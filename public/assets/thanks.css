@@ -1,16 +1,17 @@
 /* Special thanks: 사진이 놓일 공간. 사이트 공통 색과 타이포그래피를 그대로 쓴다. */
 main.page.thanks-page {
   max-width: none;
-  padding: 98px 32px 40px;
+  padding: 78px 32px 40px;
 }
 
 .thanks-viewport {
   position: relative;
   width: min(100%, 1100px);
   height: max(560px, calc(100svh - 175px));
-  max-height: 850px;
   margin: 0 auto;
-  overflow: hidden;
+  /* 좌우 탐색 폭은 유지하고 사진이 위아래 경계에서 잘리지 않게 한다. */
+  overflow: visible;
+  clip-path: inset(-100vmax 0);
   border: 0;
   background: transparent;
   cursor: default;
@@ -54,6 +55,6 @@ main.page.thanks-page {
 }
 .thanks-slot:focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }
 @media (max-width: 700px) {
-  main.page.thanks-page { padding: 90px 14px 24px; }
+  main.page.thanks-page { padding: 74px 14px 24px; }
   .thanks-viewport { height: max(510px, calc(100svh - 155px)); }
 }

@@ -212,5 +212,8 @@
   }
 
   window.IBA = { icon, esc, fmt, api, me, nextPath, authLink, boardRows, refreshEvery, gameBoard, reportScore };
-  document.addEventListener("DOMContentLoaded", renderShell);
+  // defer 스크립트는 파싱 완료 뒤 실행된다. 다음 DOMContentLoaded까지 미루면
+  // Chromium이 셸 적용 전 화면을 페이지 전환용으로 캡처할 수 있다.
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", renderShell, { once: true });
+  else renderShell();
 })();

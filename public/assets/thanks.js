@@ -81,12 +81,14 @@
   const inverse = (q, v) => rotate({ w:q.w, x:-q.x, y:-q.y, z:-q.z }, v);
   const local = (item, view = camera) => inverse(view.orientation, sub(item, view.position));
   const referenceDepth = () => camera.radius;
+  // 사진 투영 중심을 위로 옮긴다. 핀치 역투영에도 같은 중심을 사용한다.
+  const projectionCenterY = () => viewport.clientHeight / 2 - 36;
   const worldAt = (p, depth, view = camera) => add(view.position, rotate(view.orientation, {
     x:(p.x - viewport.clientWidth/2)*depth/FOCAL,
-    y:(p.y - viewport.clientHeight/2)*depth/FOCAL, z:depth,
+    y:(p.y - projectionCenterY())*depth/FOCAL, z:depth,
   }));
   function render() {
-    const cx = viewport.clientWidth/2, cy = viewport.clientHeight/2;
+    const cx = viewport.clientWidth/2, cy = projectionCenterY();
     for (const slot of slots) {
       const item = models.get(slot), v = local(item), depth = v.z;
       if (depth <= NEAR) {
@@ -229,7 +231,7 @@
     const anchor = worldAt(anchorPoint,anchorDepth,baseCamera);
     const offset = rotate(baseCamera.orientation, {
       x:(p.x-viewport.clientWidth/2)*nextDepth/FOCAL,
-      y:(p.y-viewport.clientHeight/2)*nextDepth/FOCAL, z:nextDepth,
+      y:(p.y-projectionCenterY())*nextDepth/FOCAL, z:nextDepth,
     });
     const position = sub(anchor,offset);
     const center = add(position,rotate(baseCamera.orientation,{ x:0, y:0, z:nextDepth }));

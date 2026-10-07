@@ -123,6 +123,9 @@ a { color: inherit; text-decoration: none; }
     visibility 0s;
 }
 
+/* 뒤로가기 복원 시에는 패널을 즉시 닫는다. */
+.menu-navigation .sidebar, .menu-navigation .scrim { transition: none; }
+
 .side-brand {
   display: block;
   padding: 0 5px 14px;
@@ -142,29 +145,11 @@ a { color: inherit; text-decoration: none; }
   font-size: 18px; font-weight: 400;   /* 세리프는 획이 가늘어 산세리프보다 키운다 */
   letter-spacing: 0.06em;              /* 촘촘한 세리프라 항목 사이가 붙어 보이지 않게 연다 */
   color: var(--ink-2);
-  transition: background 160ms var(--ease), color 160ms var(--ease);
 }
 .side-nav a:hover, .side-foot a:hover { background: var(--subtle); color: var(--ink); }
 /* 지금 보고 있는 페이지는 워드마크와 같은 파랑으로 */
 .side-nav a[aria-current="page"], .side-foot a[aria-current="page"] { color: var(--accent); }
 .side-nav a:focus-visible, .side-foot a:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-
-/* 항목이 차례로 따라 들어온다 — 열릴 때만 지연을 준다.
-   지연은 opacity·transform에만 걸고 background·color는 0으로 둔다.
-   한 값으로 주면 호버 배경까지 그만큼 늦게 떠서 반응이 굼떠 보인다. */
-.side-nav li a, .side-foot a {
-  opacity: 0; transform: translateX(-6px);
-  transition: opacity 240ms var(--ease), transform 240ms var(--ease),
-              background 160ms var(--ease), color 160ms var(--ease);
-  transition-delay: 0ms, 0ms, 0ms, 0ms;
-}
-.menu-open .side-nav li a, .menu-open .side-foot a { opacity: 1; transform: none; }
-.menu-open .side-nav li:nth-child(1) a { transition-delay: 80ms, 80ms, 0ms, 0ms; }
-.menu-open .side-nav li:nth-child(2) a { transition-delay: 120ms, 120ms, 0ms, 0ms; }
-.menu-open .side-nav li:nth-child(3) a { transition-delay: 160ms, 160ms, 0ms, 0ms; }
-.menu-open .side-nav li:nth-child(4) a { transition-delay: 200ms, 200ms, 0ms, 0ms; }
-.menu-open .side-foot a:nth-child(1) { transition-delay: 240ms, 240ms, 0ms, 0ms; }
-.menu-open .side-foot a:nth-child(2) { transition-delay: 275ms, 275ms, 0ms, 0ms; }
 
 .side-foot {
   margin-top: auto; padding-top: 12px;   /* 로그인·회원가입은 패널 바닥에 */
@@ -235,8 +220,8 @@ a { color: inherit; text-decoration: none; }
 
 /* ── 페이지 전환 ─────────────────────────────────────────────
    같은 사이트 안에서 페이지를 넘길 때 브라우저의 View Transitions로 부드럽게 잇는다.
-   지금 페이지는 살짝 흐려지며 빠지고, 새 페이지는 2px만 떠오르며 들어온다.
-   메뉴 버튼·오른쪽 위 IBA·하단 바는 모든 페이지에 있으니 이름을 붙여 제자리에 머물게 한다.
+   새 화면은 불투명하게 두고, 그 위의 이전 화면만 짧게 걷어 낸다.
+   전체 화면을 하나로 캡처해 페이지마다 위치가 다른 하단 바를 별도로 늘이거나 이동하지 않는다.
    지원하지 않는 브라우저는 이 규칙을 무시하고 평소처럼 넘어간다. */
 @view-transition { navigation: auto; }
 
@@ -245,20 +230,26 @@ a { color: inherit; text-decoration: none; }
    막대가 겹쳐 뜨는 환경(맥 트랙패드 기본)에서는 아무 차이가 없다. */
 html { scrollbar-gutter: stable; }
 
-.menu-btn { view-transition-name: menu-btn; }
-.corner-links .home-mark { view-transition-name: home-mark; }
-.site-foot { view-transition-name: site-foot; }
-
-::view-transition-old(root) { animation: page-out 0.36s cubic-bezier(0.4, 0, 1, 1) both; }
-::view-transition-new(root) { animation: page-in 0.62s cubic-bezier(0.2, 0.8, 0.2, 1) 0.12s both; }
-@keyframes page-out { to { opacity: 0; } }
-@keyframes page-in { from { opacity: 0; transform: translateY(2px); } }   /* 떠오르는 느낌은 아주 살짝만 */
-
-/* 제자리에 머무는 요소는 움직이지 않고, 모양이 조금 다르면(예: 랜딩↔본문 하단 바) 짧게 겹쳐 바뀐다 */
-::view-transition-group(menu-btn), ::view-transition-group(home-mark), ::view-transition-group(site-foot) {
-  animation-duration: 0.4s;
+/* Chromium에서 서로 다른 길이의 페이드와 root 이동을 겹치면 화면이 이중으로 비치고
+   합성 레이어가 바뀌는 순간이 도드라진다. 불투명한 새 화면 위에서 한 레이어만 페이드한다. */
+::view-transition-group(root) { animation: none; }
+::view-transition-old(root) {
+  animation: page-out 280ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  mix-blend-mode: normal;
+  z-index: 1;
 }
+::view-transition-new(root) {
+  animation: none;
+  opacity: 1;
+  mix-blend-mode: normal;
+  z-index: 0;
+}
+@keyframes page-out { to { opacity: 0; } }
+
+html.page-enter body { animation: page-reveal 280ms ease-out both; }
+@keyframes page-reveal { from { opacity: 0; } to { opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
   @view-transition { navigation: none; }
+  html.page-enter body { animation: none; }
 }

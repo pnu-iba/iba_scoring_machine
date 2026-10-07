@@ -31,12 +31,12 @@ label.check { display: flex; align-items: center; gap: 8px; font-weight: 500; }
 .admin-table td.wrap { white-space: normal; }
 
 .check-result { margin-top: 12px; }
-.secret { font-family: var(--mono); font-size: 15px; padding: 2px 8px; background: var(--subtle); border-radius: 6px; user-select: all; }
 
-.danger-zone { border-color: var(--danger); }
-.danger-zone .card-head h2 { color: var(--danger); }
-button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
-button.danger:hover { background: #a92c23; }
+/* 기수 초기화: 따뜻한 바탕과 어울리게 채도를 낮춘 벽돌색으로 구분한다 */
+.danger-zone { --brick: #a9493f; border-color: color-mix(in srgb, var(--brick) 45%, var(--line)); }
+.danger-zone .card-head h2 { color: var(--brick); }
+button.danger { background: var(--brick); border-color: var(--brick); color: #fff; }
+button.danger:hover:not(:disabled) { background: #923d34; }
 
 @media (max-width: 1100px) {
   .admin { grid-template-columns: minmax(0, 1fr); }

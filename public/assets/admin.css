@@ -1,0 +1,45 @@
+/* 관리자 페이지: 왼쪽 탭 목록과 오른쪽 패널 */
+.admin { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 24px; align-items: start; }
+.admin-tabs { display: grid; gap: 2px; position: sticky; top: 24px; }
+.admin-tabs a {
+  display: block; padding: 9px 12px; border-radius: var(--radius-ctl);
+  font-size: 13.5px; font-weight: 600; color: var(--ink-2);
+}
+.admin-tabs a:hover { background: var(--subtle); text-decoration: none; }
+.admin-tabs a[aria-current="true"] { background: var(--card); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line); }
+.admin-panel[hidden] { display: none; }
+
+.field-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: end; }
+input[type="date"] {
+  font: inherit; font-size: 14px;
+  height: 40px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: var(--radius-ctl);
+  background: var(--card); color: var(--ink);
+}
+label.check { display: flex; align-items: center; gap: 8px; font-weight: 500; }
+
+.notice-form { display: grid; grid-template-columns: minmax(0, 1fr) 160px auto; gap: 8px; margin-bottom: 12px; }
+.filter { display: flex; align-items: center; gap: 10px; }
+.filter input[type="text"] { width: 110px; height: 34px; }
+.filter label.check { font-size: 12.5px; color: var(--ink-2); }
+
+.admin-table td { font-size: 13px; white-space: nowrap; }
+.admin-table td:last-child { text-align: right; }
+.admin-table td .sm + .sm { margin-left: 6px; }
+.admin-table tr.deleted td { color: var(--muted); text-decoration: line-through; }
+.admin-table tr.deleted td:last-child { text-decoration: none; }
+.admin-table td.wrap { white-space: normal; }
+
+.check-result { margin-top: 12px; }
+.secret { font-family: var(--mono); font-size: 15px; padding: 2px 8px; background: var(--subtle); border-radius: 6px; user-select: all; }
+
+.danger-zone { border-color: var(--danger); }
+.danger-zone .card-head h2 { color: var(--danger); }
+button.danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+button.danger:hover { background: #a92c23; }
+
+@media (max-width: 1100px) {
+  .admin { grid-template-columns: minmax(0, 1fr); }
+  .admin-tabs { position: static; grid-auto-flow: column; justify-content: start; }
+  .field-row { grid-template-columns: minmax(0, 1fr); }
+}

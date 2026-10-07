@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>관리자 — IBA Scoring Machine</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" href="/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&family=Playfair+Display:wght@700;900&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="/assets/chrome.css">
+  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/admin.css">
+  <script src="/assets/icons.js" defer></script>
+  <script src="/assets/app.js" defer blocking="render"></script>
+  <script src="/assets/chrome.js" defer blocking="render"></script>
+  <script src="/assets/admin.js" defer></script>
+</head>
+<body>
+<main class="page">
+<section class="card" id="denied" hidden>
+  <div class="card-head"><h2>관리자만 볼 수 있습니다</h2></div>
+  <p class="lead">관리자 계정으로 로그인하세요. 관리자 지정은 기존 관리자가 사용자 탭에서 합니다.</p>
+</section>
+
+<div class="admin" id="admin" hidden>
+  <nav class="admin-tabs" aria-label="관리자 메뉴">
+    <a href="#overview">현황</a>
+    <a href="#contest">대회 설정과 공지</a>
+    <a href="#submissions">제출</a>
+    <a href="#users">사용자</a>
+    <a href="#tools">채점 확인과 초기화</a>
+  </nav>
+
+  <div class="admin-body">
+    <!-- 현황 -->
+    <section class="admin-panel" id="tab-overview">
+      <div class="card">
+        <div class="card-head">
+          <h2>대회 현황</h2>
+          <button class="ghost" type="button" data-reload="overview"><i data-icon="refresh-cw"></i>새로고침</button>
+        </div>
+        <div id="overviewWarn"></div>
+        <ul class="kv" id="overviewList"></ul>
+      </div>
+    </section>
+
+    <!-- 대회 설정과 공지 -->
+    <section class="admin-panel" id="tab-contest">
+      <div class="card">
+        <div class="card-head"><h2>대회 설정</h2></div>
+        <form class="stack" id="contestForm">
+          <div class="field-row">
+            <label>시작일<input type="date" name="start" required></label>
+            <label>마지막 날<input type="date" name="end" required></label>
+            <label>하루 제출 횟수<input type="number" name="daily_limit" min="1" max="100" required></label>
+          </div>
+          <p class="small">시작일 0시(KST)부터 제출을 받고, 마지막 날 다음 날 0시에 제출을 막고 최종 순위를 공개합니다. 저장하면 배포 없이 바로 반영됩니다.</p>
+          <div class="row"><button class="primary" type="submit">저장</button><span class="small" id="contestMsg"></span></div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>공지</h2></div>
+        <form class="notice-form" id="noticeForm">
+          <input type="text" name="title" placeholder="공지 내용" maxlength="200" required>
+          <input type="date" name="date" required>
+          <button type="submit">추가</button>
+        </form>
+        <div class="table-wrap">
+          <table class="admin-table" id="noticeTable">
+            <thead><tr><th>날짜</th><th>내용</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="empty" id="noticeEmpty" hidden>공지가 없습니다.</p>
+      </div>
+    </section>
+
+    <!-- 제출 -->
+    <section class="admin-panel" id="tab-submissions">
+      <div class="card flush">
+        <div class="card-head">
+          <h2>제출</h2>
+          <form class="filter" id="subFilter">
+            <input type="text" name="team" placeholder="팀 번호" inputmode="numeric">
+            <label class="check"><input type="checkbox" name="include_deleted" checked>삭제된 제출 포함</label>
+            <button class="sm" type="submit">조회</button>
+          </form>
+        </div>
+        <div class="table-wrap">
+          <table class="admin-table" id="subTable">
+            <thead><tr><th class="num">ID</th><th>팀</th><th>닉네임</th><th class="num">Public RMSE</th><th class="num">전체 RMSE</th><th class="num">전체 R²</th><th class="num">음수 처리</th><th>제출 시각</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="empty" id="subEmpty" hidden>제출이 없습니다.</p>
+        <div class="card-foot" id="subFoot"></div>
+      </div>
+    </section>
+
+    <!-- 사용자 -->
+    <section class="admin-panel" id="tab-users">
+      <div class="card flush">
+        <div class="card-head">
+          <h2>사용자</h2>
+          <form class="filter" id="userFilter">
+            <input type="text" name="team" placeholder="팀 번호" inputmode="numeric">
+            <button class="sm" type="submit">조회</button>
+          </form>
+        </div>
+        <div class="table-wrap">
+          <table class="admin-table" id="userTable">
+            <thead><tr><th>아이디</th><th>닉네임</th><th>팀</th><th>가입 시각</th><th></th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="empty" id="userEmpty" hidden>사용자가 없습니다.</p>
+        <div class="card-foot">팀을 옮겨도 이미 낸 제출은 원래 팀에 남습니다. 임시 비밀번호는 한 번만 보이므로 바로 전달하세요.</div>
+      </div>
+    </section>
+
+    <!-- 채점 확인과 초기화 -->
+    <section class="admin-panel" id="tab-tools">
+      <div class="card">
+        <div class="card-head"><h2>채점 확인</h2></div>
+        <p class="lead">CSV를 채점만 하고 기록과 제출 횟수에는 남기지 않습니다. 학생이 거부된 파일을 보내 오면 여기서 오류를 확인하세요.</p>
+        <form class="row" id="checkForm">
+          <input type="file" name="file" accept=".csv,text/csv" required>
+          <button type="submit">채점</button>
+        </form>
+        <div id="checkResult"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>결과 내보내기</h2></div>
+        <p class="lead">최종 순위, 전체 제출, 사용자 목록, 미니게임 점수를 CSV 네 개로 묶어 내려받습니다. 기수 기록은 이 파일로만 남습니다.</p>
+        <a class="btn" id="exportBtn" href="/api/admin/export" download><i data-icon="download"></i>결과 zip 내려받기</a>
+      </div>
+
+      <div class="card danger-zone">
+        <div class="card-head"><h2>기수 초기화</h2></div>
+        <p class="lead">제출 기록을 모두 지웁니다. 되돌릴 수 없습니다. 정답, 대회 설정, 공지, 관리자 계정은 남습니다.</p>
+        <form class="stack" id="resetForm">
+          <label class="check"><input type="checkbox" name="delete_users" checked>사용자 계정도 지우기 (관리자 제외)</label>
+          <label class="check"><input type="checkbox" name="delete_games" checked>미니게임 점수도 지우기</label>
+          <p class="small" id="resetNote">먼저 위에서 결과 zip을 내려받아야 초기화할 수 있습니다.</p>
+          <label>확인 문구<span class="hint" id="resetHint"></span><input type="text" name="confirm" autocomplete="off" disabled></label>
+          <div class="row"><button class="danger" type="submit" disabled>초기화</button><span class="small" id="resetMsg"></span></div>
+        </form>
+      </div>
+    </section>
+  </div>
+</div>
+</main>
+</body>
+</html>

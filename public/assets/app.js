@@ -12,6 +12,8 @@
     ["/thanks.html", "Special thanks to"],
   ];
   const AUTH_TITLES = { "/login.html": "Sign in" };
+  // 관리자 계정에만 사이드바에 보인다(renderAuth).
+  const ADMIN_PAGE = ["/admin.html", "Admin"];
 
   function icon(name) {
     const d = (window.ICON_PATHS || {})[name] || "";
@@ -32,7 +34,7 @@
     return { ok: res.ok, status: res.status, body };
   }
 
-  // 로그인한 사용자 {username, nickname, team}. 로그인하지 않았으면 null.
+  // 로그인한 사용자 {username, nickname, team, is_admin}. 로그인하지 않았으면 null.
   const me = api("/api/me").then((r) => (r.ok ? r.body : null), () => null);
 
   // 로그인·가입 뒤 돌아갈 주소. 같은 사이트 경로만 허용한다.
@@ -46,6 +48,14 @@
     return `/login.html?next=${encodeURIComponent(location.pathname)}${hash}`;
   }
 
+  // 지금 페이지에 해당하는 메뉴 경로. 개별 게임 페이지(/games/...)는 미니게임 메뉴 아래에 있는 것으로 본다.
+  const here = location.pathname.replace(/index\.html$/, "");
+  const navPath = here.startsWith("/games/") ? "/minigame.html" : here;
+  function link([href, label]) {
+    const cur = href === navPath ? ' aria-current="page"' : "";
+    return `<a href="${href}"${cur}><span>${label}</span></a>`;
+  }
+
   function renderShell() {
     // ?embed=1: 미니게임 바탕화면의 창(iframe) 안에 들어갈 때. 메뉴·제목·하단 바 없이 본문만 둔다.
     if (new URLSearchParams(location.search).has("embed")) {
@@ -54,15 +64,8 @@
       return;
     }
 
-    const here = location.pathname.replace(/index\.html$/, "");
-    // 개별 게임 페이지(/games/...)는 미니게임 메뉴 아래에 있는 것으로 본다.
-    const navPath = here.startsWith("/games/") ? "/minigame.html" : here;
-    const current = [...PAGES, ...FOOT_PAGES].find(([href]) => href === navPath);
+    const current = [...PAGES, ...FOOT_PAGES, ADMIN_PAGE].find(([href]) => href === navPath);
     const title = current ? current[1] : AUTH_TITLES[here] || "";
-    const link = ([href, label]) => {
-      const cur = href === navPath ? ' aria-current="page"' : "";
-      return `<a href="${href}"${cur}><span>${label}</span></a>`;
-    };
 
     // 메뉴 버튼·사이드바·막은 랜딩과 같은 마크업. 여닫는 동작은 chrome.js가 붙인다.
     document.body.insertAdjacentHTML("afterbegin", `
@@ -116,6 +119,9 @@
     if (!user) {
       corner.insertAdjacentHTML("beforeend", `<a id="signIn" href="${authLink("login")}">Sign in</a>`);
       return;
+    }
+    if (user.is_admin) {
+      document.querySelector("#sidebar .side-nav").insertAdjacentHTML("beforeend", `<li>${link(ADMIN_PAGE)}</li>`);
     }
     corner.insertAdjacentHTML("beforeend", `<a class="who" href="/mypage.html">[Team ${esc(user.team)}] ${esc(user.nickname)}</a><button type="button" id="logoutBtn">Sign out</button>`);
     document.getElementById("logoutBtn").addEventListener("click", async () => {

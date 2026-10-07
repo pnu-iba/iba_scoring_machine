@@ -130,6 +130,10 @@
   if (!res || !res.ok) return;
   const user = await res.json();
   if (!user) return;   // 로그인하지 않았으면 /api/me가 null을 돌려준다
+  // 관리자 계정에만 사이드바에 관리자 메뉴를 붙인다.
+  if (user.is_admin) {
+    document.querySelector("#sidebar .side-nav").insertAdjacentHTML("beforeend", '<li><a href="/admin.html"><span>Admin</span></a></li>');
+  }
   const who = document.createElement("a");
   who.className = "who";
   who.href = "/mypage.html";

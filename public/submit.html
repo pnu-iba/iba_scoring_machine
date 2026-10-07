@@ -100,7 +100,7 @@
     <h3>제출 규칙</h3>
     <ul>
       <li>형식은 <code>sample_submission.csv</code>와 동일: 헤더 <code>id,price</code>, 데이터 39,085행, test.csv와 같은 순서.</li>
-      <li>팀당 <strong>하루 3회</strong>. 한국 시간 자정에 초기화됩니다. 형식 오류로 거부된 제출은 횟수에 들어가지 않습니다.</li>
+      <li>팀당 <strong>하루 <span id="limitRule">3</span>회</strong>. 한국 시간 자정에 초기화됩니다. 형식 오류로 거부된 제출은 횟수에 들어가지 않습니다.</li>
       <li>제출하려면 로그인해야 합니다. 가입할 때 같은 팀 번호를 적은 사람끼리 한 팀이 됩니다. 팀 번호는 숫자만 받으며 3과 03은 같은 팀입니다.</li>
       <li>리더보드에는 팀별로 public 점수가 가장 좋은 기록 한 건이 올라가고, 이 제출이 최종 채점에 쓰입니다.</li>
       <li>대회 마지막 날 자정(한국 시간)이 지나면 제출이 막히고 리더보드가 최종 순위로 바뀝니다.</li>
@@ -121,6 +121,10 @@
   const resultEl = document.getElementById("result");
 
   document.addEventListener("DOMContentLoaded", async () => {
+    // 하루 제출 횟수는 관리자 페이지에서 바뀔 수 있다.
+    window.IBA.api("/api/contest").then((r) => {
+      if (r.ok) document.getElementById("limitRule").textContent = r.body.daily_limit;
+    });
     const user = await window.IBA.me;
     if (!user) {
       document.getElementById("loginLink").href = window.IBA.authLink("login");

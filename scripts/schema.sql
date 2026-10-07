@@ -64,13 +64,20 @@ CREATE TABLE IF NOT EXISTS contest_settings (
     daily_limit INTEGER NOT NULL DEFAULT 3
 );
 
--- 설정 행이 없으면 첫 기수 일정으로 만든다. 이후에는 관리자 페이지에서 바꾼다.
-INSERT INTO contest_settings (id, start_date, end_date, daily_limit)
-VALUES (1, DATE '2026-09-22', DATE '2026-10-05', 3)
-ON CONFLICT (id) DO NOTHING;
-
 CREATE TABLE IF NOT EXISTS notices (
     id          BIGSERIAL PRIMARY KEY,
     title       TEXT NOT NULL,
     notice_date DATE NOT NULL
 );
+
+-- 설정 행이 없을 때(처음 한 번)만 첫 기수 일정과 공지를 넣는다. 이후에는 관리자 페이지에서 바꾼다.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM contest_settings) THEN
+        INSERT INTO contest_settings (id, start_date, end_date, daily_limit)
+        VALUES (1, DATE '2026-09-22', DATE '2026-10-05', 3);
+        INSERT INTO notices (title, notice_date) VALUES
+            ('채점 사이트를 열었습니다. 팀당 하루 3회 제출할 수 있습니다.', DATE '2026-09-22'),
+            ('제출 파일은 test.csv와 같은 행 순서를 유지하세요.', DATE '2026-09-22');
+    END IF;
+END $$;

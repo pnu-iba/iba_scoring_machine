@@ -13,7 +13,6 @@
   <link rel="stylesheet" href="/assets/chrome.css">
   <link rel="stylesheet" href="/assets/style.css">
   <script src="/assets/icons.js" defer></script>
-  <script src="/assets/contest.js" defer></script>
   <script src="/assets/app.js" defer blocking="render"></script>
   <script src="/assets/chrome.js" defer blocking="render"></script>
 </head>
@@ -82,9 +81,11 @@
   };
   function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
 
-  function render() {
-    const c = window.CONTEST;
-    if (!c) return;
+  // 대회 기간과 공지는 관리자 페이지에서 바꾸고 /api/contest로 받는다.
+  async function render() {
+    const r = await window.IBA.api("/api/contest");
+    if (!r.ok) return;
+    const c = r.body;
     const statusEl = document.getElementById("status");
     const start = kstDate(c.start), end = kstDate(c.end);
     const total = Math.round((end - start) / DAY) + 1;
@@ -105,7 +106,7 @@
       document.getElementById("progressBar").style.width = `${(day / total) * 100}%`;
     }
 
-    document.getElementById("notices").innerHTML = c.notices.map((n) =>
+    document.getElementById("notices").innerHTML = c.notices.length === 0 ? '<li><div><div class="d">공지가 없습니다.</div></div></li>' : c.notices.map((n) =>
       `<li><div><div class="t">${esc(n.title)}</div><div class="d">${n.date.replaceAll("-", ".")}</div></div></li>`).join("");
   }
 

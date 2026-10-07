@@ -53,3 +53,24 @@ ALTER TABLE submissions ADD COLUMN IF NOT EXISTS public_r2 DOUBLE PRECISION;
 UPDATE submissions SET public_rmse = rmse, public_r2 = r2 WHERE public_rmse IS NULL;
 ALTER TABLE submissions ALTER COLUMN public_rmse SET NOT NULL;
 ALTER TABLE submissions ALTER COLUMN public_r2 SET NOT NULL;
+
+-- 관리자 계정과 대회 설정. 여러 번 실행해도 된다.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
+
+CREATE TABLE IF NOT EXISTS contest_settings (
+    id          INTEGER PRIMARY KEY CHECK (id = 1), -- 한 행만 둔다
+    start_date  DATE NOT NULL,                      -- 첫날(KST)
+    end_date    DATE NOT NULL,                      -- 마지막 날(KST). 다음 날 0시에 마감
+    daily_limit INTEGER NOT NULL DEFAULT 3
+);
+
+-- 설정 행이 없으면 첫 기수 일정으로 만든다. 이후에는 관리자 페이지에서 바꾼다.
+INSERT INTO contest_settings (id, start_date, end_date, daily_limit)
+VALUES (1, DATE '2026-09-22', DATE '2026-10-05', 3)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS notices (
+    id          BIGSERIAL PRIMARY KEY,
+    title       TEXT NOT NULL,
+    notice_date DATE NOT NULL
+);

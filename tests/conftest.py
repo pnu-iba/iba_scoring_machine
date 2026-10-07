@@ -12,18 +12,21 @@ from __future__ import annotations
 
 import hashlib
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 
 import pytest
 from fastapi.testclient import TestClient
 
 import auth
 from app import app
+from scoring.clock import ContestSettings
 from store import Answers, MemoryStore
 
 ANSWER_ROWS = [(69940, 20299.0), (44315, 13000.0), (10001, 8000.0), (10001, 25000.0), (55555, 15000.0)]
 # public 채점 구간: 첫 행과 셋째 행
 PUBLIC = [True, False, True, False, False]
+# 테스트 시계(2026-09-19)가 대회 기간 안에 들도록 한 일정
+SETTINGS = ContestSettings(date(2026, 9, 1), date(2026, 10, 5), 3)
 
 
 class FakeClock:
@@ -45,12 +48,13 @@ def clock():
 
 @pytest.fixture
 def store():
-    return MemoryStore(Answers(ids=[r[0] for r in ANSWER_ROWS], prices=[r[1] for r in ANSWER_ROWS], public=PUBLIC))
+    s = MemoryStore(Answers(ids=[r[0] for r in ANSWER_ROWS], prices=[r[1] for r in ANSWER_ROWS], public=PUBLIC))
+    s.save_settings(SETTINGS)
+    return s
 
 
 @pytest.fixture
 def client(store, clock, monkeypatch):
-    monkeypatch.setenv("ADMIN_KEY", "test-admin-key")
     monkeypatch.setenv("SESSION_SECRET", "test-session-secret")
     monkeypatch.setattr(auth, "PBKDF2_ITERATIONS", 1000)  # 테스트 속도용
     app.state.store = store
@@ -98,4 +102,9 @@ def perfect_rows():
     return [(i, p) for i, p in ANSWER_ROWS]
 
 
-ADMIN = {"X-Admin-Key": "test-admin-key"}
+def login_admin(client: TestClient, store) -> None:
+    """관리자 계정으로 로그인한다. 처음이면 가입한 뒤 저장소에서 관리자로 지정한다."""
+    r = client.post("/api/login", json={"username": "operator", "password": PASSWORD})
+    if r.status_code == 401:
+        assert signup(client, "operator", team="0", nickname="운영진").status_code == 200
+        store.get_user_by_username("operator").is_admin = True

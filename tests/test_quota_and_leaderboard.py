@@ -1,4 +1,4 @@
-from tests.conftest import ADMIN, ANSWER_ROWS, csv_bytes, perfect_rows, quota, submit
+from tests.conftest import ANSWER_ROWS, csv_bytes, perfect_rows, quota, submit
 
 
 def offset_rows(delta: float):
@@ -81,39 +81,3 @@ def test_rank_in_submit_response_reflects_team_best(client):
     assert r.json()["rank"] == 2
     r = submit(client, csv_bytes(offset_rows(50)), team="2")
     assert r.json()["rank"] == 1
-
-
-# --- 관리자 삭제 --------------------------------------------------------------
-
-
-def test_admin_delete_restores_quota_and_removes_from_leaderboard(client):
-    for _ in range(3):
-        submit(client, csv_bytes(perfect_rows()), team="1")
-    assert submit(client, csv_bytes(perfect_rows()), team="1").status_code == 429
-
-    subs = client.get("/api/submissions", params={"team": "01"}, headers=ADMIN).json()
-    assert len(subs) == 3
-    r = client.delete(f"/api/submissions/{subs[0]['id']}", headers=ADMIN)
-    assert r.status_code == 200
-
-    assert quota(client, "1").json()["remaining_today"] == 1
-    subs = client.get("/api/submissions", params={"team": "1"}, headers=ADMIN).json()
-    assert subs[0]["deleted_at"] is not None
-
-    # 전부 지우면 리더보드에서 사라진다
-    for s in subs[1:]:
-        client.delete(f"/api/submissions/{s['id']}", headers=ADMIN)
-    assert client.get("/api/leaderboard").json()["rows"] == []
-
-
-def test_admin_endpoints_require_key(client):
-    assert client.get("/api/submissions", params={"team": "1"}).status_code == 401
-    assert client.get("/api/submissions", params={"team": "1"}, headers={"X-Admin-Key": "nope"}).status_code == 401
-    assert client.delete("/api/submissions/1").status_code == 401
-
-
-def test_delete_unknown_or_already_deleted_is_404(client):
-    submit(client, csv_bytes(perfect_rows()), team="1")
-    assert client.delete("/api/submissions/999", headers=ADMIN).status_code == 404
-    assert client.delete("/api/submissions/1", headers=ADMIN).status_code == 200
-    assert client.delete("/api/submissions/1", headers=ADMIN).status_code == 404

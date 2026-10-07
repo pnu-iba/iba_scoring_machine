@@ -7,7 +7,7 @@ import math
 from datetime import timedelta
 
 from scoring import clock as contest_clock
-from tests.conftest import ANSWER_ROWS, PUBLIC, csv_bytes, perfect_rows, submit
+from tests.conftest import ANSWER_ROWS, PUBLIC, SETTINGS, csv_bytes, perfect_rows, submit
 
 
 def private_only_error(delta: float):
@@ -15,7 +15,7 @@ def private_only_error(delta: float):
 
 
 def to_final(clock):
-    clock.now = contest_clock.final_at() + timedelta(minutes=1)
+    clock.now = contest_clock.final_at(SETTINGS) + timedelta(minutes=1)
 
 
 def test_submit_reports_public_score_only(client):
@@ -66,6 +66,6 @@ def test_submit_closed_after_contest_end(client, clock):
 
 
 def test_contest_end_boundary_is_kst_midnight(client, clock):
-    clock.now = contest_clock.final_at() - timedelta(seconds=1)
+    clock.now = contest_clock.final_at(SETTINGS) - timedelta(seconds=1)
     assert submit(client, csv_bytes(perfect_rows())).status_code == 200
     assert client.get("/api/leaderboard").json()["final"] is False

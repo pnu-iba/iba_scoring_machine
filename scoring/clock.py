@@ -1,23 +1,46 @@
-"""'하루'의 기준과 대회 마감. 한국 시간(KST) 자정에 제출 횟수가 초기화된다(스펙 18번)."""
+"""'하루'의 기준과 대회 일정. 한국 시간(KST) 자정에 제출 횟수가 초기화된다(스펙 18번).
+
+대회 기간과 하루 제출 횟수는 DB의 contest_settings에 두고 관리자 페이지에서 바꾼다.
+시작일 0시 전은 준비, 마지막 날 다음 날 0시부터는 결과 공개(제출 마감, 최종 순위)다.
+"""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta, timezone
 
 KST = timezone(timedelta(hours=9), name="KST")
-DAILY_LIMIT = 3
 
-# 대회 마지막 날(KST). public/assets/contest.js의 end와 같은 날짜로 맞춘다.
-# 다음 날 0시부터 제출을 막고 리더보드를 전체 데이터 기준 최종 순위로 바꾼다.
-CONTEST_END = date(2026, 10, 5)
+READY, OPEN, FINAL = "ready", "open", "final"
 
 
-def final_at() -> datetime:
-    return datetime.combine(CONTEST_END + timedelta(days=1), time(0, 0), tzinfo=KST)
+@dataclass(frozen=True)
+class ContestSettings:
+    start_date: date  # 첫날(KST)
+    end_date: date  # 마지막 날(KST). 다음 날 0시에 마감
+    daily_limit: int
 
 
-def is_final(now: datetime) -> bool:
-    return now >= final_at()
+# 설정 행이 아직 없을 때 쓰는 첫 기수 일정
+DEFAULT_SETTINGS = ContestSettings(date(2026, 9, 22), date(2026, 10, 5), 3)
+
+
+def start_at(s: ContestSettings) -> datetime:
+    return datetime.combine(s.start_date, time(0, 0), tzinfo=KST)
+
+
+def final_at(s: ContestSettings) -> datetime:
+    return datetime.combine(s.end_date + timedelta(days=1), time(0, 0), tzinfo=KST)
+
+
+def is_final(now: datetime, s: ContestSettings) -> bool:
+    return now >= final_at(s)
+
+
+def status(now: datetime, s: ContestSettings) -> str:
+    if now < start_at(s):
+        return READY
+    return FINAL if is_final(now, s) else OPEN
 
 
 def day_window(now: datetime) -> tuple[datetime, datetime]:

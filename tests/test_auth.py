@@ -5,7 +5,7 @@ from tests.conftest import PASSWORD, csv_bytes, perfect_rows, signup
 def test_signup_logs_in_and_me_returns_user(client):
     r = signup(client, "minseok_3", team=" 03 ", nickname="민석")
     assert r.status_code == 200, r.text
-    assert r.json() == {"username": "minseok_3", "nickname": "민석", "team": "3"}
+    assert r.json() == {"username": "minseok_3", "nickname": "민석", "team": "3", "is_admin": False}
     assert client.get("/api/me").json()["username"] == "minseok_3"
 
 

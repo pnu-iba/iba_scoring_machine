@@ -22,17 +22,22 @@
 <main class="page thanks-page">
   <div class="thanks-viewport" id="thanksViewport" aria-label="사진 10개를 탐색하는 캔버스">
     <div class="thanks-world" id="thanksWorld">
-      <button class="thanks-slot" type="button" data-z="120" style="--x: 85px; --y: 245px; --w: 210px; --h: 270px" aria-label="사진 1 확대"><img src="/assets/thanks_to/photo-01.webp" alt="" decoding="async"></button>
-      <button class="thanks-slot" type="button" data-z="820" style="--x: 405px; --y: 75px; --w: 205px; --h: 281px" aria-label="사진 2 확대"><img src="/assets/thanks_to/photo-02.webp" alt="" decoding="async"></button>
-      <button class="thanks-slot" type="button" data-z="420" style="--x: 754px; --y: 162px; --w: 258px; --h: 204px" aria-label="사진 3 확대"><img src="/assets/thanks_to/photo-03.webp" alt="" decoding="async"></button>
-      <button class="thanks-slot" type="button" data-z="1080" style="--x: 1110px; --y: 45px; --w: 202px; --h: 303px" aria-label="사진 4 확대"><img src="/assets/thanks_to/photo-04.webp" alt="" decoding="async"></button>
-      <button class="thanks-slot" type="button" data-z="180" style="--x: 40px; --y: 598px; --w: 205px; --h: 281px" aria-label="사진 5 확대"><img src="/assets/thanks_to/photo-05.webp" alt="" decoding="async"></button>
-      <button class="thanks-slot" type="button" data-z="560" style="--x: 350px; --y: 410px; --w: 202px; --h: 259px" aria-label="사진 6 확대"><img src="/assets/thanks_to/photo-06.webp" alt="" decoding="async"></button>
-      <button class="thanks-slot" type="button" data-z="0" style="--x: 706px; --y: 500px; --w: 196px; --h: 262px" aria-label="사진 7 확대"><img src="/assets/thanks_to/photo-07.webp" alt="" decoding="async"></button>
-      <button class="thanks-slot" type="button" data-z="870" style="--x: 1190px; --y: 350px; --w: 202px; --h: 260px" aria-label="사진 8 확대"><img src="/assets/thanks_to/photo-08.webp" alt="" decoding="async"></button>
-      <button class="thanks-slot" type="button" data-z="480" style="--x: 255px; --y: 840px; --w: 202px; --h: 260px" aria-label="사진 9 확대"><img src="/assets/thanks_to/photo-09.webp" alt="" decoding="async"></button>
-      <button class="thanks-slot" type="button" data-z="70" style="--x: 830px; --y: 755px; --w: 207px; --h: 250px" aria-label="사진 10 확대"><img src="/assets/thanks_to/photo-10.webp" alt="" decoding="async"></button>
+      <button class="thanks-slot" type="button" data-z="120" style="--x: 85px; --y: 245px; --w: 210px; --h: 270px" data-person="01" aria-label="JEON HYEONG JUN 확대"><img src="/assets/thanks_to/photo-01.webp" alt="" decoding="async"></button>
+      <button class="thanks-slot" type="button" data-z="820" style="--x: 405px; --y: 75px; --w: 205px; --h: 281px" data-person="02" aria-label="OH JEONG RIN 확대"><img src="/assets/thanks_to/photo-02.webp" alt="" decoding="async"></button>
+      <button class="thanks-slot" type="button" data-z="420" style="--x: 754px; --y: 162px; --w: 258px; --h: 204px" data-person="03" aria-label="JEONG JAE YEONG 확대"><img src="/assets/thanks_to/photo-03.webp" alt="" decoding="async"></button>
+      <button class="thanks-slot" type="button" data-z="1080" style="--x: 1030px; --y: 65px; --w: 202px; --h: 303px" data-person="04" aria-label="SIM SEONG CHUL 확대"><img src="/assets/thanks_to/photo-04.webp" alt="" decoding="async"></button>
+      <button class="thanks-slot" type="button" data-z="180" style="--x: 40px; --y: 598px; --w: 205px; --h: 281px" data-person="05" aria-label="HAN GO EUN 확대"><img src="/assets/thanks_to/photo-05.webp" alt="" decoding="async"></button>
+      <button class="thanks-slot" type="button" data-z="560" style="--x: 350px; --y: 410px; --w: 202px; --h: 259px" data-person="06" aria-label="AHN HYEON JUN 확대"><img src="/assets/thanks_to/photo-06.webp?v=20261007-replaced" alt="" decoding="async"></button>
+      <button class="thanks-slot" type="button" data-z="0" style="--x: 706px; --y: 500px; --w: 196px; --h: 262px" data-person="07" aria-label="KIM JI WON 확대"><img src="/assets/thanks_to/photo-07.webp" alt="" decoding="async"></button>
+      <button class="thanks-slot" type="button" data-z="870" style="--x: 1100px; --y: 350px; --w: 202px; --h: 260px" data-person="08" aria-label="LEE JEONG SEO 확대"><img src="/assets/thanks_to/photo-08.webp" alt="" decoding="async"></button>
+      <button class="thanks-slot" type="button" data-z="480" style="--x: 255px; --y: 840px; --w: 202px; --h: 260px" data-person="09" aria-label="NO YEONG HUN 확대"><img src="/assets/thanks_to/photo-09.webp" alt="" decoding="async"></button>
+      <button class="thanks-slot" type="button" data-z="70" style="--x: 830px; --y: 755px; --w: 207px; --h: 250px" data-person="10" aria-label="HWANG HYEON SEOK 확대"><img src="/assets/thanks_to/photo-10.webp" alt="" decoding="async"></button>
     </div>
+    <section class="thanks-person" id="thanksPerson" hidden aria-live="polite" aria-atomic="true">
+      <h2 id="thanksName"></h2>
+      <p id="thanksMember"></p>
+      <p id="thanksMajor"></p>
+    </section>
   </div>
 </main>
 </body>

@@ -344,7 +344,8 @@ async def submit(
             status_code=403,
             content={"error_code": "contest_not_started", "message": "대회가 아직 시작되지 않았습니다."},
         )
-    if state == clock.FINAL:
+    # 로컬 CSV·메모리 모드에서는 마감 뒤에도 채점 테스트를 허용한다.
+    if state == clock.FINAL and not _dev_any_login():
         return JSONResponse(
             status_code=403,
             content={"error_code": "contest_closed", "message": "대회가 마감되어 더 이상 제출할 수 없습니다."},

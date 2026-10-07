@@ -58,3 +58,22 @@ main.page.thanks-page {
   main.page.thanks-page { padding: 74px 14px 24px; }
   .thanks-viewport { height: max(510px, calc(100svh - 155px)); }
 }
+
+.thanks-person {
+  position: absolute; left: 0; top: 0; z-index: 12000;
+  pointer-events: none;
+  text-align: left;
+  color: var(--ink);
+}
+.thanks-person h2 {
+  margin: 0 0 14px;
+  font-family: var(--display);
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 700; line-height: 1.12;
+  white-space: nowrap;
+}
+.thanks-person p {
+  margin: 0; font-size: 15px; line-height: 1.5;
+  color: var(--ink-2);
+}
+.thanks-person p + p { margin-top: 5px; }

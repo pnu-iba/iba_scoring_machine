@@ -3,6 +3,30 @@
   const world = document.getElementById('thanksWorld');
   if (!viewport || !world) return;
 
+  const info = document.getElementById('thanksPerson');
+  const nameLabel = document.getElementById('thanksName');
+  const memberLabel = document.getElementById('thanksMember');
+  const majorLabel = document.getElementById('thanksMajor');
+  const people = {
+    '01': ['JEON HYEONG JUN', '10th member', 'Business'],
+    '02': ['OH JEONG RIN', '10th member', 'Economics'],
+    '03': ['JEONG JAE YEONG', '10th member', 'Industrial Engineering'],
+    '04': ['SIM SEONG CHUL', '10th member', 'Industrial Engineering'],
+    '05': ['HAN GO EUN', '9th member', 'Business'],
+    '06': ['AHN HYEON JUN', '10th member', 'Statistics'],
+    '07': ['KIM JI WON', '10th member', 'Statistics'],
+    '08': ['LEE JEONG SEO', '10th member', 'Business'],
+    '09': ['NO YEONG HUN', '10th member', 'Economics'],
+    '10': ['HWANG HYEON SEOK', '10th member', 'Industrial Engineering'],
+  };
+  const offsets = new Map();
+  let plannedOffsets = new Map();
+  let layoutFrame = 0;
+  let layoutTime = 0;
+  let cameraTransition = false;
+  const stacked = () => viewport.clientWidth < 700;
+  const infoWidth = () => Math.min(stacked() ? 320 : 360, viewport.clientWidth - 32);
+  const gap = () => stacked() ? 24 : 32;
   const FOCAL = 900;
   const NEAR = 300;
   const THRESHOLD = 6;
@@ -88,25 +112,84 @@
     y:(p.y - projectionCenterY())*depth/FOCAL, z:depth,
   }));
   function render() {
+    if (layoutFrame) cancelAnimationFrame(layoutFrame);
+    layoutFrame = 0;
+    const now = performance.now();
+    const blend = reducedMotion.matches ? 1 : 1 - Math.exp(-Math.min(now - layoutTime || 16, 50) / 140);
+    layoutTime = now;
     const cx = viewport.clientWidth/2, cy = projectionCenterY();
-    for (const slot of slots) {
+    const projected = slots.map(slot => {
       const item = models.get(slot), v = local(item), depth = v.z;
+      const scale = FOCAL / Math.max(depth, NEAR);
+      return { slot, depth, scale, x:cx + v.x*scale - item.width*scale/2,
+        y:cy + v.y*scale - item.height*scale/2, w:item.width*scale, h:item.height*scale };
+    });
+    const active = projected.find(p => p.slot === selected && p.depth > NEAR);
+    if (selected && active) {
+      info.hidden = false;
+      info.style.width = `${infoWidth()}px`;
+      const iw = info.offsetWidth, ih = info.offsetHeight;
+      const ix = stacked() ? active.x + (active.w-iw)/2 : active.x + active.w + gap();
+      const iy = stacked() ? active.y + active.h + gap() : active.y + (active.h-ih)/2;
+      const shift = offsets.get(selected) || {x:0,y:0};
+      info.style.transform = `translate3d(${ix+shift.x}px, ${iy+shift.y}px, 0)`;
+    } else info.hidden = true;
+    let settling = false;
+    for (const p of projected) {
+      const {slot,depth,scale,w,h} = p;
+      let dx = 0, dy = 0;
+      const planned = plannedOffsets.get(slot);
+      if (selected && planned && slot !== selected) { dx = planned.x; dy = planned.y; }
+      const old = offsets.get(slot) || {x:0,y:0};
+      const offset = cameraTransition ? old : {x:old.x+(dx-old.x)*blend,y:old.y+(dy-old.y)*blend};
+      if (!cameraTransition) {
+        if (Math.hypot(dx-offset.x,dy-offset.y) > .2) settling = true;
+        else { offset.x=dx; offset.y=dy; }
+      }
+      offsets.set(slot,offset);
       if (depth <= NEAR) {
         slot.style.opacity = '0'; slot.style.visibility = 'hidden';
         slot.style.pointerEvents = 'none'; slot.tabIndex = -1; continue;
       }
-      const scale = FOCAL/depth;
-      const x = cx + v.x*scale - item.width*scale/2;
-      const y = cy + v.y*scale - item.height*scale/2;
       const opacity = clamp((depth-NEAR)/220, 0, 1);
-      slot.style.transform = `translate3d(${x}px, ${y}px, 0) scale(${scale})`;
-      slot.style.zIndex = String(Math.round(10000-depth));
+      slot.style.transform = `translate3d(${p.x+offset.x}px, ${p.y+offset.y}px, 0) scale(${scale})`;
+      slot.style.zIndex = String(slot === selected ? 11000 : Math.round(10000-depth));
       slot.style.opacity = String(opacity);
       slot.style.pointerEvents = opacity > .15 ? 'auto' : 'none';
       slot.style.visibility = 'visible'; slot.tabIndex = 0;
     }
+    if (settling) layoutFrame = requestAnimationFrame(render);
   }
-  const stop = () => { if (animation) cancelAnimationFrame(animation); animation = 0; };
+  // 최종 구도에서 이동할 위치를 한 번 계산해, 카메라 이동 중 회피 방향이 바뀌지 않게 한다.
+  const planBackground = view => {
+    const result = new Map();
+    if (!selected) return result;
+    const project = slot => {
+      const item=models.get(slot), v=local(item,view), scale=FOCAL/Math.max(v.z,NEAR);
+      return {slot,depth:v.z,x:viewport.clientWidth/2+v.x*scale-item.width*scale/2,
+        y:projectionCenterY()+v.y*scale-item.height*scale/2,w:item.width*scale,h:item.height*scale};
+    };
+    const active=project(selected), iw=info.offsetWidth, ih=info.offsetHeight;
+    const ix=stacked()?active.x+(active.w-iw)/2:active.x+active.w+gap();
+    const iy=stacked()?active.y+active.h+gap():active.y+(active.h-ih)/2;
+    const safe={left:Math.min(active.x,ix)-20,top:Math.min(active.y,iy)-20,
+      right:Math.max(active.x+active.w,ix+iw)+20,bottom:Math.max(active.y+active.h,iy+ih)+20};
+    for (const slot of slots) {
+      if (slot===selected) continue;
+      const p=project(slot);
+      if (p.depth<=NEAR || p.x>=safe.right || p.x+p.w<=safe.left || p.y>=safe.bottom || p.y+p.h<=safe.top) continue;
+      const moves=[{x:safe.left-p.x-p.w,y:0},{x:safe.right-p.x,y:0},
+        {x:0,y:safe.top-p.y-p.h},{x:0,y:safe.bottom-p.y}]
+        .filter(m=>p.x+m.x>=8 && p.x+m.x+p.w<=viewport.clientWidth-8);
+      result.set(slot,moves.sort((a,b)=>Math.hypot(a.x,a.y)-Math.hypot(b.x,b.y))[0] || {x:0,y:safe.bottom-p.y});
+    }
+    return result;
+  };
+  const stop = () => {
+    if (animation) cancelAnimationFrame(animation);
+    animation = 0;
+    cameraTransition = false;
+  };
   const stopHover = () => {
     if (hoverFrame) cancelAnimationFrame(hoverFrame);
     hoverFrame = 0;
@@ -132,10 +215,23 @@
   };
   const animateTo = (target, duration = 700) => {
     stop();
-    if (reducedMotion.matches || duration === 0) { setCamera(target); return; }
+    if (layoutFrame) cancelAnimationFrame(layoutFrame);
+    layoutFrame = 0;
+    const startOffsets = new Map(slots.map(slot => [slot, {...(offsets.get(slot) || {x:0,y:0})}]));
+    const endOffsets = new Map(slots.map(slot => [slot, {...(plannedOffsets.get(slot) || {x:0,y:0})}]));
+    const placeOffsets = progress => {
+      for (const slot of slots) {
+        const a = startOffsets.get(slot), b = endOffsets.get(slot);
+        offsets.set(slot, {x:a.x+(b.x-a.x)*progress,y:a.y+(b.y-a.y)*progress});
+      }
+    };
+    if (reducedMotion.matches || duration === 0) { placeOffsets(1); setCamera(target); return; }
     const start = snapshot(), begun = performance.now();
+    cameraTransition = true;
     const frame = now => {
-      const t = clamp((now-begun)/duration,0,1), e = 1-Math.pow(1-t,4);
+      // 카메라와 회피 보정을 하나의 타임라인으로 움직인다. 시작·끝의 속도는 0이다.
+      const t = clamp((now-begun)/duration,0,1), e = t*t*t*(t*(t*6-15)+10);
+      placeOffsets(e);
       setCamera({ position: {
         x:start.position.x+(target.position.x-start.position.x)*e,
         y:start.position.y+(target.position.y-start.position.y)*e,
@@ -145,12 +241,28 @@
         y:start.center.y+(target.center.y-start.center.y)*e,
         z:start.center.z+(target.center.z-start.center.z)*e,
       }, radius:start.radius+(target.radius-start.radius)*e });
-      animation = t < 1 ? requestAnimationFrame(frame) : 0;
+      if (t < 1) animation = requestAnimationFrame(frame);
+      else { animation = 0; cameraTransition = false; }
     };
     animation = requestAnimationFrame(frame);
   };
   const select = slot => {
     selected = slot;
+    if (slot) {
+      const [name, member, major] = people[slot.dataset.person];
+      nameLabel.textContent = name;
+      memberLabel.textContent = member;
+      majorLabel.textContent = major;
+      info.hidden = false;
+      nameLabel.style.fontSize = "";
+      info.style.width = `${infoWidth()}px`;
+      const size = parseFloat(getComputedStyle(nameLabel).fontSize);
+      const available = info.clientWidth;
+      if (nameLabel.scrollWidth > available) {
+        nameLabel.style.fontSize = `${Math.max(20, size * available / nameLabel.scrollWidth)}px`;
+      }
+      info.hidden = false;
+    } else { info.hidden = true; plannedOffsets = new Map(); }
     for (const item of slots) {
       item.classList.toggle('is-selected', item === slot);
       item.setAttribute('aria-pressed', String(item === slot));
@@ -161,11 +273,20 @@
     stopHover();
     const item = models.get(slot);
     select(slot);
-    const scale = clamp(Math.min(viewport.clientWidth*.68/item.width, viewport.clientHeight*.62/item.height),1.05,1.55);
-    const radius = FOCAL/scale;
-    const center = { x:item.x, y:item.y, z:item.z };
+    info.style.width = `${infoWidth()}px`;
+    const scale = Math.min(1.55,
+      (stacked() ? viewport.clientWidth-40 : viewport.clientWidth-infoWidth()-gap()-64)/item.width,
+      (stacked() ? viewport.clientHeight-info.offsetHeight-gap()-100 : viewport.clientHeight*.62)/item.height);
+    const safeScale = Math.max(.4, scale);
+    const radius = FOCAL/safeScale;
+    const shift = stacked()
+      ? {x:0,y:(info.offsetHeight+gap())/2/safeScale,z:0}
+      : {x:(infoWidth()+gap())/2/safeScale,y:0,z:0};
+    const center = add(item, rotate(camera.orientation,shift));
     const position = sub(center, rotate(camera.orientation,{ x:0, y:0, z:radius }));
-    animateTo({ position, orientation:{ ...camera.orientation }, center, radius }, duration);
+    const target = { position, orientation:{ ...camera.orientation }, center, radius };
+    plannedOffsets = planBackground(target);
+    animateTo(target, duration);
   };
 
   // Rotate around the current scene center. Both axes are camera-local, so a
@@ -227,15 +348,37 @@
     animation = requestAnimationFrame(frame);
   };
   const zoomAt = (p, depth, baseCamera, anchorPoint, anchorDepth) => {
-    const nextDepth = clamp(depth,ORBIT_MIN,ORBIT_MAX);
+    let nextDepth = clamp(depth,ORBIT_MIN,ORBIT_MAX);
+    if (selected) {
+      const item = models.get(selected);
+      const maxScale = Math.max(.4, Math.min(1.55,
+        (stacked() ? viewport.clientWidth-40 : viewport.clientWidth-infoWidth()-gap()-64)/item.width,
+        (stacked() ? viewport.clientHeight-info.offsetHeight-gap()-100 : viewport.clientHeight*.62)/item.height));
+      nextDepth = Math.max(nextDepth, baseCamera.radius + FOCAL/maxScale - local(item,baseCamera).z);
+    }
     const anchor = worldAt(anchorPoint,anchorDepth,baseCamera);
     const offset = rotate(baseCamera.orientation, {
       x:(p.x-viewport.clientWidth/2)*nextDepth/FOCAL,
       y:(p.y-projectionCenterY())*nextDepth/FOCAL, z:nextDepth,
     });
-    const position = sub(anchor,offset);
+    let position = sub(anchor,offset);
+    if (selected) {
+      // 핀치의 포인터 기준점을 유지하되 사진·정보가 화면 밖으로 나가지 않게 제한한다.
+      const item = models.get(selected);
+      const v = inverse(baseCamera.orientation,sub(item,position));
+      const scale = FOCAL / v.z, w = item.width*scale, h = item.height*scale;
+      const totalW = stacked() ? Math.max(w,infoWidth()) : w+gap()+infoWidth();
+      const totalH = stacked() ? h+gap()+info.offsetHeight : Math.max(h,info.offsetHeight);
+      const left = viewport.clientWidth/2+v.x*scale-(stacked() ? totalW/2 : w/2);
+      const top = projectionCenterY()+v.y*scale-(stacked() ? h/2 : totalH/2);
+      const dx = clamp(left,16,Math.max(16,viewport.clientWidth-totalW-16))-left;
+      const dy = clamp(top,16,Math.max(16,viewport.clientHeight-totalH-16))-top;
+      position = sub(position,rotate(baseCamera.orientation,{x:dx/scale,y:dy/scale,z:0}));
+    }
     const center = add(position,rotate(baseCamera.orientation,{ x:0, y:0, z:nextDepth }));
-    setCamera({ position, orientation:baseCamera.orientation, center, radius:nextDepth });
+    const target = { position, orientation:baseCamera.orientation, center, radius:nextDepth };
+    plannedOffsets = planBackground(target);
+    setCamera(target);
   };
   const startPinch = () => {
     const [a,b] = [...pointers.values()];
@@ -279,7 +422,7 @@
       const [a,b] = [...pointers.values()], mid = middle(a,b);
       const depth = clamp(pinch.depth/(distance(a,b)/pinch.distance),ORBIT_MIN,ORBIT_MAX);
       zoomAt(mid,depth,pinch.camera,pinch.center,pinch.depth);
-      select(null); return;
+      return;
     }
     if (!gesture) return;
     if (!gesture.moved && distance(p,gesture.start) < THRESHOLD) return;
@@ -341,7 +484,6 @@
     const base = snapshot();
     const depth = base.radius*Math.exp(clamp(e.deltaY,-120,120)*0.0025);
     zoomAt(p,depth,base,p,base.radius);
-    select(null);
   }, { passive:false });
   // Safari exposes the same trackpad movement as gesture scale events.
   viewport.addEventListener('gesturestart', e => {
@@ -356,7 +498,6 @@
     const scale = Math.max(e.scale/gesturePinch.scale,0.1);
     zoomAt(point(e),gesturePinch.camera.radius/scale,
       gesturePinch.camera,gesturePinch.point,gesturePinch.camera.radius);
-    select(null);
   }, { passive:false });
   viewport.addEventListener('gestureend', e => {
     if (!gesturePinch) return;
@@ -368,6 +509,10 @@
       e.preventDefault(); reset();
     }
   });
-  new ResizeObserver(render).observe(viewport);
+  new ResizeObserver(() => {
+    if (selected) focus(selected, 0);
+    else render();
+  }).observe(viewport);
+  document.fonts.ready.then(render);
   select(null); render();
 })();

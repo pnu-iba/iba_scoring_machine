@@ -177,7 +177,7 @@
         window.IBA.api(signup ? "/api/signup" : "/api/login", {
           method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
         }),
-        wait(2500),
+        wait(1700),
       ]);
       if (!r.ok) throw new Error((r.body && r.body.message)
         || (signup ? `가입하지 못했습니다 (HTTP ${r.status})` : `Couldn’t sign in (HTTP ${r.status}).`));

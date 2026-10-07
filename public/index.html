@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ko">
 <head>
+  <script src="/assets/local-preview.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>IBA — Regression Project Scoring Service</title>
@@ -42,7 +43,7 @@
 <!-- 오른쪽 위: 메뉴 버튼과 같은 높이에서 마주 보는 두 줄 -->
 <nav class="corner-links" aria-label="Quick links">
   <a href="/login.html" id="signIn">Sign in</a>
-  <a href="/submit.html#rules">How to use?</a>
+  <a href="/submit.html">How to use?</a>
 </nav>
 
 <!-- 사이드바가 열렸을 때 본문을 아주 살짝 눌러 주는 막 -->
@@ -132,7 +133,7 @@
   const who = document.createElement("a");
   who.className = "who";
   who.href = "/mypage.html";
-  who.textContent = `[${user.team}] ${user.nickname}`;
+  who.textContent = `[Team ${user.team}] ${user.nickname}`;
   const out = document.createElement("button");
   out.type = "button";
   out.textContent = "Sign out";

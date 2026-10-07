@@ -200,8 +200,8 @@ main.page.auth-main {
   display: flex; flex-direction: column; justify-content: center; align-items: center;
   padding: 72px 8px 32px 88px;   /* 왼쪽을 더 띄워 폼을 사진 쪽으로 40px 옮긴다 */
 }
-/* 로그인 페이지에서는 오른쪽 위 IBA 워드마크를 숨긴다 */
-body:has(.auth-main) .corner-links .home-mark { display: none; }
+/* 로그인·회원가입 화면에서는 우측 상단 링크를 표시하지 않는다. */
+body:has(.auth-main) .corner-links { display: none; }
 /* 사진: 화면 위아래에 똑같이 20px씩 띄우고 그 사이 높이를 꽉 채운다(하단 바와는 좌우로 겹치지 않는다).
    오른쪽 절반의 가운데에 선다 */
 .auth-visual {
@@ -381,7 +381,6 @@ main.page.desk-main { max-width: none; padding: 68px 40px 0; }
 .desk-thumb svg {
   width: 100%; height: 100%; display: block;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.18)) drop-shadow(0 3px 6px rgba(0, 0, 0, 0.12));
-  transition: transform 0.18s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.18s;
 }
 .desk-label {
   max-width: 100%; padding: 1px 7px; border-radius: 5px;
@@ -392,11 +391,10 @@ main.page.desk-main { max-width: none; padding: 68px 40px 0; }
 .desk-icon.selected .desk-thumb, .desk-icon:focus-visible .desk-thumb {
   background: rgba(21, 24, 29, 0.08); border-color: rgba(21, 24, 29, 0.14);
 }
-.desk-icon.selected .desk-thumb svg, .desk-icon:focus-visible .desk-thumb svg {
-  transform: translateY(-3px) scale(1.08);
-  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2)) drop-shadow(0 8px 12px rgba(0, 0, 0, 0.22));
+.desk-icon.selected .desk-label, .desk-icon:focus-visible .desk-label {
+  background: #0a64d8;
+  color: #fff;
 }
-.desk-icon.selected .desk-label, .desk-icon:focus-visible .desk-label { font-weight: 700; }
 
 /* Dock: 화면 아래 가운데의 반투명 유리 막대. 앱 아이콘은 장식이고, 커서 가까운 것일수록 커진다(--s). */
 .dock {
@@ -579,3 +577,14 @@ body.embed main:has(.apple-layout) { padding: 16px; }
 .crew .role { font-size: 12px; font-weight: 600; color: var(--muted); }
 .crew .name { font-size: 15px; font-weight: 600; color: var(--ink); }
 .crew .note { font-size: 13px; color: var(--ink-2); }
+
+/* 가입·로그인 처리 중 버튼 전체를 반투명하게 표시한다. */
+.auth-main #submitBtn {
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 220ms ease;
+}
+.auth-main #submitBtn:disabled { opacity: 1; }
+.auth-main #submitBtn.is-loading { opacity: 0.55; }
+@media (prefers-reduced-motion: reduce) {
+  .auth-main #submitBtn { transition: none; }
+}

@@ -110,12 +110,14 @@
     me.then(renderAuth);
   }
 
-  // 오른쪽 위. 본문 페이지는 랜딩으로 돌아가는 IBA 워드마크를 늘 두고(renderShell),
-  // Sign in·How to use?는 랜딩에만 둔다. 로그인했으면 그 아래에 내 이름(마이페이지로)과 로그아웃.
+  // 본문 페이지의 우측 상단: 비로그인 시 가입 진입, 로그인 시 계정·로그아웃 두 줄.
   function renderAuth(user) {
-    if (!user) return;
     const corner = document.getElementById("cornerLinks");
-    corner.insertAdjacentHTML("beforeend", `<a class="who" href="/mypage.html">[${esc(user.team)}] ${esc(user.nickname)}</a><button type="button" id="logoutBtn">Sign out</button>`);
+    if (!user) {
+      corner.insertAdjacentHTML("beforeend", `<a id="signIn" href="${authLink("login")}">Sign in</a>`);
+      return;
+    }
+    corner.insertAdjacentHTML("beforeend", `<a class="who" href="/mypage.html">[Team ${esc(user.team)}] ${esc(user.nickname)}</a><button type="button" id="logoutBtn">Sign out</button>`);
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await api("/api/logout", { method: "POST" });
       location.reload();

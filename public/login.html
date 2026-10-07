@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ko">
 <head>
+  <script src="/assets/local-preview.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>로그인 — IBA Scoring Machine</title>
@@ -10,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&family=Playfair+Display:wght@700;900&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/assets/chrome.css">
-  <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/style.css?v=20261007-auth-opacity">
   <script src="/assets/icons.js" defer></script>
   <script src="/assets/app.js" defer blocking="render"></script>
   <script src="/assets/chrome.js" defer blocking="render"></script>
@@ -64,6 +65,7 @@
   const ERASE_MS = 55;    // 글자 하나 지울 때
   const STEP_MS = 420;    // 입력 칸이 나타난 뒤 다음 단계까지 쉬는 시간
   let mode = "signin";
+  let submitting = false;
   let run = 0;            // 바꾸는 도중 다시 누르면 앞선 움직임을 멈추기 위한 번호
 
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -139,10 +141,16 @@
   }
 
   // 팀 번호 칸에는 숫자만 남긴다
-  form.team.addEventListener("input", () => { form.team.value = form.team.value.replace(/\D/g, ""); });
+  if (window.IBA_LOCAL_PREVIEW) {
+    form.noValidate = true;
+    form.team.removeAttribute("pattern");
+  } else {
+    form.team.addEventListener("input", () => { form.team.value = form.team.value.replace(/\D/g, ""); });
+  }
 
   toggle.addEventListener("click", (e) => {
     e.preventDefault();
+    if (submitting) return;
     if (mode === "signin") toSignup(); else toSignin();
   });
 
@@ -151,19 +159,41 @@
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (submitting) return;
+    submitting = true;
+    ++run; // 진행 중인 버튼 문구 애니메이션을 멈춘다
+    btnLabel.classList.remove("typing");
     const signup = mode === "signup";
     const body = { username: form.username.value, password: form.password.value };
     if (signup) { body.nickname = form.nickname.value; body.team = form.team.value; }
     btn.disabled = true;
+    btn.classList.add("is-loading");
+    btn.setAttribute("aria-busy", "true");
+    btnLabel.setAttribute("role", "status");
+    btnLabel.textContent = signup ? "Signing up…" : "Signing in…";
     errorEl.hidden = true;
-    const r = await window.IBA.api(signup ? "/api/signup" : "/api/login", {
-      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-    });
-    btn.disabled = false;
-    if (r.ok) { location.href = window.IBA.nextPath(); return; }
-    errorEl.textContent = (r.body && r.body.message)
-      || (signup ? `가입하지 못했습니다 (HTTP ${r.status})` : `Couldn\u2019t sign in (HTTP ${r.status}).`);
-    errorEl.hidden = false;
+    try {
+      const [r] = await Promise.all([
+        window.IBA.api(signup ? "/api/signup" : "/api/login", {
+          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+        }),
+        wait(2500),
+      ]);
+      if (!r.ok) throw new Error((r.body && r.body.message)
+        || (signup ? `가입하지 못했습니다 (HTTP ${r.status})` : `Couldn’t sign in (HTTP ${r.status}).`));
+      btn.classList.remove("is-loading");
+      btn.setAttribute("aria-busy", "false");
+      if (signup) { btnLabel.textContent = "Success!"; await wait(1000); }
+      location.assign("/");
+    } catch (error) {
+      errorEl.textContent = error.message || "연결에 실패했습니다. 다시 시도해 주세요.";
+      errorEl.hidden = false;
+      btn.classList.remove("is-loading");
+      btn.setAttribute("aria-busy", "false");
+      btnLabel.textContent = signup ? "Sign up" : "Sign in";
+      btn.disabled = false;
+      submitting = false;
+    }
   });
 })();
 </script>

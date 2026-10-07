@@ -12,12 +12,12 @@
   <link rel="stylesheet" href="/assets/chrome.css">
   <link rel="stylesheet" href="/assets/style.css">
   <script src="/assets/icons.js" defer></script>
-  <script src="/assets/app.js" defer></script>
-  <script src="/assets/chrome.js" defer></script>
+  <script src="/assets/app.js" defer blocking="render"></script>
+  <script src="/assets/chrome.js" defer blocking="render"></script>
   <script src="/assets/desktop.js" defer></script>
 </head>
 <body>
-<main class="desk-main">
+<main class="page desk-main">
 <!-- macOS 화면: 바탕보다 조금 짙은 색과 그림자로 구분한 둥근 판.
      위쪽 바탕에는 게임 아이콘(한 번 누르면 선택, 두 번 누르면 desktop.js가 그 게임을 창에 담아 연다, 끌면 옮겨진다),
      아래쪽 Dock에는 macOS 기본 앱을 닮은 장식 아이콘(누르면 아무 일도 없다, 올리면 커진다).

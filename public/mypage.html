@@ -12,11 +12,11 @@
   <link rel="stylesheet" href="/assets/chrome.css">
   <link rel="stylesheet" href="/assets/style.css">
   <script src="/assets/icons.js" defer></script>
-  <script src="/assets/app.js" defer></script>
-  <script src="/assets/chrome.js" defer></script>
+  <script src="/assets/app.js" defer blocking="render"></script>
+  <script src="/assets/chrome.js" defer blocking="render"></script>
 </head>
 <body>
-<main>
+<main class="page">
 <section class="card" id="needLogin" hidden>
   <div class="card-head"><h2>로그인이 필요합니다</h2></div>
   <p class="lead">내 팀의 기록을 보려면 로그인하세요.</p>

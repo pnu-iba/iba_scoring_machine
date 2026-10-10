@@ -92,7 +92,7 @@
       if (here !== "/thanks.html" && here !== "/about.html") main.insertAdjacentHTML("afterbegin", `
         <header class="page-head${variant}">
           <p class="page-eyebrow">Regression Project Scoring Service</p>
-          <h1 class="page-title">${title}</h1>
+          ${here === "/mypage.html" ? "" : `<h1 class="page-title">${title}</h1>`}
         </header>`);
     }
 

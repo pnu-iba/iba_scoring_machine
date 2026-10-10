@@ -113,7 +113,7 @@ def require_admin(user: User = Depends(require_user)) -> User:
 
 
 def _user_body(u: User) -> dict:
-    return {"username": u.username, "nickname": u.nickname, "team": u.team_display, "is_admin": u.is_admin}
+    return {"username": u.username, "nickname": "Admin" if u.is_admin else u.nickname, "team": u.team_display, "is_admin": u.is_admin}
 
 
 def _set_session(response: Response, u: User) -> None:
@@ -251,14 +251,14 @@ def _dev_any_login() -> bool:
 
 def _dev_user_for(store: Store, raw: str, password: str, now: datetime) -> User:
     """개발용: 아무 아이디·비밀번호로 로그인한다. 처음 보는 아이디면 그 이름으로 계정을 바로 만든다.
-    아이디가 admin이면 관리자 계정으로 만든다."""
+    아이디가 admin 또는 iba_admin이면 관리자 계정으로 만든다."""
     username = raw.strip().lower() or "guest"
     user = store.get_user_by_username(username)
     if user is None:
         user = User(
             id=0, username=username, password_hash=auth.hash_password(password or "dev"),
             nickname=(raw.strip() or "guest")[:40], team_key="0", team_display="0", created_at=now,
-            is_admin=username == "admin",
+            is_admin=username in {"admin", "iba_admin"},
         )
         store.create_user(user)
     return user

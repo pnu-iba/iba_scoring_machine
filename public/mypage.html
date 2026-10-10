@@ -18,13 +18,9 @@
 </head>
 <body>
 <main class="page">
-<section class="card" id="needLogin" hidden>
-  <div class="card-head"><h2>로그인이 필요합니다</h2></div>
-  <p class="lead">내 팀의 기록을 보려면 로그인하세요.</p>
-  <div class="actions">
-    <a class="btn primary" id="loginLink" href="/login.html">로그인</a>
-    <a class="btn" id="signupLink" href="/login.html#signup">회원가입</a>
-  </div>
+<section id="needLogin" hidden>
+  <h2>Sign in required</h2>
+  <a class="btn primary" id="loginLink" href="/login.html">Sign in</a>
 </section>
 
 <div id="content" hidden>
@@ -60,7 +56,6 @@
     const user = await window.IBA.me;
     if (!user) {
       document.getElementById("loginLink").href = window.IBA.authLink("login");
-      document.getElementById("signupLink").href = window.IBA.authLink("signup");
       document.getElementById("needLogin").hidden = false;
       return;
     }

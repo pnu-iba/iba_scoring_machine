@@ -11,7 +11,7 @@
     ["/about.html", "About us"],
     ["/thanks.html", "Special thanks to"],
   ];
-  const AUTH_TITLES = { "/login.html": "Sign in" };
+  const AUTH_TITLES = { "/login.html": "Sign in", "/how-to-use.html": "How to use" };
   // 관리자 계정에만 사이드바에 보인다(renderAuth).
   const ADMIN_PAGE = ["/admin.html", "Admin"];
 
@@ -89,7 +89,7 @@
       // 게임 화면은 캔버스가 한 화면에 들어오도록 제목을 줄인다.
       const variant = here in AUTH_TITLES ? " centered" : here.startsWith("/games/") ? " compact" : "";
       if (variant === " compact") main.classList.add("compact");
-      if (here !== "/thanks.html" && here !== "/about.html") main.insertAdjacentHTML("afterbegin", `
+      if (here !== "/thanks.html" && here !== "/about.html" && here !== "/submit.html") main.insertAdjacentHTML("afterbegin", `
         <header class="page-head${variant}">
           <p class="page-eyebrow">Regression Project Scoring Service</p>
           ${here === "/mypage.html" ? "" : `<h1 class="page-title">${title}</h1>`}

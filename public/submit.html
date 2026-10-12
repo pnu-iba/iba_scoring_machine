@@ -4,7 +4,7 @@
   <script src="/assets/local-preview.js"></script>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>채점 — IBA Scoring Machine</title>
+  <title>Submit — IBA Scoring Machine</title>
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" href="/favicon.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,14 +12,17 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&family=Playfair+Display:wght@700;900&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/assets/chrome.css">
   <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/submit.css">
   <script src="/assets/icons.js" defer></script>
   <script src="/assets/app.js" defer blocking="render"></script>
   <script src="/assets/chrome.js" defer blocking="render"></script>
+  <script src="/assets/submit.js" defer></script>
 </head>
 <body>
-<main class="page">
-<div class="cols">
-  <div>
+<main class="page submit-page">
+<div class="submit-divider" aria-hidden="true"></div>
+<div class="submit-layout">
+<div class="submit-controls">
   <section class="card" id="needLogin" hidden>
   <div class="card-head"><h2>로그인이 필요합니다</h2></div>
   <p class="lead">모델을 제출하려면 로그인하세요. 계정이 없으면 팀 번호를 적어 가입하면 됩니다.</p>
@@ -29,180 +32,35 @@
   </div>
   </section>
 
-  <section class="card" id="formCard" hidden>
-  <div class="card-head"><h2>모델 제출</h2></div>
-  <p class="lead">예측 결과 CSV를 올리면 바로 점수가 나옵니다. <span id="who"></span></p>
-
-  <form class="stack" id="form" novalidate>
-    <label>제출 파일
-      <input type="file" name="file" id="file" accept=".csv,text/csv" required>
-      <span class="hint">헤더 <code>id,price</code>, 39,085행, <a href="/data/sample_submission.csv" download>sample_submission.csv</a>와 같은 순서. 2 MB 이하.</span>
-    </label>
-    <div class="row">
-      <button type="submit" class="primary" id="submitBtn">채점하기</button>
-      <span class="quota" id="quota"></span>
-    </div>
-  </form>
+  <section id="formCard" hidden>
+    <form id="form" novalidate>
+      <input type="file" name="file" id="file" accept=".csv,text/csv" hidden>
+      <button type="button" class="file-box" id="submitBtn">
+        <svg class="file-box-icon" viewBox="0 0 48 56" fill="none" aria-hidden="true">
+          <path d="M9 2h20l12 12v38a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/>
+          <path d="M29 2v12h12M16 28h16M16 36h16M16 44h10"/>
+        </svg>
+        <span id="fileBoxLabel">add file</span>
+      </button>
+    </form>
   </section>
+  <div class="result" id="result" hidden></div>
 
-  <section class="card result" id="result" hidden aria-live="polite"></section>
-  </div>
-
-  <div>
-  <section class="card">
-  <div class="card-head"><h2>형식 안내</h2></div>
-  <ul>
-    <li>파일은 UTF-8 CSV. BOM·CRLF는 괜찮습니다.</li>
-    <li><code>id</code> 열은 test.csv의 순서와 값이 모두 같아야 합니다. <strong>정렬하거나 섞지 마세요.</strong> 채점은 행 순서로 짝지어 이루어집니다.</li>
-    <li><code>price</code>는 빈 값 없이 모두 숫자여야 합니다. 음수는 0으로 바꿔 채점합니다.</li>
-    <li>형식 오류로 거부된 제출은 오늘 횟수에 들어가지 않습니다.</li>
-  </ul>
-  </section>
-  </div>
 </div>
-
-<!-- 과제·데이터·채점 방식: 예전 홈에 있던 안내를 제출 페이지로 옮겼다 -->
-  <section class="card">
-    <div class="card-head"><h2>과제</h2></div>
-    <p class="lead">영국 중고차 거래 데이터로 차량 가격(<code>price</code>, 파운드)을 예측하는 회귀 모델을 만듭니다. <code>train.csv</code>로 학습하고, <code>test.csv</code>의 각 차량에 대한 예측 가격을 제출합니다.</p>
-  </section>
-
-  <section class="card flush" id="data">
-    <div class="card-head"><h2>데이터</h2></div>
-    <div class="table-wrap">
-    <table class="downloads">
-      <thead><tr><th>파일</th><th>내용</th><th class="num">행</th></tr></thead>
-      <tbody>
-        <tr><td><a href="/data/train.csv" download>train.csv</a></td><td>학습 데이터. <code>brand, model, year, transmission, mileage, fuelType, tax, mpg, engineSize, price</code>. <code>mileage</code>·<code>tax</code>·<code>mpg</code>에 결측이 있습니다.</td><td class="num">58,627</td></tr>
-        <tr><td><a href="/data/test.csv" download>test.csv</a></td><td>예측 대상. <code>id</code> + 위와 같은 특성, <code>price</code> 없음. 결측 없음.</td><td class="num">39,085</td></tr>
-        <tr><td><a href="/data/sample_submission.csv" download>sample_submission.csv</a></td><td>제출 형식 예시. <code>id,price</code> 두 열, test.csv와 같은 순서. price는 무작위 값입니다.</td><td class="num">39,085</td></tr>
-        <tr><td><a href="/data/brand_model.csv" download>brand_model.csv</a></td><td><code>brand</code>·<code>model</code>의 전체 클래스 목록. 인코더를 fit할 때 쓰면 train에 없는 model도 처리할 수 있습니다.</td><td class="num">195</td></tr>
-      </tbody>
-    </table>
+<section class="submit-sequence" aria-label="채점 결과">
+  <div class="sequence-idle" id="sequenceIdle" aria-hidden="true"><span class="sequence-caret">_</span></div>
+  <div id="sequenceContent" hidden>
+    <p class="sequence-label">Visual sequence</p>
+    <div class="sequence-viewport" id="sequenceViewport" aria-hidden="true"><pre id="sequenceText"><span class="sequence-caret" id="typingCaret" hidden>_</span></pre></div>
+    <div class="sequence-outcome" id="sequenceOutcome" hidden>
+      <p class="sequence-label">Public</p>
+      <p class="sequence-score" id="sequenceScore"></p>
     </div>
-    <div class="card-foot">test.csv의 id는 0부터 39,084까지의 행 번호입니다. 제출 파일도 test.csv와 같은 행 순서를 유지하세요.</div>
-  </section>
-
-  <section class="card" id="rules">
-    <div class="card-head"><h2>채점 방식</h2></div>
-    <dl class="facts">
-      <dt>주 지표</dt><dd><strong>RMSE</strong>: 리더보드 순위 기준. 낮을수록 좋음.</dd>
-      <dt>보조 지표</dt><dd><strong>R²</strong>: 참고용. 1에 가까울수록 좋음.</dd>
-      <dt>중간 채점</dt><dd><strong>Public</strong>: test.csv 39,085행 중 무작위로 고른 30%(중복 없이)로 매긴 점수. 제출 결과와 대회 중 리더보드에 이 점수가 나옵니다. 어느 행이 public인지는 공개하지 않습니다.</dd>
-      <dt>최종 채점</dt><dd><strong>Private</strong>: 마감 뒤 test.csv 전체로 다시 채점해 최종 순위를 정합니다. 팀마다 public 점수가 가장 좋았던 제출 1건이 쓰입니다.</dd>
-      <dt>음수 예측</dt><dd>0으로 바꿔 채점하고 몇 건이었는지 알려줍니다.</dd>
-      <dt>기준선</dt><dd>sample_submission.csv를 그대로 내면 RMSE 약 13,190 (아무것도 안 한 점수).</dd>
-    </dl>
-
-    <h3>Public과 Private를 나누는 이유</h3>
-    <p class="lead">테스트셋은 모델이 한 번도 보지 못한 데이터여야 일반화 성능을 제대로 잴 수 있습니다. 그런데 제출할 때마다 점수가 보이면 그 점수가 오르는 쪽으로 모델을 고치게 되고, 테스트셋이 사실상 validation set 역할을 하게 됩니다. 그래서 대회 중에는 테스트셋의 일부로만 점수를 보여주고, 최종 순위는 대회 중 점수에 쓰이지 않은 70%가 들어간 전체 데이터로 매깁니다. public 점수에만 맞춘 모델은 최종 순위가 떨어질 수 있으니 train에서 직접 나눈 validation 점수도 함께 확인하세요.</p>
-
-    <h3>제출 규칙</h3>
-    <ul>
-      <li>형식은 <code>sample_submission.csv</code>와 동일: 헤더 <code>id,price</code>, 데이터 39,085행, test.csv와 같은 순서.</li>
-      <li>팀당 <strong>하루 <span id="limitRule">3</span>회</strong>. 한국 시간 자정에 초기화됩니다. 형식 오류로 거부된 제출은 횟수에 들어가지 않습니다.</li>
-      <li>제출하려면 로그인해야 합니다. 가입할 때 같은 팀 번호를 적은 사람끼리 한 팀이 됩니다. 팀 번호는 숫자만 받으며 3과 03은 같은 팀입니다.</li>
-      <li>리더보드에는 팀별로 public 점수가 가장 좋은 기록 한 건이 올라가고, 이 제출이 최종 채점에 쓰입니다.</li>
-      <li>대회 마지막 날 자정(한국 시간)이 지나면 제출이 막히고 리더보드가 최종 순위로 바뀝니다.</li>
-      <li>가입할 때 다른 팀의 번호를 적지 마세요. 그 팀과 하루 제출 횟수를 나눠 쓰게 됩니다.</li>
-    </ul>
-
-    <h3>시작 코드</h3>
-    <p class="lead">저장소의 <code>scoring_machine/regression/IBA_reg_comp_BASELINE.ipynb</code>에 데이터 로드 → 인코딩 → DecisionTreeRegressor → 제출 파일 생성까지의 베이스라인이 있습니다.</p>
-  </section>
+  </div>
+</section>
+</div>
+<p class="submit-announcement" id="submitAnnouncement" role="status" aria-live="polite" aria-atomic="true"></p>
 </main>
 
-<script>
-(function () {
-  const form = document.getElementById("form");
-  const fileEl = document.getElementById("file");
-  const btn = document.getElementById("submitBtn");
-  const quotaEl = document.getElementById("quota");
-  const resultEl = document.getElementById("result");
-
-  document.addEventListener("DOMContentLoaded", async () => {
-    // 하루 제출 횟수는 관리자 페이지에서 바뀔 수 있다.
-    window.IBA.api("/api/contest").then((r) => {
-      if (r.ok) document.getElementById("limitRule").textContent = r.body.daily_limit;
-    });
-    const user = await window.IBA.me;
-    if (!user) {
-      document.getElementById("loginLink").href = window.IBA.authLink("login");
-      document.getElementById("signupLink").href = window.IBA.authLink("signup");
-      document.getElementById("needLogin").hidden = false;
-      return;
-    }
-    document.getElementById("who").textContent = `${user.team} 팀 · ${user.nickname} 이름으로 제출됩니다.`;
-    document.getElementById("formCard").hidden = false;
-    loadQuota();
-  });
-
-  async function loadQuota() {
-    const r = await window.IBA.api("/api/quota");
-    if (!r.ok) { quotaEl.textContent = ""; return; }
-    const q = r.body;
-    quotaEl.innerHTML = `오늘 <strong>${q.used_today}/${q.limit}</strong>회 사용, <strong>${q.remaining_today}</strong>회 남음`;
-  }
-
-  const esc = (s) => window.IBA.esc(s);
-
-  function showError(title, detail) {
-    resultEl.hidden = false;
-    resultEl.innerHTML = `<p class="msg-error"><strong>${esc(title)}</strong></p>${detail ? `<p>${esc(detail)}</p>` : ""}`;
-  }
-
-  function showScore(b) {
-    const f = window.IBA.fmt;
-    const clipped = b.negative_clipped > 0
-      ? `<p class="msg-warn">음수 예측 ${f.int(b.negative_clipped)}건을 0으로 바꿔 채점했습니다.</p>` : "";
-    resultEl.hidden = false;
-    resultEl.innerHTML = `
-      <p class="msg-ok"><strong>채점 완료</strong>: ${esc(b.team)}</p>
-      <div class="score">
-        <div><div class="label">Public RMSE</div><div class="value">${f.rmse(b.rmse)}</div></div>
-        <div><div class="label">R²</div><div class="value sub">${f.r2(b.r2)}</div></div>
-        <div><div class="label">현재 팀 순위</div><div class="value sub">${b.rank ?? "-"}위</div></div>
-      </div>
-      ${clipped}
-      <p class="small">test.csv의 30%로 매긴 public 점수입니다. 최종 순위는 마감 뒤 전체 데이터로 다시 매깁니다.</p>
-      <p class="small">오늘 ${b.remaining_today}회 남음. <a href="/leaderboard.html">리더보드 보기</a></p>`;
-  }
-
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const file = fileEl.files[0];
-    if (!file) return showError("제출 파일을 선택하세요.");
-    if (file.size > 2 * 1024 * 1024) return showError("파일이 2 MB를 넘습니다.", "정상 제출은 약 0.5 MB입니다.");
-
-    const fd = new FormData();
-    fd.append("file", file);
-    btn.disabled = true; btn.textContent = "채점 중…";
-    resultEl.hidden = true;
-    try {
-      const r = await window.IBA.api("/api/submit", { method: "POST", body: fd });
-      if (r.ok) {
-        showScore(r.body);
-      } else if (r.status === 401) {
-        showError("로그인이 풀렸습니다.", "다시 로그인한 뒤 제출하세요.");
-      } else if (r.status === 503 && r.body && r.body.message) {
-        showError("채점 준비 중입니다.", r.body.message);
-      } else if (r.status === 403 && r.body && r.body.error_code === "contest_closed") {
-        showError("대회가 마감되었습니다.", "최종 순위는 리더보드에서 확인하세요.");
-      } else if (r.status === 429) {
-        showError(r.body.message, "초기화: " + window.IBA.fmt.time(r.body.resets_at) + " (KST)");
-      } else if (r.body && r.body.message) {
-        showError("제출이 거부되었습니다" + (r.body.row ? ` (${r.body.row}행)` : ""), r.body.message);
-      } else {
-        showError("서버 오류가 났습니다.", `HTTP ${r.status}`);
-      }
-    } catch (err) {
-      showError("네트워크 오류가 났습니다.", String(err));
-    } finally {
-      btn.disabled = false; btn.textContent = "채점하기";
-      loadQuota();
-    }
-  });
-})();
-</script>
 </body>
 </html>

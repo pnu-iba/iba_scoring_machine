@@ -217,6 +217,8 @@ body:has(.auth-main) .corner-links { display: none; }
 /* 줄 간격은 gap 대신 위 여백으로 준다. 그래야 접힌 가입 줄은 간격까지 0이 된다 */
 .auth-main form.stack { gap: 0; }
 .auth-main form.stack > * + * { margin-top: 20px; }
+/* 이름표 줄 높이(32px) 위쪽 여백만큼 덜 띄워, 입력 칸 → 다음 이름표 간격이 입력 칸 → Sign in 버튼(24px)과 같아 보이게 */
+.auth-main form.stack > label + label { margin-top: 16px; }
 .auth-main label { gap: 8px; }
 /* 영문 글자(ID·Password·Sign in·Don't have account?)는 랜딩 소제목과 같은 Instrument Serif */
 .auth-main label { font-family: var(--sub); font-size: 20px; font-weight: 400; letter-spacing: 0.02em; color: var(--ink-2); }
@@ -249,7 +251,7 @@ body:has(.auth-main) .corner-links { display: none; }
   opacity: 0;
   transition: grid-template-rows 0.52s cubic-bezier(0.4, 0, 0.2, 1), margin-top 0.52s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
 }
-.auth-main form.stack > .signup-field.open { grid-template-rows: 1fr; margin-top: 20px; opacity: 1; }
+.auth-main form.stack > .signup-field.open { grid-template-rows: 1fr; margin-top: 16px; opacity: 1; }
 .auth-main .sf-inner { min-height: 0; overflow: hidden; gap: 0; }
 /* 입력 칸 자리도 이름표가 다 쳐진 뒤 같은 방식으로 열리고, 칸은 살짝 내려오며 나타난다 */
 .auth-main .sf-input { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 0.52s cubic-bezier(0.4, 0, 0.2, 1); }

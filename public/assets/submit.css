@@ -2,6 +2,10 @@ main.page.submit-page {
   --submit-gutter: clamp(32px, 4vw, 72px);
   max-width: none;
   padding: 136px var(--submit-gutter) 24px;
+  /* 오른쪽 글자 영역 높이. 파일 박스는 여기에 점수 줄(92px)까지 더해 오른쪽 전체와 높이를 맞춘다.
+     박스 아래 change file 줄이 하단 바 바로 위에 들어가도록 뺀다 */
+  --stage-h: max(240px, calc(100svh - 224px - 92px - 16px));
+  --outcome-h: 92px;
 }
 /* 구분선: 화면 끝에서 끝까지 가는 점선 한 줄(작은 체크 무늬는 깨진 글자처럼 보여 바꿨다) */
 .submit-divider {
@@ -26,8 +30,7 @@ main.page.submit-page {
   align-items: center;
   gap: 18px;
   width: 100%;
-  /* 위 여백 136 + 구분선 41 + 아래 여백 24 + 하단 바 53 + 틈 10 을 뺀 화면 높이를 꽉 채운다(하단 바가 스크롤 없이 보이게) */
-  height: max(320px, calc(100svh - 264px));
+  height: calc(var(--stage-h) + var(--outcome-h));
   padding: 32px;
   border: 1.5px dashed #d9d5cc;
   border-radius: var(--radius-card);
@@ -79,7 +82,7 @@ main.page.submit-page {
   margin: 0 0 10px;
 }
 .sequence-viewport {
-  height: max(220px, calc(100svh - 224px - 96px));
+  height: var(--stage-h);
   overflow: hidden;
   overflow-anchor: none;
 }
@@ -107,6 +110,17 @@ main.page.submit-page {
   font-variant-numeric: tabular-nums;
   margin: 0;
 }
+/* 점수 줄 오른쪽 끝의 리더보드 링크(글자만, Sign out과 같은 호버) */
+.sequence-result-row { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; }
+.leaderboard-link {
+  flex: none;
+  font-family: var(--nav); font-size: 18px; letter-spacing: 0.035em; color: var(--ink-2);
+  border-bottom: 1px solid transparent; text-decoration: none;
+  transition: color 160ms var(--ease), border-color 160ms var(--ease);
+}
+.leaderboard-arrow { width: 14px; height: 10px; margin-left: 8px; stroke: currentColor; stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; vertical-align: 0.05em; }
+.leaderboard-link:hover { color: var(--ink); border-bottom-color: var(--line); text-decoration: none; }
+.leaderboard-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .submit-announcement {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;

@@ -24,7 +24,7 @@
     "if it scored badly / good / now you know one more thing that does not work",
   ];
   // 줄바꿈 없이 이어 붙여 영역을 끝까지 빈틈없이 채운다.
-  const script = Array.from({ length: 64 }, (_, i) =>
+  const script = Array.from({ length: 96 }, (_, i) =>
     `${fragments[i % fragments.length]} :: ${fragments[(i + 3) % fragments.length]}`
   ).join(" / ");
   let frame = 0, timer = 0, releaseWait = null;
@@ -37,8 +37,8 @@
     if (releaseWait) { const release = releaseWait; releaseWait = null; release(); }
   }
   function paint(value) {
-    // One stable text node, bounded to 8k characters / at most 64 source lines.
-    currentText = value.slice(-8000);
+    // One stable text node, bounded to 16k characters.
+    currentText = value.slice(-16000);
     node.data = currentText;
   }
   function wait(ms) {

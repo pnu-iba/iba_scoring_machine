@@ -134,11 +134,14 @@ def _bad_request(code: str, message: str) -> JSONResponse:
 def _quota_body(store: Store, team_key: str, now: datetime, limit: int) -> dict:
     start, end = clock.day_window(now)
     used = store.count_submissions_between(team_key, start, end)
-    return {
+    body = {
         "used_today": used,
         "remaining_today": max(limit - used, 0),
         "resets_at": clock.resets_at(now).isoformat(),
     }
+    if _dev_any_login():
+        body.update(remaining_today=None, unlimited=True)
+    return body
 
 
 def _team_rank(store: Store, team_key: str) -> int | None:
@@ -351,7 +354,7 @@ async def submit(
             content={"error_code": "contest_closed", "message": "대회가 마감되어 더 이상 제출할 수 없습니다."},
         )
     quota = _quota_body(store, team_key, now, settings.daily_limit)
-    if quota["remaining_today"] <= 0:
+    if not _dev_any_login() and quota["remaining_today"] <= 0:
         return JSONResponse(
             status_code=429,
             content={
@@ -386,7 +389,8 @@ async def submit(
         "rmse": public.rmse,
         "r2": public.r2,
         "negative_clipped": full.negative_clipped,
-        "remaining_today": quota["remaining_today"] - 1,
+        "remaining_today": None if _dev_any_login() else quota["remaining_today"] - 1,
+        **({"unlimited": True} if _dev_any_login() else {}),
         "resets_at": quota["resets_at"],
         "rank": _team_rank(store, team_key),
         "team": user.team_display,

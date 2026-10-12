@@ -36,8 +36,10 @@
           <path d="M9 8h18l10 10v32a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2Z"/>
           <path d="M27 8v10h10M14 30h16M14 37h16M14 44h9"/>
         </svg>
+        <span class="file-box-name" id="fileBoxName" hidden></span>
         <span id="fileBoxLabel">add file</span>
       </button>
+      <button type="button" class="change-file" id="changeFile" hidden>change file</button>
     </form>
   </section>
   <div class="result" id="result" hidden></div>
@@ -45,10 +47,10 @@
 </div>
 <section class="submit-sequence" aria-label="채점 결과">
   <div class="sequence-idle" id="sequenceIdle" aria-hidden="true">
-    <p class="sequence-wait">waiting for a file<span class="sequence-caret">_</span></p>
+    <p class="sequence-wait" id="sequenceWait">waiting for a file<span class="sequence-caret">_</span></p>
+    <p class="sequence-notice" id="sequenceNotice" hidden></p>
   </div>
   <div id="sequenceContent" hidden>
-    <p class="sequence-label">Visual sequence</p>
     <div class="sequence-viewport" id="sequenceViewport" aria-hidden="true"><pre id="sequenceText"><span class="sequence-caret" id="typingCaret" hidden>_</span></pre></div>
     <div class="sequence-outcome" id="sequenceOutcome" hidden>
       <p class="sequence-label">Public</p>

@@ -70,7 +70,9 @@
     ]);
 
     if (q.ok) {
-      document.getElementById("quota").textContent = `${q.body.used_today} / ${q.body.limit}회 사용 · ${q.body.remaining_today}회 남음`;
+      document.getElementById("quota").textContent = q.body.unlimited
+        ? `${q.body.used_today}회 사용 · 로컬 테스트 제한 없음`
+        : `${q.body.used_today} / ${q.body.limit}회 사용 · ${q.body.remaining_today}회 남음`;
       document.getElementById("resets").textContent = f.time(q.body.resets_at);
     }
 

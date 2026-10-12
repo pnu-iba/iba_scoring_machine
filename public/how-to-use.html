@@ -141,7 +141,9 @@
     const r = await window.IBA.api("/api/quota");
     if (!r.ok) { quotaEl.textContent = ""; return; }
     const q = r.body;
-    quotaEl.innerHTML = `오늘 <strong>${q.used_today}/${q.limit}</strong>회 사용, <strong>${q.remaining_today}</strong>회 남음`;
+    quotaEl.innerHTML = q.unlimited
+      ? `오늘 <strong>${q.used_today}</strong>회 사용 · 로컬 테스트 제한 없음`
+      : `오늘 <strong>${q.used_today}/${q.limit}</strong>회 사용, <strong>${q.remaining_today}</strong>회 남음`;
   }
 
   const esc = (s) => window.IBA.esc(s);
@@ -165,7 +167,7 @@
       </div>
       ${clipped}
       <p class="small">test.csv의 30%로 매긴 public 점수입니다. 최종 순위는 마감 뒤 전체 데이터로 다시 매깁니다.</p>
-      <p class="small">오늘 ${b.remaining_today}회 남음. <a href="/leaderboard.html">리더보드 보기</a></p>`;
+      <p class="small">${b.unlimited ? "로컬 테스트 제한 없음." : `오늘 ${b.remaining_today}회 남음.`} <a href="/leaderboard.html">리더보드 보기</a></p>`;
   }
 
   form.addEventListener("submit", async (e) => {

@@ -7,17 +7,14 @@ main.page.submit-page {
 .submit-divider {
   display: block;
   height: 1px;
-  margin: 0 calc(-1 * var(--submit-gutter)) 40px;
-  background-image: radial-gradient(circle, var(--muted) 0.6px, transparent 0.9px);
-  background-size: 6px 1px;
-  opacity: 0.7;
+  margin: 0 calc(-1 * var(--submit-gutter));
 }
 .submit-layout {
   max-width: 1536px;
   margin-inline: auto;
   display: grid;
   grid-template-columns: minmax(0, 22fr) minmax(0, 78fr);   /* 파일 상자를 조금 좁게 */
-  gap: clamp(32px, 3.5vw, 56px);
+  gap: clamp(48px, 5vw, 80px);
   align-items: start;
 }
 .submit-controls, .submit-sequence { min-width: 0; }
@@ -52,6 +49,17 @@ main.page.submit-page {
 /* 아이콘이 주인공: 크게, 가는 선으로 */
 .file-box-icon { width: 112px; height: 121px; stroke: var(--accent); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
 .file-box-icon .back { opacity: 0.4; }
+.file-box-name { display: block; width: 100%; text-align: center; font-family: var(--mono); font-size: 13px; line-height: 1.4; color: var(--ink-2); white-space: normal; word-break: break-all; margin-bottom: -10px; }
+/* 첨부 뒤 박스 아래에 글자만 있는 다시 고르기 버튼 */
+.change-file {
+  display: block; margin: 2px auto 0; padding: 0; height: auto;
+  border: 0; border-bottom: 1px solid transparent; border-radius: 0; background: none; cursor: pointer;
+  font-family: var(--nav); font-size: 18px; font-weight: 400; letter-spacing: 0.035em; color: var(--ink-2);
+  transition: color 160ms var(--ease), border-color 160ms var(--ease);
+}
+/* Sign out과 같은 호버: 글자가 진해지고 밑줄이 생긴다 */
+.change-file:hover { color: var(--ink); background: none; border-bottom-color: var(--line); }
+.change-file:disabled { visibility: hidden; }
 .submit-page .file-box #fileBoxLabel { color: var(--muted); letter-spacing: 0.02em; }
 .submit-page .file-box.has-file #fileBoxLabel { color: var(--accent); }
 .submit-page .result { margin-top: 24px; animation: none; }
@@ -60,6 +68,7 @@ main.page.submit-page {
 .sequence-idle { font-family: var(--mono); font-size: 13px; line-height: 1.1; }
 .sequence-wait { margin: 0; color: var(--muted); }
 .sequence-wait .sequence-caret { color: var(--accent); }
+.sequence-notice { margin: 0; color: #b42318; white-space: pre-wrap; line-height: 1.5; }
 .sequence-caret { animation: sequence-caret-blink 1s steps(1, end) infinite; }
 @keyframes sequence-caret-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 .sequence-label {
@@ -70,7 +79,7 @@ main.page.submit-page {
   margin: 0 0 10px;
 }
 .sequence-viewport {
-  height: clamp(320px, 50vh, 560px);
+  height: max(220px, calc(100svh - 224px - 96px));
   overflow: hidden;
   overflow-anchor: none;
 }
@@ -80,7 +89,8 @@ main.page.submit-page {
   line-height: 1.1;
   letter-spacing: -0.02em;
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  word-break: break-all;
+  text-align: justify;
   margin: 0;
 }
 /* 점수: 위 글자 영역과 가는 점선으로 나눠 결과임을 드러낸다 */
@@ -90,7 +100,7 @@ main.page.submit-page {
 }
 .sequence-score {
   font-family: var(--mono);
-  font-size: clamp(16px, 1.8vw, 24px);
+  font-size: 15px;
   line-height: 1.45;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -126,7 +136,6 @@ main.page.submit-page {
   .submit-sequence { min-height: 0; }
   .sequence-viewport { height: clamp(220px, 36vh, 360px); }
   .sequence-viewport pre { font-size: 12px; }
-  .sequence-score { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sequence-caret { animation: none; }

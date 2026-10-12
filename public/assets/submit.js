@@ -7,22 +7,26 @@
   const idle = el("sequenceIdle"), caret = el("typingCaret");
   const node = document.createTextNode("");
   text.insertBefore(node, caret);
-  // Keep the ending visible when responsive line wrapping changes the text height.
-  new ResizeObserver(() => { viewport.scrollTop = viewport.scrollHeight; }).observe(viewport);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  // 이 프로젝트와 동아리 PNU IBA에 대한 혼잣말
   const fragments = [
-    "paper moons / quiet corners / a small blue afternoon / again and again",
-    "abcdefghijklmnop :: 0123456789 :: ( ) [ ] { } :: on the other side",
-    "the quick brown fox meets a slow silver cloud / nothing in particular",
-    "north east south west / little letters in long lines / dot dash dot",
-    "violet window amber morning / a sentence without a destination",
-    "+=+= 00 11 22 33 44 55 66 77 88 99 / the space between two words",
-    "one more line / another imagined postcard / somewhere near the sea",
-    "round and round / distant bells / soft pencils / end of the alphabet",
+    "a scoring machine is just a patient reader / it reads every row and never gets tired",
+    "pnu iba :: people who like data a little more than they should / since the first meetup",
+    "the devil is in the details / so we count the details one by one",
+    "rmse is honest / it does not care how late you stayed up / it only cares how close you got",
+    "one csv / one guess at the future / one number that comes back",
+    "late nights in the club room / cold coffee / a notebook full of half finished ideas",
+    "the leaderboard is not the point / the point is the next idea you try",
+    "busan / blue sea / blue accent / a quiet place to make careful models",
+    "every submission is a small letter to the test set / and the test set always answers",
+    "we built this so the scoring could stay fair and the thinking could stay yours",
+    "features / folds / seeds / patience :: the four seasons of a competition",
+    "if it scored badly / good / now you know one more thing that does not work",
   ];
+  // 줄바꿈 없이 이어 붙여 영역을 끝까지 빈틈없이 채운다.
   const script = Array.from({ length: 64 }, (_, i) =>
     `${fragments[i % fragments.length]} :: ${fragments[(i + 3) % fragments.length]}`
-  ).join("\n");
+  ).join(" / ");
   let frame = 0, timer = 0, releaseWait = null;
   let serial = 0, busy = false, controller = null, currentText = "";
 
@@ -36,7 +40,6 @@
     // One stable text node, bounded to 8k characters / at most 64 source lines.
     currentText = value.slice(-8000);
     node.data = currentText;
-    viewport.scrollTop = viewport.scrollHeight;
   }
   function wait(ms) {
     return new Promise((resolve) => {
@@ -52,31 +55,53 @@
     el("sequenceContent").hidden = true;
     el("sequenceOutcome").hidden = true;
     el("sequenceScore").textContent = "";
+    el("sequenceWait").hidden = false;
+    el("sequenceNotice").hidden = true;
+  }
+  // 글자는 영역에 들어가는 만큼만 찍는다(스크롤 없음). 마지막 한 줄은 success 몫으로 남긴다.
+  let filled = Promise.resolve();
+  function fits() {
+    const line = parseFloat(getComputedStyle(text).lineHeight) || 15;
+    return text.offsetHeight <= viewport.clientHeight - line;
+  }
+  function fillTo(count) {
+    // 넘치면 넘치기 직전 길이로 되돌린다.
+    paint(script.slice(0, count));
+    if (fits()) return false;
+    let lo = currentText.length - 40, hi = count;
+    lo = Math.max(0, Math.min(lo, count));
+    while (lo < hi - 1) { const mid = (lo + hi) >> 1; paint(script.slice(0, mid)); if (fits()) lo = mid; else hi = mid; }
+    paint(script.slice(0, lo));
+    return true;
   }
   function startSequence(start, token) {
     resetSequence();
     idle.hidden = true;
     el("sequenceContent").hidden = false;
-    if (reduced.matches) { paint(fragments.join("\n")); return; }
+    if (reduced.matches) { fillTo(script.length); return; }
     caret.hidden = false;
     let count = 0, last = start, fraction = 0;
-    const tick = (now) => {
-      if (token !== serial) return;
-      if (reduced.matches) { caret.hidden = true; paint(fragments.join("\n")); return; }
-      // Short character batches reveal the current line instead of adding a whole
-      // line per frame. Cap each update so delayed frames cannot jump ahead.
-      fraction += Math.min(40, now - last) * 0.48;
-      last = now;
-      const step = Math.min(12, Math.floor(fraction));
-      fraction -= step;
-      count = Math.min(script.length, count + step);
-      paint(script.slice(0, count));
-      if (count < script.length) frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
+    filled = new Promise((done) => {
+      const tick = (now) => {
+        if (token !== serial) return done();
+        if (reduced.matches) { fillTo(script.length); return done(); }
+        // 처음부터 끝까지 같은 속도로 글자 단위로 찍는다(프레임이 밀려도 한 번에 건너뛰지 않게 제한).
+        fraction += Math.min(40, now - last) * 1.4;
+        last = now;
+        const step = Math.min(24, Math.floor(fraction));
+        fraction -= step;
+        count = Math.min(script.length, count + step);
+        if (fillTo(count) || count >= script.length) return done();
+        frame = requestAnimationFrame(tick);
+      };
+      frame = requestAnimationFrame(tick);
+    });
   }
   async function finishSequence(token) {
+    // 채점이 일찍 끝나도 글자가 아래 끝까지 찬 뒤에 결과를 보여 준다.
+    await Promise.race([filled, new Promise((r) => setTimeout(r, 8000))]);
     cancelMotion();
+    if (token !== serial) return;
     const base = currentText.replace(/\s+$/, "") + "\n";
     const ending = "...success!";
     if (!reduced.matches) {
@@ -93,7 +118,12 @@
     el("fileBoxLabel").textContent = busy ? "Scoring…" : file ? "Submit" : "add file";
     btn.classList.toggle("has-file", Boolean(file) && !busy);
     btn.setAttribute("aria-label", busy ? "Scoring" : file ? `Submit ${file.name}` : "add file");
+    el("fileBoxName").textContent = file ? file.name : "";
+    el("fileBoxName").hidden = !file;
+    el("changeFile").hidden = !file;
+    el("changeFile").disabled = busy;
   }
+  el("changeFile").addEventListener("click", () => { if (!busy) fileEl.click(); });
 
   // 파일을 상자에 끌어다 놓기
   ["dragenter", "dragover"].forEach((type) => btn.addEventListener(type, (e) => {
@@ -122,13 +152,30 @@
     if (fileEl.files[0]) announcement.textContent = `${fileEl.files[0].name} 선택됨. 박스를 다시 눌러 채점을 시작하세요.`;
   });
   const esc = (s) => window.IBA.esc(s);
+  // 오류도 오른쪽 결과 영역에 한 글자씩 찍는다. 제목과 설명 사이는 한 줄 띄운다.
   function showError(title, detail) {
+    showNotice(detail ? [title, "", detail] : [title], [title, detail].filter(Boolean).join(" "));
+  }
+  // lines의 빈 문자열은 빈 줄.
+  let noticeId = 0;
+  function showNotice(lines, spoken) {
     resetSequence();
     fileEl.value = "";
     updateButton();
-    result.hidden = false;
-    result.innerHTML = `<p class="msg-error"><strong>${esc(title)}</strong></p>${detail ? `<p>${esc(detail)}</p>` : ""}`;
-    announcement.textContent = [title, detail].filter(Boolean).join(" ");
+    result.hidden = true;
+    announcement.textContent = spoken;
+    const notice = el("sequenceNotice"), full = lines.join("\n");
+    el("sequenceWait").hidden = true;
+    notice.hidden = false;
+    if (reduced.matches) { notice.textContent = full; return; }
+    const token = serial, id = ++noticeId;
+    let i = 0;
+    const type = () => {
+      if (token !== serial || id !== noticeId || notice.hidden) return;
+      notice.textContent = full.slice(0, ++i);
+      if (i < full.length) setTimeout(type, 22);
+    };
+    type();
   }
   function showScore(b) {
     const f = window.IBA.fmt;
@@ -138,7 +185,8 @@
     result.hidden = true;
     result.textContent = "";
     fileEl.value = "";
-    announcement.textContent = `채점 완료. Public ${score}. 현재 팀 순위 ${b.rank ?? "-"}위. 오늘 ${b.remaining_today}회 남음.`;
+    const remaining = b.unlimited ? "로컬 테스트: 제출 횟수 제한 없음." : `오늘 ${b.remaining_today}회 남음.`;
+    announcement.textContent = `채점 완료. Public ${score}. 현재 팀 순위 ${b.rank ?? "-"}위. ${remaining}`;
 
   }
 
@@ -148,49 +196,229 @@
     const svg = document.createElementNS(ns, "svg");
     svg.setAttribute("class", "signin-arrow");
     svg.setAttribute("aria-hidden", "true");
-    // 점선은 마스크로 앞에서부터 드러내고, 점선 화살촉이 그 끝을 따라간다.
     svg.innerHTML = '<defs><mask id="signinReveal" maskUnits="userSpaceOnUse"><path class="reveal"/></mask></defs>' +
       '<path class="line" mask="url(#signinReveal)"/><path class="head" d="M0 0 L-10 -6 M0 0 L-10 6"/>';
     const line = svg.querySelector(".line"), reveal = svg.querySelector(".reveal"), head = svg.querySelector(".head");
     document.body.append(svg);
-    const draw = () => {
-      const from = el("signinPromptText").getBoundingClientRect();
-      const target = document.getElementById("signIn");
-      if (!target) return;
-      const to = target.getBoundingClientRect();
-      const x1 = from.right + 14, y1 = from.top + from.height * 0.55;   // 문장 끝 조금 뒤
-      const x2 = to.left - 10, y2 = to.top + to.height * 0.6;           // Sign in 바로 왼쪽
-      const dx = x2 - x1, dy = y2 - y1;
-      // 살짝 휘었다가 위로 올라가는 곡선(직선보다 손그림 느낌)
-      const d = `M${x1} ${y1} C${x1 + dx * 0.45} ${y1 + 18}, ${x1 + dx * 0.5} ${y2 - 6}, ${x2} ${y2}`;
-      line.setAttribute("d", d);
-      reveal.setAttribute("d", d);
-    };
-    // 그리기 1.8초 → 잠깐 머문 뒤 사라지고 처음부터 반복
+    const motion = matchMedia("(prefers-reduced-motion: reduce)");
+    const hover = matchMedia("(hover: hover) and (pointer: fine)");
     const DRAW = 1800, HOLD = 700, FADE = 350, CYCLE = DRAW + HOLD + FADE;
-    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const RADIUS = 48, MAX_SHIFT = 64, SAMPLES = 80;
+    let raf = 0, active = false, dirty = true, started = 0, last = 0;
+    let base = [], shown = [], baseD = "", total = 0, targetRect = null;
+    const pointer = { x: 0, y: 0, inside: false, samples: [] };
+    // A local displacement, always applied to the fixed baseline, never accumulated.
+    const bend = { center: 0.5, targetCenter: 0.5, amount: 0, side: 0, engaged: false, pulseUntil: 0, pulse: 0 };
+    const smooth = (t) => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
     const ease = (t) => 1 - Math.pow(1 - t, 3);
-    const frame = (now) => {
-      const len = line.getTotalLength();
-      if (len) {
-        const t = now % CYCLE;
-        const p = still ? 1 : ease(Math.min(t / DRAW, 1));
-        const at = Math.max(p * len, 0.01);
-        reveal.style.strokeDasharray = `${len} ${len}`;
-        reveal.style.strokeDashoffset = String(len - at);
-        const pt = line.getPointAtLength(at), prev = line.getPointAtLength(Math.max(at - 2, 0));
-        const ang = Math.atan2(pt.y - prev.y, pt.x - prev.x) * 180 / Math.PI;
-        head.setAttribute("transform", `translate(${pt.x} ${pt.y}) rotate(${ang})`);
-        svg.style.opacity = still || t < DRAW + HOLD ? "1" : String(1 - (t - DRAW - HOLD) / FADE);
+    function measure() {
+      const target = document.getElementById("signIn");
+      if (!target) return false;
+      const from = el("signinPromptText").getBoundingClientRect();
+      targetRect = target.getBoundingClientRect();
+      const a = { x: from.right + 14, y: from.top + from.height * 0.55 };
+      const d = { x: targetRect.left - 10, y: targetRect.top + targetRect.height * 0.6 };
+      const dx = d.x - a.x;
+      const b = { x: a.x + dx * 0.45, y: a.y + 18 };
+      const c = { x: a.x + dx * 0.5, y: d.y - 6 };
+      baseD = `M${a.x} ${a.y} C${b.x} ${b.y}, ${c.x} ${c.y}, ${d.x} ${d.y}`;
+      base = []; total = 0;
+      for (let i = 0; i <= SAMPLES; i++) {
+        const t = i / SAMPLES, u = 1 - t;
+        const x = u ** 3 * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t ** 3 * d.x;
+        const y = u ** 3 * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t ** 3 * d.y;
+        const tx = 3 * u * u * (b.x - a.x) + 6 * u * t * (c.x - b.x) + 3 * t * t * (d.x - c.x);
+        const ty = 3 * u * u * (b.y - a.y) + 6 * u * t * (c.y - b.y) + 3 * t * t * (d.y - c.y);
+        const length = Math.hypot(tx, ty) || 1;
+        if (i) total += Math.hypot(x - base[i - 1].x, y - base[i - 1].y);
+        base.push({ x, y, nx: -ty / length, ny: tx / length, arc: total });
       }
-      if (!still) requestAnimationFrame(frame);
+      shown = base.map((p) => ({ x: p.x, y: p.y }));
+      dirty = false;
+      return true;
+    }
+    // Measure proximity to the revealed portion, not the full-screen SVG bounds.
+    function nearest(points, progress, probe = pointer) {
+      let best = { distance: Infinity, index: 0 };
+      let walked = 0;
+      const lengths = points.slice(1).map((p, i) => Math.hypot(p.x - points[i].x, p.y - points[i].y));
+      const visibleLength = lengths.reduce((sum, n) => sum + n, 0) * progress;
+      for (let i = 0; i < points.length - 1 && walked < visibleLength; i++) {
+        const a = points[i], b = points[i + 1], length = lengths[i];
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const cap = Math.min(1, (visibleLength - walked) / (length || 1));
+        const t = Math.max(0, Math.min(cap, ((probe.x - a.x) * dx + (probe.y - a.y) * dy) / (length * length || 1)));
+        const distance = Math.hypot(probe.x - a.x - t * dx, probe.y - a.y - t * dy);
+        if (distance < best.distance) best = { distance, index: i, t, probe };
+        walked += length;
+      }
+      return best;
+    }
+    function project(point, a, b) {
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const t = Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / (dx * dx + dy * dy || 1)));
+      return { x: a.x + dx * t, y: a.y + dy * t, t };
+    }
+    function sweptNear(points, progress, samples) {
+      let best = { distance: Infinity, index: 0 };
+      if (samples.length < 2) return best;
+      const lengths = points.slice(1).map((p, i) => Math.hypot(p.x - points[i].x, p.y - points[i].y));
+      const visible = lengths.reduce((sum, n) => sum + n, 0) * progress;
+      let walked = 0;
+      for (let i = 0; i < lengths.length && walked < visible; i++) {
+        const a = points[i], end = points[i + 1];
+        const cap = Math.min(1, (visible - walked) / (lengths[i] || 1));
+        const b = { x: a.x + (end.x - a.x) * cap, y: a.y + (end.y - a.y) * cap };
+        for (let j = 1; j < samples.length; j++) {
+          const u = samples[j - 1], v = samples[j];
+          const dx = v.x - u.x, dy = v.y - u.y, ex = b.x - a.x, ey = b.y - a.y;
+          const cross = dx * ey - dy * ex;
+          if (Math.abs(cross) > 0.001) {
+            const t = ((a.x - u.x) * ey - (a.y - u.y) * ex) / cross;
+            const s = ((a.x - u.x) * dy - (a.y - u.y) * dx) / cross;
+            if (t >= 0 && t <= 1 && s >= 0 && s <= 1) {
+              // The approach side, rather than the final cursor position, decides
+              // the avoidance direction when a whole crossing occurs in one frame.
+              best = { distance: 0, index: i, t: s * cap, probe: u };
+              continue;
+            }
+          }
+          const candidates = [
+            { cursor: u, path: project(u, a, b) }, { cursor: v, path: project(v, a, b) },
+            { cursor: project(a, u, v), path: { ...a, t: 0 } },
+            { cursor: project(b, u, v), path: { ...b, t: 1 } },
+          ];
+          for (const pair of candidates) {
+            const distance = Math.hypot(pair.cursor.x - pair.path.x, pair.cursor.y - pair.path.y);
+            if (distance < best.distance) best = { distance, index: i, t: pair.path.t * cap, probe: pair.cursor };
+          }
+        }
+        walked += lengths[i];
+      }
+      return best;
+    }
+    function curvedPath(points) {
+      // Cubic Hermite interpolation keeps the displaced sample chain smooth.
+      let path = `M${points[0].x} ${points[0].y}`;
+      for (let i = 0; i < points.length - 1; i++) {
+        const p = points[i], q = points[i + 1];
+        const before = points[Math.max(0, i - 1)], after = points[Math.min(points.length - 1, i + 2)];
+        path += ` C${p.x + (q.x - before.x) / 6} ${p.y + (q.y - before.y) / 6}, ${q.x - (after.x - p.x) / 6} ${q.y - (after.y - p.y) / 6}, ${q.x} ${q.y}`;
+      }
+      return path;
+    }
+    function frame(now) {
+      if (!active) return;
+      if (dirty && !measure()) { raf = requestAnimationFrame(frame); return; }
+      const dt = Math.min(50, Math.max(0, now - last)); last = now;
+      const phase = (now - started) % CYCLE;
+      const progress = motion.matches ? 1 : ease(Math.min(phase / DRAW, 1));
+      const opacity = motion.matches || phase < DRAW + HOLD ? 1 : 1 - (phase - DRAW - HOLD) / FADE;
+      let wanted = 0;
+      const samples = pointer.samples.splice(0);
+      const overLink = targetRect && pointer.x > targetRect.left - 16 && pointer.x < targetRect.right + 16 &&
+        pointer.y > targetRect.top - 16 && pointer.y < targetRect.bottom + 16;
+      if (!motion.matches && hover.matches && pointer.inside && !overLink) {
+        const current = nearest(shown, progress);
+        const swept = opacity > 0.2 ? sweptNear(shown, progress, samples) : { distance: Infinity };
+        const near = swept.distance < current.distance ? swept : current;
+        if (!bend.engaged && opacity > 0.2 && near.distance < RADIUS) {
+          bend.engaged = true;
+          const p = base[near.index];
+          bend.targetCenter = (p.arc + (base[near.index + 1].arc - p.arc) * near.t) / (total || 1);
+          // Re-entry must not teleport a still-visible bend to a new location.
+          if (Math.abs(bend.amount) < 0.02) bend.center = bend.targetCenter;
+          const side = (near.probe.x - p.x) * p.nx + (near.probe.y - p.y) * p.ny;
+          bend.side = Math.abs(side) > 2 ? -Math.sign(side) : (bend.side || 1);
+        }
+        if (opacity > 0.2 && swept.distance < RADIUS) {
+          const p = base[swept.index];
+          bend.targetCenter = (p.arc + (base[swept.index + 1].arc - p.arc) * swept.t) / (total || 1);
+          // Give a short crossing a visible, smoothly decaying response instead
+          // of engaging and disengaging within the same frame.
+          bend.pulseUntil = now + 160;
+          bend.pulse = MAX_SHIFT * (1 - smooth(swept.distance / RADIUS));
+        }
+        if (bend.engaged) {
+          // Keep the chosen side while passing through the line. Baseline
+          // proximity retains the bend once the visible curve has moved away.
+          const held = nearest(base, 1);
+          if (held.distance > RADIUS + 24 && now >= bend.pulseUntil) bend.engaged = false;
+          else {
+            if (held.distance <= RADIUS + 24) {
+              const p = base[held.index];
+              bend.targetCenter = (p.arc + (base[held.index + 1].arc - p.arc) * held.t) / (total || 1);
+            }
+            wanted = Math.max(MAX_SHIFT * (1 - smooth(held.distance / (RADIUS + 24))), now < bend.pulseUntil ? bend.pulse : 0) * bend.side;
+          }
+        }
+      } else { bend.engaged = false; bend.pulseUntil = 0; }
+      bend.center += (bend.targetCenter - bend.center) * (1 - Math.exp(-dt / 150));
+      if (motion.matches) bend.amount = 0;
+      // Signed amplitude interpolates a direction change through zero instead
+      // of instantly flipping the existing displacement to the opposite side.
+      else bend.amount += (wanted - bend.amount) * (1 - Math.exp(-dt / (Math.abs(wanted) > Math.abs(bend.amount) ? 150 : 320)));
+      if (Math.abs(bend.amount) < 0.02 && !wanted) bend.amount = 0;
+      shown = base.map((p) => {
+        const edge = smooth(p.arc / 72) * smooth((total - p.arc) / 72);
+        const local = Math.exp(-(((p.arc - bend.center * total) / 95) ** 2));
+        let offset = bend.amount * edge * local;
+        // Fade the deformation near page edges / the fixed text endpoints.
+        const room = Math.min(p.x, innerWidth - p.x, p.y, innerHeight - p.y);
+        offset *= smooth(Math.max(0, room - 8) / 40);
+        return { x: p.x + p.nx * offset, y: p.y + p.ny * offset };
+      });
+      const path = bend.amount ? curvedPath(shown) : baseD;
+      line.setAttribute("d", path); reveal.setAttribute("d", path);
+      const length = line.getTotalLength();
+      const at = Math.max(progress * length, 0.01);
+      reveal.style.strokeDasharray = `${length} ${length}`;
+      reveal.style.strokeDashoffset = String(length - at);
+      const pt = line.getPointAtLength(at), prev = line.getPointAtLength(Math.max(at - 2, 0));
+      const angle = Math.atan2(pt.y - prev.y, pt.x - prev.x) * 180 / Math.PI;
+      head.setAttribute("transform", `translate(${pt.x} ${pt.y}) rotate(${angle})`);
+      svg.style.opacity = String(opacity);
+      if (!motion.matches) raf = requestAnimationFrame(frame);
+    }
+    const invalidate = () => { dirty = true; if (active && motion.matches) raf = requestAnimationFrame(frame); };
+    const move = (event) => {
+      if (event.pointerType !== "mouse") return;
+      if (!pointer.samples.length && pointer.inside) pointer.samples.push({ x: pointer.x, y: pointer.y });
+      const coalesced = event.getCoalescedEvents?.() || [];
+      for (const sample of coalesced.length ? coalesced : [event]) pointer.samples.push({ x: sample.clientX, y: sample.clientY });
+      if (pointer.samples.length > 24) pointer.samples.splice(1, pointer.samples.length - 24);
+      pointer.x = event.clientX; pointer.y = event.clientY; pointer.inside = true;
     };
-    draw();
-    addEventListener("resize", draw);
-    addEventListener("scroll", draw, { passive: true });
-    document.fonts && document.fonts.ready.then(draw);
-    new MutationObserver(draw).observe(document.body, { childList: true, subtree: true });
-    requestAnimationFrame(frame);
+    const leave = () => { pointer.inside = false; pointer.samples.length = 0; };
+    const observer = new ResizeObserver(invalidate);
+    const restartMotion = () => { cancelAnimationFrame(raf); if (active) { last = performance.now(); raf = requestAnimationFrame(frame); } };
+    function start() {
+      if (active) return;
+      active = true; dirty = true; last = performance.now();
+      if (!started) started = last;
+      addEventListener("resize", invalidate);
+      addEventListener("scroll", invalidate, { passive: true });
+      addEventListener("pointermove", move, { passive: true });
+      document.documentElement.addEventListener("pointerleave", leave);
+      addEventListener("blur", leave);
+      motion.addEventListener("change", restartMotion);
+      observer.observe(el("signinPromptText"));
+      const target = document.getElementById("signIn");
+      if (target) observer.observe(target);
+      raf = requestAnimationFrame(frame);
+    }
+    function stop() {
+      active = false; cancelAnimationFrame(raf); observer.disconnect();
+      removeEventListener("resize", invalidate); removeEventListener("scroll", invalidate);
+      removeEventListener("pointermove", move); removeEventListener("blur", leave);
+      document.documentElement.removeEventListener("pointerleave", leave);
+      motion.removeEventListener("change", restartMotion);
+      leave();
+    }
+    addEventListener("pagehide", stop);
+    addEventListener("pageshow", (event) => { if (event.persisted) start(); });
+    document.fonts?.ready.then(invalidate);
+    start();
   }
 
   async function init() {
@@ -237,7 +465,10 @@
       } else if (r.status === 403 && r.body && r.body.error_code === "contest_closed") {
         showError("대회가 마감되었습니다.", "최종 순위는 리더보드에서 확인하세요.");
       } else if (r.status === 429) {
-        showError(r.body.message, "초기화: " + window.IBA.fmt.time(r.body.resets_at) + " (KST)");
+        const limit = ((r.body && r.body.message) || "").match(/(\d+)회/);
+        const used = limit ? ` (${limit[1]}/${limit[1]})` : "";
+        const resets = window.IBA.fmt.time(r.body.resets_at);
+        showNotice([`daily limit reached${used}`, "", `resets ${resets} KST`], (r.body && r.body.message) || "Daily limit reached.");
       } else if (r.body && r.body.message) {
         showError("제출이 거부되었습니다" + (r.body.row ? ` (${r.body.row}행)` : ""), r.body.message);
       } else showError("서버 오류가 났습니다.", `HTTP ${r.status}`);

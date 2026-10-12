@@ -8,6 +8,31 @@ def offset_rows(delta: float):
 # --- 하루 3회 제한 ------------------------------------------------------------
 
 
+def test_local_csv_mode_allows_repeated_submissions(client, monkeypatch):
+    monkeypatch.setenv("DEV_ANSWER_CSV", "local-test.csv")
+    monkeypatch.delenv("VERCEL", raising=False)
+    for _ in range(6):
+        response = submit(client, csv_bytes(perfect_rows()))
+        assert response.status_code == 200, response.text
+        assert response.json()["unlimited"] is True
+        assert response.json()["remaining_today"] is None
+    body = quota(client).json()
+    assert body["used_today"] == 6
+    assert body["unlimited"] is True
+    assert body["remaining_today"] is None
+
+
+def test_vercel_keeps_quota_even_with_dev_csv_env(client, monkeypatch):
+    monkeypatch.setenv("DEV_ANSWER_CSV", "local-test.csv")
+    monkeypatch.setenv("VERCEL", "1")
+    # Vercel sessions use Secure cookies, so exercise this case over HTTPS.
+    client.base_url = client.base_url.copy_with(scheme="https")
+    for _ in range(3):
+        assert submit(client, csv_bytes(perfect_rows())).status_code == 200
+    assert submit(client, csv_bytes(perfect_rows())).status_code == 429
+    assert "unlimited" not in quota(client).json()
+
+
 def test_fourth_submission_same_day_is_rejected(client):
     for _ in range(3):
         assert submit(client, csv_bytes(perfect_rows())).status_code == 200

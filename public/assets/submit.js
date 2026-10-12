@@ -90,9 +90,27 @@
   }
   function updateButton() {
     const file = fileEl.files[0];
-    el("fileBoxLabel").textContent = busy ? "채점 중…" : file ? "채점하기" : "add file";
-    btn.setAttribute("aria-label", busy ? "채점 중" : file ? `${file.name} 채점하기` : "add file");
+    el("fileBoxLabel").textContent = busy ? "Scoring…" : file ? "Submit" : "add file";
+    btn.classList.toggle("has-file", Boolean(file) && !busy);
+    btn.setAttribute("aria-label", busy ? "Scoring" : file ? `Submit ${file.name}` : "add file");
   }
+
+  // 파일을 상자에 끌어다 놓기
+  ["dragenter", "dragover"].forEach((type) => btn.addEventListener(type, (e) => {
+    if (busy || !e.dataTransfer || ![...e.dataTransfer.types].includes("Files")) return;
+    e.preventDefault();
+    btn.classList.add("dragging");
+  }));
+  ["dragleave", "dragend"].forEach((type) => btn.addEventListener(type, () => btn.classList.remove("dragging")));
+  btn.addEventListener("drop", (e) => {
+    btn.classList.remove("dragging");
+    if (busy || !e.dataTransfer || !e.dataTransfer.files.length) return;
+    e.preventDefault();
+    const dt = new DataTransfer();
+    dt.items.add(e.dataTransfer.files[0]);
+    fileEl.files = dt.files;
+    fileEl.dispatchEvent(new Event("change"));
+  });
   btn.addEventListener("click", () => {
     if (busy) return;
     if (fileEl.files.length) form.requestSubmit();
@@ -124,12 +142,62 @@
 
   }
 
+  // 로그인 전: 안내 문장 끝에서 오른쪽 위 Sign in까지 손으로 그은 듯한 점선 화살표
+  function drawSigninArrow() {
+    const ns = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("class", "signin-arrow");
+    svg.setAttribute("aria-hidden", "true");
+    // 점선은 마스크로 앞에서부터 드러내고, 점선 화살촉이 그 끝을 따라간다.
+    svg.innerHTML = '<defs><mask id="signinReveal" maskUnits="userSpaceOnUse"><path class="reveal"/></mask></defs>' +
+      '<path class="line" mask="url(#signinReveal)"/><path class="head" d="M0 0 L-10 -6 M0 0 L-10 6"/>';
+    const line = svg.querySelector(".line"), reveal = svg.querySelector(".reveal"), head = svg.querySelector(".head");
+    document.body.append(svg);
+    const draw = () => {
+      const from = el("signinPromptText").getBoundingClientRect();
+      const target = document.getElementById("signIn");
+      if (!target) return;
+      const to = target.getBoundingClientRect();
+      const x1 = from.right + 14, y1 = from.top + from.height * 0.55;   // 문장 끝 조금 뒤
+      const x2 = to.left - 10, y2 = to.top + to.height * 0.6;           // Sign in 바로 왼쪽
+      const dx = x2 - x1, dy = y2 - y1;
+      // 살짝 휘었다가 위로 올라가는 곡선(직선보다 손그림 느낌)
+      const d = `M${x1} ${y1} C${x1 + dx * 0.45} ${y1 + 18}, ${x1 + dx * 0.5} ${y2 - 6}, ${x2} ${y2}`;
+      line.setAttribute("d", d);
+      reveal.setAttribute("d", d);
+    };
+    // 그리기 1.8초 → 잠깐 머문 뒤 사라지고 처음부터 반복
+    const DRAW = 1800, HOLD = 700, FADE = 350, CYCLE = DRAW + HOLD + FADE;
+    const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const ease = (t) => 1 - Math.pow(1 - t, 3);
+    const frame = (now) => {
+      const len = line.getTotalLength();
+      if (len) {
+        const t = now % CYCLE;
+        const p = still ? 1 : ease(Math.min(t / DRAW, 1));
+        const at = Math.max(p * len, 0.01);
+        reveal.style.strokeDasharray = `${len} ${len}`;
+        reveal.style.strokeDashoffset = String(len - at);
+        const pt = line.getPointAtLength(at), prev = line.getPointAtLength(Math.max(at - 2, 0));
+        const ang = Math.atan2(pt.y - prev.y, pt.x - prev.x) * 180 / Math.PI;
+        head.setAttribute("transform", `translate(${pt.x} ${pt.y}) rotate(${ang})`);
+        svg.style.opacity = still || t < DRAW + HOLD ? "1" : String(1 - (t - DRAW - HOLD) / FADE);
+      }
+      if (!still) requestAnimationFrame(frame);
+    };
+    draw();
+    addEventListener("resize", draw);
+    addEventListener("scroll", draw, { passive: true });
+    document.fonts && document.fonts.ready.then(draw);
+    new MutationObserver(draw).observe(document.body, { childList: true, subtree: true });
+    requestAnimationFrame(frame);
+  }
+
   async function init() {
     const user = await window.IBA.me;
     if (!user) {
-      el("loginLink").href = window.IBA.authLink("login");
-      el("signupLink").href = window.IBA.authLink("signup");
       el("needLogin").hidden = false;
+      drawSigninArrow();
       return;
     }
     el("formCard").hidden = false;

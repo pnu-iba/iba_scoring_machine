@@ -23,22 +23,18 @@
 <div class="submit-divider" aria-hidden="true"></div>
 <div class="submit-layout">
 <div class="submit-controls">
-  <section class="card" id="needLogin" hidden>
-  <div class="card-head"><h2>로그인이 필요합니다</h2></div>
-  <p class="lead">모델을 제출하려면 로그인하세요. 계정이 없으면 팀 번호를 적어 가입하면 됩니다.</p>
-  <div class="actions">
-    <a class="btn primary" id="loginLink" href="/login.html">로그인</a>
-    <a class="btn" id="signupLink" href="/login.html#signup">회원가입</a>
-  </div>
-  </section>
+  <!-- 로그인 전: 상자 없이 안내 한 줄. 오른쪽 위 Sign in 옆에 흔들리는 화살표가 붙는다(submit.css) -->
+  <p class="signin-prompt" id="needLogin" hidden><span id="signinPromptText">Please sign in first to submit your model.</span></p>
 
   <section id="formCard" hidden>
     <form id="form" novalidate>
       <input type="file" name="file" id="file" accept=".csv,text/csv" hidden>
       <button type="button" class="file-box" id="submitBtn">
-        <svg class="file-box-icon" viewBox="0 0 48 56" fill="none" aria-hidden="true">
-          <path d="M9 2h20l12 12v38a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z"/>
-          <path d="M29 2v12h12M16 28h16M16 36h16M16 44h10"/>
+        <!-- 아이콘: 겹친 종이 두 장(뒤 장은 옅게) -->
+        <svg class="file-box-icon" viewBox="0 0 52 56" fill="none" aria-hidden="true">
+          <path class="back" d="M18 6h18l10 10v32a2 2 0 0 1-2 2"/>
+          <path d="M9 8h18l10 10v32a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2Z"/>
+          <path d="M27 8v10h10M14 30h16M14 37h16M14 44h9"/>
         </svg>
         <span id="fileBoxLabel">add file</span>
       </button>
@@ -48,7 +44,9 @@
 
 </div>
 <section class="submit-sequence" aria-label="채점 결과">
-  <div class="sequence-idle" id="sequenceIdle" aria-hidden="true"><span class="sequence-caret">_</span></div>
+  <div class="sequence-idle" id="sequenceIdle" aria-hidden="true">
+    <p class="sequence-wait">waiting for a file<span class="sequence-caret">_</span></p>
+  </div>
   <div id="sequenceContent" hidden>
     <p class="sequence-label">Visual sequence</p>
     <div class="sequence-viewport" id="sequenceViewport" aria-hidden="true"><pre id="sequenceText"><span class="sequence-caret" id="typingCaret" hidden>_</span></pre></div>

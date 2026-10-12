@@ -45,14 +45,16 @@ main.page.submit-page {
 }
 .submit-page .file-box:hover { background: #f0ede6; border-color: #c9c4b8; }
 .submit-page .file-box.dragging { background: #eef1fb; border-color: var(--accent); }   /* 파일을 끌고 올라왔을 때 */
-.submit-page .file-box.has-file { border-style: solid; border-color: rgba(47, 85, 224, 0.45); background: #f3f4fa; }   /* 파일을 고른 뒤 */
-.submit-page .file-box.has-file:hover { background: #eceffa; }
 .submit-page .file-box:disabled { cursor: progress; }
 .submit-page .file-box:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 /* 아이콘이 주인공: 크게, 가는 선으로 */
 .file-box-icon { width: 112px; height: 121px; stroke: var(--accent); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
 .file-box-icon .back { opacity: 0.4; }
-.file-box-name { display: block; width: 100%; text-align: center; font-family: var(--mono); font-size: 13px; line-height: 1.4; color: var(--ink-2); white-space: normal; word-break: break-all; margin-bottom: -10px; }
+/* 첨부 뒤(채점 중 포함): 아이콘이 가운데 세로축을 중심으로 천천히 돈다 */
+.file-box.has-file .file-box-icon, .file-box:disabled .file-box-icon { animation: file-icon-spin 4s linear infinite; }
+@keyframes file-icon-spin { from { transform: perspective(500px) rotateY(0deg); } to { transform: perspective(500px) rotateY(360deg); } }
+@media (prefers-reduced-motion: reduce) { .file-box .file-box-icon { animation: none !important; } }
+.file-box-name { display: block; width: 100%; text-align: center; font-family: var(--mono); font-size: 13px; line-height: 1.4; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 14px 0 -10px; }   /* 긴 이름은 한 줄로 자르고 … 로 줄인다 */
 /* 첨부 뒤 박스 아래에 글자만 있는 다시 고르기 버튼 */
 .change-file {
   display: block; margin: 2px auto 0; padding: 0; height: auto;

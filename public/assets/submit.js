@@ -119,6 +119,7 @@
     btn.classList.toggle("has-file", Boolean(file) && !busy);
     btn.setAttribute("aria-label", busy ? "Scoring" : file ? `Submit ${file.name}` : "add file");
     el("fileBoxName").textContent = file ? file.name : "";
+    el("fileBoxName").title = file ? file.name : "";
     el("fileBoxName").hidden = !file;
     el("changeFile").hidden = !file;
     el("changeFile").disabled = busy;

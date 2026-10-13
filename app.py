@@ -1,7 +1,7 @@
 """채점 사이트 API. Vercel Python 런타임이 이 파일의 `app`을 찾아 실행한다.
 
 엔드포인트 (스펙 "API 계약"):
-- POST   /api/signup                 가입(아이디·비밀번호·닉네임·팀명) → 세션 쿠키
+- POST   /api/signup                 가입(아이디·비밀번호·닉네임·팀 번호 1-4) → 세션 쿠키
 - POST   /api/login                  로그인 → 세션 쿠키
 - POST   /api/logout                 세션 쿠키 삭제
 - GET    /api/me                     로그인한 사용자 (로그인하지 않았으면 null)

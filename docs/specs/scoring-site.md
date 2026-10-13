@@ -46,7 +46,7 @@
 17. 제출 CSV의 `id` 열은 test.csv와 **행 순서까지** 같아야 하며, 채점은 위치 기준으로 비교한다. test.csv·answer.csv·sample_submission.csv의 id는 0부터 39,084까지의 행 번호다. 원본 데이터의 id는 39,085행 중 고유값이 31,573개뿐이라 서로 다른 차량이 같은 id를 가졌고, id로 merge하면 다른 차량끼리 짝지어져 점수가 부풀었다(3조 제출 기준 RMSE 1,985 → 7,882). 그래서 배포 전에 세 파일의 id를 행 번호로 다시 매겼다.
 18. `price`에 음수가 있으면 거부하지 않고 0으로 클리핑한 뒤 채점하며, 결과 화면에 "음수 n건을 0으로 처리했다"고 알린다. (기존 노트북 관행과 일치.)
 19. `price`가 비어 있거나 숫자가 아닌 행이 하나라도 있으면 채점하지 않고 거부한다.
-20. 팀은 숫자로 된 팀 번호로만 받는다. 앞뒤 공백을 지우고 전각 숫자를 반각으로 바꾼 뒤 앞자리 0을 떼어 같은 팀으로 본다(3과 03은 같은 팀). 숫자가 아닌 글자가 있으면 가입을 거부한다.
+20. 팀은 숫자로 된 팀 번호로만 받는다. 앞뒤 공백을 지우고 전각 숫자를 반각으로 바꾼 뒤 앞자리 0을 떼어 같은 팀으로 본다(3과 03은 같은 팀). 숫자가 아닌 글자가 있거나 이번 기수 팀 번호(`scoring/teams.py`의 `TEAMS`, 1-4)가 아니면 가입을 거부한다. 관리자 페이지의 팀 번호 변경에는 1-4 제한이 없다.
 21. "하루"는 한국 시간(KST) 자정에 초기화된다.
 22. 업로드 파일 크기는 2 MB를 넘으면 거부한다(정상 제출은 약 0.5 MB, 플랫폼 본문 한도 4.5 MB 이내 여유).
 
@@ -86,14 +86,14 @@
 
 ### API 계약
 
-- `POST /api/signup` — JSON `{ username, password, nickname, team }`. 성공 200: `{ username, nickname, team }` + 세션 쿠키. 형식 오류 400, 아이디 중복 409. 아이디는 영문 소문자·숫자·밑줄 4~20자, 비밀번호 8~72자.
+- `POST /api/signup` — JSON `{ username, password, nickname, team }`. 성공 200: `{ username, nickname, team }` + 세션 쿠키. 형식 오류와 1-4 밖의 팀 번호는 400, 아이디 중복 409. 아이디는 영문 소문자·숫자·밑줄 4~20자, 비밀번호 8~72자.
 - `POST /api/login` — JSON `{ username, password }`. 성공 200 + 세션 쿠키, 실패 401. `POST /api/logout` — 쿠키 삭제.
 - `GET /api/me` — 로그인한 사용자 `{ username, nickname, team, is_admin }`, 로그인하지 않았으면 `null`.
 - `GET /api/contest` — `{ start, end, status, final_at, daily_limit, notices }`. `status`는 `ready`·`open`·`final`.
 - `POST /api/submit` (로그인 필요) — multipart: `file`. 로그인하지 않았으면 401. 성공 200: `{ rmse, r2, negative_clipped, remaining_today, rank }`(점수와 순위는 public 기준). 검증 실패 400: `{ error_code, message, row? }`. 한도 초과 429: `{ message, resets_at }`. 시작 전 403 `contest_not_started`, 마감 뒤 403 `contest_closed`, 관리자 계정 403 `admin_cannot_submit`.
 - `POST /api/games/{game}/score` (로그인 필요) — JSON `{ score }`. `game`은 `apple`(상한 170), `tetris`, `blocks`. 성공 200: `{ rank, team_best }`. 없는 게임 404, 범위 밖 점수 400.
 - `GET /api/games/{game}/leaderboard` — 팀별 최고 점수: `[{ rank, team, nickname, score, played_at }]`. 점수 내림차순, 동점이면 먼저 기록한 쪽.
-- `GET /api/leaderboard` — `{ final, final_at, rows }`. `rows`는 팀별 public 최고 기록 `[{ rank, team, nickname, rmse, r2, submitted_at }]`. 대회 중에는 public 점수로, `final`이 참이면 전체 데이터 점수로 정렬하고 각 행에 `public_rmse`, `public_r2`, `public_rank`를 더한다. RMSE 오름차순, 동점 시 R² 내림차순, 그다음 `submitted_at` 오름차순.
+- `GET /api/leaderboard` — `{ final, final_at, teams, rows }`. `teams`는 이번 기수 팀 번호 목록으로, 제출이 없는 팀도 표에 넣을 수 있게 준다. `rows`는 팀별 public 최고 기록 `[{ rank, team, nickname, rmse, r2, submitted_at }]`. 대회 중에는 public 점수로, `final`이 참이면 전체 데이터 점수로 정렬하고 각 행에 `public_rmse`, `public_r2`, `public_rank`를 더한다. RMSE 오름차순, 동점 시 R² 내림차순, 그다음 `submitted_at` 오름차순.
 - `GET /api/quota` (로그인 필요) — 우리 팀의 `{ used_today, remaining_today, resets_at, limit }`.
 - `/api/admin/*` — 관리자 계정으로 로그인해야 한다. 비로그인 401, 일반 사용자 403. 권한은 요청마다 DB에서 읽은 계정으로 확인한다.
   - `GET /overview` — 대회 상태, 시작·마감 시각, 정답 행 수, 제출 수, 가입자 수.
@@ -109,7 +109,7 @@
 
 - 홈: 소개·리더보드 상위 5팀(로그인했고 우리 팀이 5위 밖이면 우리 팀 행 추가)·데이터 설명·채점 방식·제출 규칙·데이터 다운로드 링크(train/test/brand_model/sample_submission은 정적 파일로 제공; answer는 절대 포함하지 않음).
 - 채점: 로그인하지 않았으면 로그인·회원가입 안내. 로그인했으면 파일 선택, 남은 횟수 표시, 제출 결과(점수·현재 순위·음수 처리 안내) 또는 오류 메시지 표시.
-- 리더보드: 표 하나. 페이지 로드 시 조회, 새로고침 버튼. 캐시 없이 매번 조회(요청량이 작다).
+- 리더보드: 표 하나. 이번 기수 팀은 제출이 없어도 "제출 없음" 행으로 보이고, 행에는 팀 번호만 쓰고 닉네임은 쓰지 않는다. 마감 뒤에는 최종 순위가 기본이고 대회 중 public 순위로 전환할 수 있다. 페이지 로드 시 조회, 새로고침 버튼. 캐시 없이 매번 조회(요청량이 작다).
 - 미니게임: 게임 목록 페이지와 사과게임·테트리스·블록깨기 페이지. 게임은 브라우저에서만 돌고, 조작은 키보드·마우스만 지원한다. 개인 최고 기록은 브라우저(localStorage)에 저장한다. 게임 페이지마다 팀 순위 표가 있고, 로그인한 상태로 게임을 마치면 점수를 서버에 기록한다. 점수는 브라우저가 계산해 보내므로 게임별 상한을 넘는 값만 거절하고, 그 이상의 조작 방지는 하지 않는다.
 - 로그인·회원가입: 가입 후 원래 보던 페이지로 돌아간다.
 - 관리자: 관리자 계정에만 사이드바 메뉴가 보인다. 현황, 대회 설정과 공지, 제출, 사용자, 채점 확인과 초기화 다섯 탭. 기수 초기화는 결과 zip을 내려받고 확인 문구를 입력해야 실행된다.
@@ -117,9 +117,9 @@
 
 ### 기수 교체 절차 (결정 005)
 
-- 관리자 페이지에서 처리한다: (1) 결과 zip 내려받기, (2) 기수 초기화(제출 기록, 기본으로 관리자가 아닌 계정과 미니게임 점수), (3) 대회 설정에서 다음 기수 날짜와 공지 정리. 팀 번호를 기수마다 다시 쓰므로 지난 기수 계정과 점수를 남기면 새 팀에 섞인다.
+- 관리자 페이지에서 처리한다: (1) 결과 zip 내려받기, (2) 기수 초기화(제출 기록, 기본으로 관리자가 아닌 계정과 미니게임 점수), (3) 대회 설정에서 다음 기수 날짜와 공지 정리. 팀 수가 바뀌면 `scoring/teams.py`의 `TEAMS`를 고쳐 다시 배포한다. 팀 번호를 기수마다 다시 쓰므로 지난 기수 계정과 점수를 남기면 새 팀에 섞인다.
 - 데이터셋과 정답은 바꾸지 않으므로 정적 데이터 파일 교체와 정답 재적재는 없다.
-- 첫 관리자는 가입한 계정에 `scripts/grant_admin.py`로 권한을 주고, 그 뒤로는 관리자 페이지에서 지정한다.
+- 첫 관리자는 가입한 계정에 `scripts/grant_admin.py`로 권한을 주고, 그 뒤로는 관리자 페이지에서 지정한다. 가입할 때는 1-4 중 하나를 팀 번호로 적어야 하므로, 관리자로 지정한 뒤 팀 번호를 0으로 옮긴다.
 - 플랫폼 계정(Vercel, Neon, GitHub 조직)은 동아리 공용 이메일로 만들고, 운영 문서에 계정 인수인계 항목을 둔다.
 
 ## Validation Decisions

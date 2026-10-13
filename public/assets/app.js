@@ -228,6 +228,7 @@
     const user = await me;
     if (!user) { note.textContent = "로그인하면 팀 순위에 기록됩니다."; return; }
     if (score <= 0) return;
+    if (user.demo) { note.textContent = "구경용 계정이라 점수는 기록되지 않습니다."; return; }
     const r = await api(`/api/games/${game}/score`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ score }),
     });

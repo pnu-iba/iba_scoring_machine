@@ -12,7 +12,10 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&family=Playfair+Display:wght@700;900&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/assets/chrome.css">
   <link rel="stylesheet" href="/assets/style.css">
-  <link rel="stylesheet" href="/assets/about.css?v=cd-flip-2">
+  <link rel="stylesheet" href="/assets/about.css?v=cd-flip-4">
+  <!-- CD 그림 두 장을 HTML을 읽자마자 받기 시작한다(SVG 안의 image는 늦게 발견된다) -->
+  <link rel="preload" as="image" href="/assets/about-cd/cd-row.jpg" fetchpriority="high">
+  <link rel="preload" as="image" href="/assets/about-cd/personalized-faces.jpg" fetchpriority="high">
   <script src="/assets/icons.js" defer></script>
   <script src="/assets/app.js?v=2" defer blocking="render"></script>
   <script src="/assets/chrome.js" defer blocking="render"></script>
@@ -75,11 +78,11 @@
   <div class="cd-stage">
    <div class="cd-anchor"><div class="cd-advance"><div class="cd-pose"><div class="cd-flip">
     <div class="cd-face cd-front" aria-hidden="false">
-     <svg class="cd-face-texture" viewBox="95 120 480 414" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="minsoeklee-front-crop"><polygon points="96,125 100,120 569,120 574,124 574,530 570,534 99,534 95,530"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.png" width="1254" height="1254" clip-path="url(#minsoeklee-front-crop)"/></svg>
+     <svg class="cd-face-texture" viewBox="95 120 480 414" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="minsoeklee-front-crop"><polygon points="96,125 100,120 569,120 574,124 574,530 570,534 99,534 95,530"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.jpg" width="1254" height="1254" clip-path="url(#minsoeklee-front-crop)"/></svg>
      <button class="cd-toggle cd-front-toggle" type="button" aria-expanded="false" aria-controls="details-minsoeklee" aria-label="minsoeklee 뒷면 보기"></button>
     </div>
     <div class="cd-face cd-back" id="details-minsoeklee" aria-hidden="true" inert>
-     <svg class="cd-face-texture" viewBox="95 722 480 425" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="minsoeklee-back-crop"><polygon points="95,729 100,722 569,722 575,727 575,1140 570,1147 99,1147 95,1142"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.png" width="1254" height="1254" clip-path="url(#minsoeklee-back-crop)"/></svg>
+     <svg class="cd-face-texture" viewBox="95 722 480 425" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="minsoeklee-back-crop"><polygon points="95,729 100,722 569,722 575,727 575,1140 570,1147 99,1147 95,1142"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.jpg" width="1254" height="1254" clip-path="url(#minsoeklee-back-crop)"/></svg>
      <div class="cd-description" id="description-minsoeklee"><p>minsoeklee</p><p>10th member</p><p>Statistics</p><p>Worked on: Frontend , Design</p><p>In progress: Traveling</p></div>
      <button class="cd-toggle cd-back-toggle" type="button" tabindex="-1" aria-expanded="false" aria-controls="details-minsoeklee" aria-describedby="description-minsoeklee" aria-label="minsoeklee 앞면으로 돌아가기"></button>
     </div>
@@ -94,11 +97,11 @@
   <div class="cd-stage">
    <div class="cd-anchor"><div class="cd-advance"><div class="cd-pose"><div class="cd-flip">
     <div class="cd-face cd-front" aria-hidden="false">
-     <svg class="cd-face-texture" viewBox="683 120 477 414" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="taejeong0416-front-crop"><polygon points="684,125 688,120 1154,120 1159,124 1159,530 1155,534 688,534 683,530"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.png" width="1254" height="1254" clip-path="url(#taejeong0416-front-crop)"/></svg>
+     <svg class="cd-face-texture" viewBox="683 120 477 414" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="taejeong0416-front-crop"><polygon points="684,125 688,120 1154,120 1159,124 1159,530 1155,534 688,534 683,530"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.jpg" width="1254" height="1254" clip-path="url(#taejeong0416-front-crop)"/></svg>
      <button class="cd-toggle cd-front-toggle" type="button" aria-expanded="false" aria-controls="details-taejeong0416" aria-label="taejeong0416 뒷면 보기"></button>
     </div>
     <div class="cd-face cd-back" id="details-taejeong0416" aria-hidden="true" inert>
-     <svg class="cd-face-texture" viewBox="683 722 478 425" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="taejeong0416-back-crop"><polygon points="683,729 688,722 1155,722 1161,727 1161,1142 1155,1147 688,1147 683,1142"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.png" width="1254" height="1254" clip-path="url(#taejeong0416-back-crop)"/></svg>
+     <svg class="cd-face-texture" viewBox="683 722 478 425" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="taejeong0416-back-crop"><polygon points="683,729 688,722 1155,722 1161,727 1161,1142 1155,1147 688,1147 683,1142"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.jpg" width="1254" height="1254" clip-path="url(#taejeong0416-back-crop)"/></svg>
      <div class="cd-description" id="description-taejeong0416"><p>taejeong0416</p><p>10th member</p><p>Computer Engineering</p><p>Worked on: Backend , Management</p><p>In progress: Building something big</p></div>
      <button class="cd-toggle cd-back-toggle" type="button" tabindex="-1" aria-expanded="false" aria-controls="details-taejeong0416" aria-describedby="description-taejeong0416" aria-label="taejeong0416 앞면으로 돌아가기"></button>
     </div>

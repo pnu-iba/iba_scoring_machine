@@ -528,6 +528,8 @@ def record_game_score(
         raise HTTPException(status_code=404, detail="없는 게임입니다.")
     if not 0 <= body.score <= GAME_MAX_SCORE[game]:
         return _bad_request("bad_score", "점수가 올바르지 않습니다.")
+    if _is_demo(user):   # 구경용 계정의 점수는 미니게임 리더보드에 남기지 않는다
+        return {"rank": None, "team_best": None, "demo": True}
     store.insert_game_score(
         GameScore(0, game, user.team_key, user.team_display, user.nickname, body.score, now_fn())
     )

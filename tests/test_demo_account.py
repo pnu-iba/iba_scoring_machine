@@ -49,3 +49,11 @@ def test_other_accounts_unchanged(client):
     me = client.get("/api/me").json()
     assert me["team"] == "3"
     assert "demo" not in me
+
+
+def test_demo_game_scores_not_recorded(client):
+    login_demo(client)
+    r = client.post("/api/games/apple/score", json={"score": 40})
+    assert r.status_code == 200
+    assert r.json()["demo"] is True
+    assert client.get("/api/games/apple/leaderboard").json() == []

@@ -3,6 +3,14 @@
 (() => {
   const scene = document.querySelector('.cd-scene');
   if (!scene) return;
+  // 처음 열 때 CD 그림(사진 한 장, 얼굴 그림 한 장)이 받아지고 그릴 준비가 될 때까지 장면을 감춰 두었다가
+  // 한 번에 보여 준다. 그림이 끝내 안 오더라도 2.5초 뒤에는 보여 준다.
+  const sources = [...new Set([...scene.querySelectorAll('image')].map(img => img.getAttribute('href')))];
+  const ready = () => scene.classList.add('is-ready');
+  Promise.race([
+    Promise.all(sources.map(src => { const img = new Image(); img.src = src; return img.decode().catch(() => {}); })),
+    new Promise(resolve => setTimeout(resolve, 2500)),
+  ]).then(() => requestAnimationFrame(ready));
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const mobile = matchMedia('(max-width: 700px)');
   const live = scene.querySelector('.cd-state-live');

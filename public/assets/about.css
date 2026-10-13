@@ -3,6 +3,11 @@ main.page.about-page { max-width: 1440px; padding: 140px 48px 72px; display: gri
 .about-page .page-head { display: none; }
 
 .cd-scene { position: relative; width: min(100%, 1220px); aspect-ratio: 1220 / 400; margin: 0 auto; isolation: isolate; }
+/* 처음 열 때: CD 그림이 다 받아져 그려질 준비가 되면(about.js가 is-ready를 붙인다) 한 번에 나타난다.
+   그림이 늦게 와서 빈 바닥이 먼저 보이고 CD가 하나씩 튀어나오는 일이 없게 한다 */
+.cd-scene { opacity: 0; transform: translateY(8px); transition: opacity 520ms ease-out, transform 620ms cubic-bezier(.2, .8, .2, 1); }
+.cd-scene.is-ready { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .cd-scene { transition: none; transform: none; } }
 /* 사진 바탕(옅은 회백색)이 페이지 바탕에 녹아들도록 네 가장자리를 부드럽게 흐린다 */
 .cd-ground {
   position: absolute; inset: 0; pointer-events: none;
@@ -53,16 +58,19 @@ main.page.about-page { max-width: 1440px; padding: 140px 48px 72px; display: gri
 .cd-pose { transform: rotateY(var(--pose-yaw, var(--rest-yaw))); }
 .cd-flip { transform: rotateY(var(--flip-yaw, 0deg)); }
 .cd-face { position: absolute; inset: 0; background: #d8d8cf; border: 1px solid #bfc0b7; border-radius: 2px; box-sizing: border-box; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
-.cd-front { transform: translateZ(3px); }
-.cd-back { transform: rotateY(180deg) translateZ(3px); }
+/* 케이스 두께. 옆 사진 속 케이스들처럼 옆면이 보일 만큼 두껍게(앞뒤 면은 두께의 절반씩 띄운다) */
+.cd-flip { --thick: 10px; }
+.cd-front { transform: translateZ(calc(var(--thick) / 2)); }
+.cd-back { transform: rotateY(180deg) translateZ(calc(var(--thick) / 2)); }
 .cd-face-texture { display: block; width: 100%; height: 100%; pointer-events: none; user-select: none; }
 .cd-face[inert] { pointer-events: none; }
 .cd-face[inert] .cd-toggle { pointer-events: none; }
 .cd-edge { position: absolute; backface-visibility: visible; pointer-events: none; }
-.cd-edge-left, .cd-edge-right { top: 0; height: 100%; width: 6px; transform-origin: left center; transform: rotateY(90deg) translateX(-3px); }
-.cd-edge-left { left: 0; background: repeating-linear-gradient(to right, #292a27 0 1px, #51524c 1px 2px); }
+.cd-edge-left, .cd-edge-right { top: 0; height: 100%; width: var(--thick); transform-origin: left center; transform: rotateY(90deg) translateX(calc(var(--thick) / -2)); }
+/* 경첩 쪽 옆면: 사진 속 케이스처럼 밝은 회색 플라스틱에 가는 홈이 세로로 난 모양 */
+.cd-edge-left { left: 0; background: linear-gradient(to right, rgba(0, 0, 0, .18), transparent 18%, transparent 82%, rgba(0, 0, 0, .18)), repeating-linear-gradient(to right, #b3b6ac 0 1px, #d9dbd2 1px 3px); }
 .cd-edge-right { left: 100%; background: linear-gradient(to right, #b5b9ae, #e3e5dc, #b4b8ad); }
-.cd-edge-top, .cd-edge-bottom { left: 0; width: 100%; height: 6px; transform-origin: center top; transform: rotateX(90deg) translateY(-3px); background: #c9cdc1; }
+.cd-edge-top, .cd-edge-bottom { left: 0; width: 100%; height: var(--thick); transform-origin: center top; transform: rotateX(90deg) translateY(calc(var(--thick) / -2)); background: #c9cdc1; }
 .cd-edge-top { top: 0; }
 .cd-edge-bottom { top: 100%; }
 .cd-description { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }

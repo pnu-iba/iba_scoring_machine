@@ -274,21 +274,50 @@
     refresh();
   });
 
-  // 처음 열 때(브라우저 새로고침 버튼 포함): 종이를 화면 아래에 둔 채 기록을 받고, 아래에서 올라오게 한다.
+  // 브라우저 새로고침 버튼으로 다시 열린 경우: 새로고침 버튼과 똑같이 종이가 빠졌다가 올라온다.
+  // (페이지를 떠나기 전에는 애니메이션을 걸 수 없어서, 다시 열린 뒤 제자리에서 시작한다)
+  const nav = performance.getEntriesByType("navigation")[0];
+  const reopened = !!nav && nav.type === "reload";
+  // 처음 열 때: 종이를 화면 아래에 둔 채 기록을 받고, 아래에서 올라오게 한다.
   // 이 스크립트는 첫 화면이 그려지기 전에 실행되므로 종이가 제자리에 잠깐 보였다가 사라지지 않는다.
   if (!calm.matches) {
     busy = true;
     reload.disabled = true;
-    paper.style.transform = LOW(dropDistance());
-    syncClip();
+    if (!reopened) {
+      paper.style.transform = LOW(dropDistance());
+      syncClip();
+    }
   }
   document.addEventListener("DOMContentLoaded", async () => {
     await load();
     if (!calm.matches) {
-      await riseIn(dropDistance());
+      const d = dropDistance();
+      if (reopened) {
+        reload.classList.add("spinning");
+        await dropOut(d);
+        await riseIn(d);
+        reload.classList.remove("spinning");
+      } else {
+        await riseIn(d);
+      }
       reload.disabled = false;
       busy = false;
     }
+  });
+
+  // 뒤로·앞으로 가기로 BFCache에서 복원되면 스크립트가 다시 실행되지 않는다.
+  // 처음 열 때와 같이 종이를 아래로 내려 두고, 새 기록을 받은 뒤 올라오게 한다.
+  window.addEventListener("pageshow", async (event) => {
+    if (!event.persisted || calm.matches || busy) return;
+    busy = true;
+    reload.disabled = true;
+    paper.getAnimations().forEach((a) => a.cancel());
+    paper.style.transform = LOW(dropDistance());
+    syncClip();
+    await load();
+    await riseIn(dropDistance());
+    reload.disabled = false;
+    busy = false;
   });
 })();
 </script>

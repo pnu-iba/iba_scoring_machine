@@ -25,26 +25,29 @@
 <svg class="cd-ground" viewBox="0 0 1220 400" aria-hidden="true" focusable="false">
  <defs><!-- 케이스 자리 + 그 아래 8px(바닥과 맞닿은 회색 경계)을 지워, 케이스가 떠올라도 바닥에 아무것도 남지 않게 한다 -->
  <mask id="cd-ground-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="1220" height="400"><rect width="1220" height="400" fill="white"/>
-  <polygon points="28,33 43,23 136,30 137,378 44,392 27,385" fill="black"/>
-  <polygon points="131,33 144,24 235,28 236,378 145,391 130,384" fill="black"/>
-  <polygon points="231,31 244,23 334,25 336,378 245,392 230,385" fill="black"/>
+  <polygon points="27,345 137,345 137,378 44,392 27,385" fill="black"/>
+  <polygon points="130,345 236,345 236,378 145,391 130,384" fill="black"/>
+  <polygon points="230,345 336,345 336,378 245,392 230,385" fill="black"/>
   <polygon points="324,29 344,14 605,35 607,369 346,395 324,386" fill="black"/>
   <polygon points="614,40 640,34 878,15 897,20 899,31 882,35 882,368 900,369 900,385 875,389 642,389 614,380" fill="black"/>
-  <polygon points="877,42 951,27 966,25 980,29 985,34 985,372 978,378 962,377 895,376 877,370" fill="black"/>
-  <polygon points="985,34 1058,25 1066,23 1080,28 1085,34 1085,371 1078,378 1066,378 985,371" fill="black"/>
-  <polygon points="1085,35 1166,26 1177,25 1187,31 1187,372 1181,379 1168,380 1085,372" fill="black"/>
+  <polygon points="877,345 985,345 985,380 978,386 962,385 895,384 877,378" fill="black"/>
+  <polygon points="985,345 1085,345 1085,379 1078,386 1066,386 985,379" fill="black"/>
+  <polygon points="1085,345 1187,345 1187,380 1181,387 1168,388 1085,380" fill="black"/>
  </mask></defs>
  <!-- 케이스가 떠오를 때 드러나는 자리: 사진 바닥과 같은 색 흐름(케이스 아래쪽 바닥은 조금 더 밝다) -->
  <linearGradient id="cd-floor" x1="0" y1="0" x2="0" y2="400" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f5f4f0"/><stop offset=".86" stop-color="#f6f5f1"/><stop offset=".95" stop-color="#f7f6f2"/><stop offset="1" stop-color="#f5f4f0"/></linearGradient>
  <rect width="1220" height="400" fill="url(#cd-floor)"/>
  <image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" mask="url(#cd-ground-mask)"/>
- <!-- minsoeklee 케이스 자리(위에서 지운 모양과 같음)는 사이트 바탕색으로 채운다: 케이스가 들려도 아래가 페이지 바탕과 같은 색 -->
+ <!-- 지운 자리는 사이트 바탕색으로 채운다. 장식 CD 6장은 바닥 띠만 지워서, 들릴 때 위쪽·옆 틈에는 원래 사진이 그대로 보인다 -->
  <filter id="cd-soft-edge" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="1.6"/></filter>
  <polygon points="324,29 344,14 605,35 607,369 346,395 324,386" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
  <polygon points="614,40 640,34 878,15 897,20 899,31 882,35 882,368 900,369 900,385 875,389 642,389 614,380" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
-<polygon points="28,33 43,23 136,30 137,378 44,392 27,385" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
-<polygon points="131,33 144,24 235,28 236,378 145,391 130,384" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
-<polygon points="231,31 244,23 334,25 336,378 245,392 230,385" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
+<polygon points="27,345 137,345 137,378 44,392 27,385" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
+<polygon points="130,345 236,345 236,378 145,391 130,384" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
+<polygon points="230,345 336,345 336,378 245,392 230,385" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
+<polygon points="877,345 985,345 985,380 978,386 962,385 895,384 877,378" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
+<polygon points="985,345 1085,345 1085,379 1078,386 1066,386 985,379" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
+<polygon points="1085,345 1187,345 1187,380 1181,387 1168,388 1085,380" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
  <!-- 가운데 두 케이스 사이 틈 아래쪽(사진 좌표 x 598–620, y 343–365)에 원래 찍혀 있던 회색 그늘을 바닥색으로 옅게 덮는다 -->
  <filter id="cd-soften" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
  <ellipse cx="609" cy="355" rx="13" ry="14" fill="#f5f4f0" opacity=".85" filter="url(#cd-soften)"/>

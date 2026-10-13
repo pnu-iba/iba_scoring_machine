@@ -238,4 +238,14 @@
   }
 
   document.addEventListener("DOMContentLoaded", init);
+
+  // 뒤로·앞으로 가기로 BFCache에서 복원되면 CSS 애니메이션이 이미 끝난 상태로 남는다.
+  // 화면이 켜지는 모션(검은 막 → 아이콘·Dock)을 처음부터 다시 재생한다.
+  const ENTRANCE = new Set(["screen-on", "screen-content-in"]);
+  window.addEventListener("pageshow", (event) => {
+    if (!event.persisted) return;
+    document.getAnimations().forEach((a) => {
+      if (ENTRANCE.has(a.animationName)) { a.cancel(); a.play(); }
+    });
+  });
 })();

@@ -746,7 +746,7 @@ def admin_export(store: Store = Depends(get_store), settings: ContestSettings = 
 
 
 def reset_phrase(settings: ContestSettings) -> str:
-    return f"{settings.end_date.isoformat()} 대회 초기화"
+    return "기수 초기화"
 
 
 class ResetBody(BaseModel):

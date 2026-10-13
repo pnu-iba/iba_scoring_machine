@@ -88,7 +88,7 @@
       // 게임 화면은 캔버스가 한 화면에 들어오도록 제목을 줄인다.
       const variant = here in AUTH_TITLES ? " centered" : here.startsWith("/games/") ? " compact" : "";
       if (variant === " compact") main.classList.add("compact");
-      if (!["/thanks.html", "/about.html", "/submit.html", "/leaderboard.html"].includes(here)) main.insertAdjacentHTML("afterbegin", `
+      if (!["/thanks.html", "/about.html", "/submit.html", "/leaderboard.html", "/admin.html"].includes(here)) main.insertAdjacentHTML("afterbegin", `
         <header class="page-head${variant}">
           <p class="page-eyebrow">Regression Project Scoring Service</p>
           <h1 class="page-title">${title}</h1>
@@ -122,10 +122,10 @@
     if (user.is_admin) {
       document.querySelector("#sidebar .side-nav").insertAdjacentHTML("beforeend", `<li>${link(ADMIN_PAGE)}</li>`);
     }
-    corner.insertAdjacentHTML("beforeend", `<span class="who">[Team ${esc(user.team)}] ${esc(user.nickname)}</span><button type="button" id="logoutBtn">Sign out</button>`);
+    corner.insertAdjacentHTML("beforeend", `<span class="who">${user.is_admin ? esc(user.nickname) : `[Team ${esc(user.team)}] ${esc(user.nickname)}`}</span><button type="button" id="logoutBtn">Sign out</button>`);
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await api("/api/logout", { method: "POST" });
-      location.reload();
+      location.assign("/");   // 어느 페이지에서 로그아웃하든 메인 페이지로
     });
   }
 

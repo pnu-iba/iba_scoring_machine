@@ -278,7 +278,7 @@ def test_reset_season(client, store):
     assert r.status_code == 400
     assert len(store.list_submissions()) == 1
 
-    r = client.post("/api/admin/reset", json={"confirm": "2026-10-05 대회 초기화"})
+    r = client.post("/api/admin/reset", json={"confirm": "기수 초기화"})
     assert r.status_code == 200
     assert r.json()["deleted"] == {"submissions": 1, "game_scores": 1, "users": 1}
     assert [u.username for u in store.list_users()] == ["operator"]
@@ -295,7 +295,7 @@ def test_reset_can_keep_users_and_games(client, store):
     login_admin(client, store)
     r = client.post(
         "/api/admin/reset",
-        json={"confirm": "2026-10-05 대회 초기화", "delete_games": False, "delete_users": False},
+        json={"confirm": "기수 초기화", "delete_games": False, "delete_users": False},
     )
     assert r.json()["deleted"] == {"submissions": 1, "game_scores": 0, "users": 0}
     assert len(store.list_users()) == 2

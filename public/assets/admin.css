@@ -1,4 +1,14 @@
 /* 관리자 페이지: 왼쪽 탭 목록과 오른쪽 패널 */
+/* 위쪽 여백: Admin page 제목이 있어 너무 내려 보이지 않게 */
+main.page:has(#admin) { padding-top: 120px; --card: #f4f2ec; }   /* 카드·선택된 탭의 흰색을 페이지 바탕(#faf9f6)에 가까운 따뜻한 색으로 */
+/* 버튼·입력칸은 카드보다 밝은 따뜻한 흰색(순백보다 살짝 누런 #fdfcf9)으로 남겨 눌리는 곳이 잘 보이게 */
+main.page:has(#admin) :is(input, select, textarea, .btn, button):not(.primary):not(.danger):not([type="checkbox"]) { background-color: #fdfcf9; }
+main.page:has(#admin) :is(.btn, button):not(.primary):not(.danger):hover { background-color: var(--subtle); }
+/* 현황 카드: 목록 아래 여백(공통 .kv의 아래 margin)을 없애 카드 아래가 비어 보이지 않게 */
+/* 탭 위 머리 글자: 오른쪽 위 Sign out과 같은 글꼴 */
+.admin-label { grid-column: 1 / -1; position: relative; top: -24px; margin: 0 0 -4px;   /* 탭·내용은 그대로 두고 제목만 위로 */ font-family: var(--nav); font-size: 32px; line-height: 1.1; font-weight: 400; letter-spacing: 0.035em; color: var(--ink-2); }
+#overviewList { margin-bottom: 0; }
+#overviewList li:last-child { padding-bottom: 0; }
 .admin { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 24px; align-items: start; }
 .admin-tabs { display: grid; gap: 2px; position: sticky; top: 24px; }
 .admin-tabs a {

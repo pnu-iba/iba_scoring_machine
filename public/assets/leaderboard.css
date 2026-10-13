@@ -66,12 +66,13 @@ main.page.board-page { padding-top: 88px; padding-bottom: 40px; overflow: clip; 
 
 /* 꼬리 */
 .file-foot { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 16px 24px; margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--ink-dark); }
+.sign { align-self: start; }   /* 사진이 하단 칸을 높여도 서명란은 구분선 바로 아래에 둔다 */
 .sign .k { margin: 0; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
 /* 서명 대신 빨간 인장: 테두리 상자 + 잉크가 군데군데 빠진 질감, 살짝 기울여 찍은 느낌 */
 .seal {
   position: relative; display: inline-block; margin-top: -4px; padding: 6px 14px 5px;   /* APPROVED BY: 글자에 살짝 걸치게 찍는다 */
   border: 2.5px solid var(--stamp); outline: 1px solid var(--stamp); outline-offset: 2px;
-  color: var(--stamp); font-family: "Special Elite", monospace; font-size: 22px; letter-spacing: 0.18em; -webkit-text-stroke: 0.9px currentColor;   /* Special Elite는 굵기가 하나뿐이라 획을 덧그려 두껍게 */
+  color: var(--stamp); font-family: var(--display); font-weight: 900; font-size: 29px; line-height: 1.1; letter-spacing: 0.04em;   /* 랜딩 IBA 워드마크와 같은 글꼴 */
   opacity: 0.85; transform: rotate(-6deg);
   -webkit-mask-image: var(--ink-mask); mask-image: var(--ink-mask);
 }
@@ -104,3 +105,34 @@ main.page.board-page { padding-top: 88px; padding-bottom: 40px; overflow: clip; 
 .file-reload.spinning svg { animation: file-reload-spin 0.9s linear infinite; }
 @keyframes file-reload-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .file-reload.spinning svg { animation: none; } }
+
+/* 테이프로 붙인 흑백 사진: 흰 테두리 인화지, 살짝 기울임, 위 양쪽 모서리에 반투명 테이프 */
+.file-photo {
+  position: relative; justify-self: end; align-self: end;
+  width: 110px; margin: 0 36px -8px 0; padding: 6px 6px 16px;
+  background: #faf8f3;
+  box-shadow: 0 1px 2px rgba(31, 30, 27, 0.18), 0 4px 10px -4px rgba(31, 30, 27, 0.22);
+  transform: rotate(2.5deg);
+}
+.file-photo img { display: block; width: 100%; height: auto; filter: grayscale(1) brightness(0.6) contrast(1.08); }
+.file-photo::before, .file-photo::after {
+  content: ""; position: absolute; top: -10px; width: 48px; height: 18px;
+  background: rgba(236, 228, 206, 0.72);
+  box-shadow: 0 1px 1px rgba(31, 30, 27, 0.08);
+  /* 손으로 찢은 테이프 끝 */
+  clip-path: polygon(3% 8%, 97% 0, 100% 30%, 96% 55%, 99% 100%, 4% 94%, 0 65%, 3% 35%);
+}
+.file-photo::before { left: -14px; transform: rotate(-32deg); }
+.file-photo::after { right: -14px; transform: rotate(28deg); }
+
+/* 사진 왼쪽 빨간 펜 손글씨 메모 + 사진을 가리키는 손그림 화살표 */
+.photo-note {
+  position: absolute; right: calc(100% + 18px); top: 30%;
+  white-space: nowrap; font-family: "Nothing You Could Do", "Homemade Apple", cursive; font-size: 17px; line-height: 1.4; color: var(--stamp);   /* 가는 펜 손글씨 */
+  transform: rotate(-7deg); transform-origin: right center;
+  filter: url(#penInk);   /* 펜 잉크가 종이에 번진 듯 획 가장자리를 살짝 거칠게 */
+}
+.photo-note svg {
+  position: absolute; left: 62%; top: 80%; width: 70px; height: 34px; overflow: visible;
+  fill: none; stroke: var(--stamp); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
+}

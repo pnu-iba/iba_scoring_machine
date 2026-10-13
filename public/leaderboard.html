@@ -9,7 +9,7 @@
   <link rel="icon" href="/favicon.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&family=Playfair+Display:wght@700;900&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&family=Playfair+Display:wght@700;900&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&family=Special+Elite&family=Courier+Prime:wght@400;700&family=Nothing+You+Could+Do&display=swap">
   <link rel="stylesheet" href="/assets/chrome.css">
   <link rel="stylesheet" href="/assets/style.css">
   <link rel="stylesheet" href="/assets/leaderboard.css">
@@ -48,6 +48,7 @@
   <span class="file-surface" aria-hidden="true"></span>
   <!-- 가림 막대 가장자리를 마커로 칠한 듯 거칠게 만드는 필터 -->
   <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <filter id="penInk"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="2"/><feDisplacementMap in="SourceGraphic" scale="1.2"/></filter>
     <filter id="marker"><feTurbulence type="fractalNoise" baseFrequency="0.08 0.6" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
   </svg>
 
@@ -76,6 +77,14 @@
       <p class="k">Approved by:</p>
       <span class="seal">PNU IBA</span>
     </div>
+    <!-- 오른쪽 아래, 설명 문구 위: 테이프로 붙인 흑백 사진(장식) -->
+    <figure class="file-photo" aria-hidden="true">
+      <img src="/assets/photos/leaderboard-photo.png" alt="" width="400" height="500">
+      <!-- 빨간 펜 손글씨 메모와 사진을 가리키는 화살표 -->
+      <span class="photo-note">top authority
+        <svg viewBox="0 0 70 34"><path d="M3 9c14-2 30 3 44 13 6 4 11 7 18 9"/><path d="M56 23c3 3 6 6 9 8-4 1-8 1-12 0"/></svg>
+      </span>
+    </figure>
     <p class="file-note" id="boardFoot"></p>
   </footer>
 </article>

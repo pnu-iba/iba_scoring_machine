@@ -65,7 +65,7 @@
       ? '<p class="msg-warn">정답이 적재되지 않아 채점할 수 없습니다. README의 배포 절차대로 load_answers.py를 실행하세요.</p>' : "";
   };
 
-  // --- 대회 설정과 공지 -----------------------------------------------------------
+  // --- 대회 설정 -----------------------------------------------------------
   loaders.contest = async () => {
     const c = await loadContest();
     if (!c) return;
@@ -73,8 +73,6 @@
     f.start.value = c.start;
     f.end.value = c.end;
     f.daily_limit.value = c.daily_limit;
-    $("#noticeForm").date.value = todayKst();
-    renderNotices();
   };
 
   // 저장하기 전에 바뀌는 영향을 문장으로 모은다.
@@ -110,49 +108,6 @@
     $("#contestMsg").className = r.ok ? "small msg-ok" : "small msg-error";
     $("#contestMsg").textContent = r.ok ? "저장했습니다." : errMsg(r);
     if (r.ok) await loadContest();
-  });
-
-  function renderNotices() {
-    const rows = contest.notices;
-    $("#noticeEmpty").hidden = rows.length > 0;
-    $("#noticeTable").hidden = rows.length === 0;
-    $("#noticeTable tbody").innerHTML = rows.map((n) => `
-      <tr data-id="${n.id}">
-        <td>${n.date}</td>
-        <td class="wrap">${esc(n.title)}</td>
-        <td><button class="sm" type="button" data-act="edit">수정</button><button class="sm" type="button" data-act="del">삭제</button></td>
-      </tr>`).join("");
-  }
-
-  $("#noticeForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const f = e.target;
-    const r = await api("/api/admin/notices", json("POST", { title: f.title.value, date: f.date.value }));
-    if (!r.ok) return alert(errMsg(r));
-    f.title.value = "";
-    await loadContest();
-    renderNotices();
-  });
-
-  $("#noticeTable").addEventListener("click", async (e) => {
-    const btn = e.target.closest("button[data-act]");
-    if (!btn) return;
-    const id = Number(btn.closest("tr").dataset.id);
-    const n = contest.notices.find((x) => x.id === id);
-    let r;
-    if (btn.dataset.act === "del") {
-      if (!confirm(`공지를 지울까요?\n\n${n.title}`)) return;
-      r = await api(`/api/admin/notices/${id}`, { method: "DELETE" });
-    } else {
-      const title = prompt("공지 내용", n.title);
-      if (title === null) return;
-      const date = prompt("날짜 (YYYY-MM-DD)", n.date);
-      if (date === null) return;
-      r = await api(`/api/admin/notices/${id}`, json("PUT", { title, date }));
-    }
-    if (!r.ok) return alert(errMsg(r));
-    await loadContest();
-    renderNotices();
   });
 
   // --- 제출 -------------------------------------------------------------------
@@ -259,7 +214,7 @@
   loaders.tools = async () => {
     const c = await loadContest();
     if (!c) return;
-    const phrase = `${c.end} 대회 초기화`;
+    const phrase = "기수 초기화";
     $("#resetHint").textContent = `'${phrase}'를 그대로 입력하세요.`;
     $("#resetForm").confirm.placeholder = phrase;
     syncReset();
@@ -291,7 +246,7 @@
 
   function syncReset() {
     const f = $("#resetForm");
-    const phrase = contest ? `${contest.end} 대회 초기화` : null;
+    const phrase = "기수 초기화";
     f.confirm.disabled = !exported;
     $("#resetNote").hidden = exported;
     f.querySelector("button").disabled = !(exported && phrase && f.confirm.value.trim() === phrase);

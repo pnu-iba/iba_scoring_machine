@@ -26,9 +26,10 @@
 </section>
 
 <div class="admin" id="admin" hidden>
+  <p class="admin-label">Admin page</p>
   <nav class="admin-tabs" aria-label="관리자 메뉴">
     <a href="#overview">현황</a>
-    <a href="#contest">대회 설정과 공지</a>
+    <a href="#contest">대회 설정</a>
     <a href="#submissions">제출</a>
     <a href="#users">사용자</a>
     <a href="#tools">채점 확인과 초기화</a>
@@ -40,14 +41,13 @@
       <div class="card">
         <div class="card-head">
           <h2>대회 현황</h2>
-          <button class="ghost" type="button" data-reload="overview"><i data-icon="refresh-cw"></i>새로고침</button>
         </div>
         <div id="overviewWarn"></div>
         <ul class="kv" id="overviewList"></ul>
       </div>
     </section>
 
-    <!-- 대회 설정과 공지 -->
+    <!-- 대회 설정 -->
     <section class="admin-panel" id="tab-contest">
       <div class="card">
         <div class="card-head"><h2>대회 설정</h2></div>
@@ -60,22 +60,6 @@
           <p class="small">시작일 0시(KST)부터 제출을 받고, 마지막 날 다음 날 0시에 제출을 막고 최종 순위를 공개합니다. 저장하면 배포 없이 바로 반영됩니다.</p>
           <div class="row"><button class="primary" type="submit">저장</button><span class="small" id="contestMsg"></span></div>
         </form>
-      </div>
-
-      <div class="card">
-        <div class="card-head"><h2>공지</h2></div>
-        <form class="notice-form" id="noticeForm">
-          <input type="text" name="title" placeholder="공지 내용" maxlength="200" required>
-          <input type="date" name="date" required>
-          <button type="submit">추가</button>
-        </form>
-        <div class="table-wrap">
-          <table class="admin-table" id="noticeTable">
-            <thead><tr><th>날짜</th><th>내용</th><th></th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
-        <p class="empty" id="noticeEmpty" hidden>공지가 없습니다.</p>
       </div>
     </section>
 
@@ -118,7 +102,7 @@
           </table>
         </div>
         <p class="empty" id="userEmpty" hidden>사용자가 없습니다.</p>
-        <div class="card-foot">팀을 옮겨도 이미 낸 제출은 원래 팀에 남습니다. 임시 비밀번호는 한 번만 보이므로 바로 전달하세요.</div>
+        <div class="card-foot">임시 비밀번호는 한 번만 보이므로 바로 전달하세요.</div>
       </div>
     </section>
 
@@ -126,7 +110,7 @@
     <section class="admin-panel" id="tab-tools">
       <div class="card">
         <div class="card-head"><h2>채점 확인</h2></div>
-        <p class="lead">CSV를 채점만 하고 기록과 제출 횟수에는 남기지 않습니다. 학생이 거부된 파일을 보내 오면 여기서 오류를 확인하세요.</p>
+        <p class="lead">CSV를 채점만 하고 기록과 제출 횟수에는 남기지 않습니다. 문의가 들어오면 여기서 오류를 확인하세요.</p>
         <form class="row" id="checkForm">
           <input type="file" name="file" accept=".csv,text/csv" required>
           <button type="submit">채점</button>

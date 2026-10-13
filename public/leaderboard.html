@@ -41,7 +41,6 @@
       <tbody></tbody>
     </table>
   </div>
-  <p class="empty" id="empty" hidden>아직 제출이 없습니다. <a href="/submit.html">첫 제출</a>을 해보세요.</p>
   <div class="card-foot" id="boardFoot">test.csv의 30%로 매긴 public 점수 기준 팀별 최고 기록입니다. RMSE가 낮을수록 높은 순위이고, 같으면 R²가 높은 쪽, 그다음 먼저 제출한 쪽이 앞섭니다. 최종 순위는 마감 뒤 전체 데이터로 다시 매깁니다.</div>
 </section>
   </div>
@@ -122,9 +121,9 @@
 (function () {
   const tbody = document.querySelector("#board tbody");
   const meta = document.getElementById("meta");
-  const empty = document.getElementById("empty");
-  const table = document.getElementById("board");
   const btn = document.getElementById("refresh");
+  // 이번 기수 팀 번호. 제출하지 않은 팀도 표에 항상 보인다.
+  const TEAMS = ["1", "2", "3", "4"];
   const switcher = document.getElementById("boardSwitch");
 
   // 마감 뒤에는 최종 순위를 기본으로 보이고, 대회 중 public 순위로 바꿔 볼 수 있다.
@@ -154,7 +153,8 @@
       switcher.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
     }
     const shown = final && view === "public" ? [...rows].sort((a, b) => a.public_rank - b.public_rank) : rows;
-    tbody.innerHTML = window.IBA.boardRows(shown, user && user.team, final ? view : null);
+    const missing = TEAMS.filter((t) => !rows.some((r) => r.team === t)).map((team) => ({ team }));
+    tbody.innerHTML = window.IBA.boardRows([...shown, ...missing], user && user.team, final ? view : null);
   }
 
   async function load() {
@@ -167,11 +167,8 @@
     const { rows, final } = r.body;
     last = { rows, final, user };
     draw();
-    const hasRows = rows.length > 0;
-    table.hidden = !hasRows;
-    empty.hidden = hasRows;
     const now = new Date();
-    meta.textContent = `${rows.length}팀 · ${f.time(now.toISOString())} 기준 · 1분마다 자동 갱신`;
+    meta.textContent = `${rows.length}팀 제출 · ${f.time(now.toISOString())} 기준 · 1분마다 자동 갱신`;
   }
 
   switcher.addEventListener("click", (e) => {

@@ -153,16 +153,27 @@
   // 리더보드 표의 <tr>들. myTeam과 같은 팀 행은 강조한다.
   // 마감 뒤(view가 있을 때)에는 비교 열을 하나 더 둔다.
   // "final"은 최종 점수 옆에 대회 중 public 점수와 순위를, "public"은 public 점수 옆에 최종 점수와 순위를 보여준다.
+  // 점수가 없는 행({team}만 있는 행)은 아직 제출하지 않은 팀이다.
   function boardRows(rows, myTeam, view) {
     const teamIcon = icon("users");
     const pub = view === "public";
     return rows.map((row) => {
       const mine = myTeam && row.team === myTeam;
+      const teamCell = `<td><div class="team"><span class="avatar">${teamIcon}</span><div class="name">${esc(row.team)}${mine ? ' <span class="tag">우리 팀</span>' : ""}</div></div></td>`;
+      if (row.rmse == null) return `
+      <tr${mine ? ' class="mine"' : ""}>
+        <td><span class="rank-badge">–</span></td>
+        ${teamCell}
+        <td class="num faint">–</td>
+        <td class="num faint">–</td>
+        ${view ? '<td class="num faint">–</td>' : ""}
+        <td class="num faint">제출 없음</td>
+      </tr>`;
       const rank = pub ? row.public_rank : row.rank;
       return `
       <tr${mine ? ' class="mine"' : ""}>
         <td><span class="rank-badge${rank === 1 ? " first" : ""}">${rank}</span></td>
-        <td><div class="team"><span class="avatar">${teamIcon}</span><div><div class="name">${esc(row.team)}${mine ? ' <span class="tag">우리 팀</span>' : ""}</div><div class="sub">${esc(row.nickname)}</div></div></div></td>
+        ${teamCell}
         <td class="num score-main">${fmt.rmse(pub ? row.public_rmse : row.rmse)}</td>
         <td class="num soft">${fmt.r2(pub ? row.public_r2 : row.r2)}</td>
         ${view ? `<td class="num soft">${fmt.rmse(pub ? row.rmse : row.public_rmse)} <span class="faint">(${pub ? row.rank : row.public_rank}위)</span></td>` : ""}

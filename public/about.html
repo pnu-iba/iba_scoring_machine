@@ -12,53 +12,41 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&family=Playfair+Display:wght@700;900&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/assets/chrome.css">
   <link rel="stylesheet" href="/assets/style.css">
-  <link rel="stylesheet" href="/assets/about.css?v=2">
+  <link rel="stylesheet" href="/assets/about.css?v=cd-2">
   <script src="/assets/icons.js" defer></script>
   <script src="/assets/app.js?v=2" defer blocking="render"></script>
   <script src="/assets/chrome.js" defer blocking="render"></script>
-  <script src="/assets/about.js" defer></script>
+  <script src="/assets/about.js?v=cd-2" defer></script>
 </head>
 <body>
 <main class="page about-page">
-  <section class="about-library" aria-label="이 사이트를 만든 사람들">
-    <div class="about-shelf" id="aboutShelf">
-      <div class="about-book-entry is-active" data-about-book>
-        <button class="about-book-control" type="button" aria-label="minsoeklee 책 선택" aria-pressed="true">
-          <span class="about-book-spine" aria-hidden="true"><span>minsoeklee</span></span>
-          <span class="about-book-cover" aria-hidden="true"><span>minsoeklee</span></span>
-        </button>
-        <div class="about-book-detail" data-about-detail>
-          <h2>이민석</h2>
-          <p>채점 서버 · 사이트</p>
-          <a href="https://github.com/minsoeklee" target="_blank" rel="noopener">GitHub ↗</a>
-        </div>
-      </div>
+<!-- 레퍼런스 사진(케이스 줄)을 그대로 쓰고, 가운데 두 케이스 위에 보이지 않는 버튼을 얹는다.
+     누르면 그 케이스 자리에 소개 카드가 나타난다(about.js). -->
+<section class="cd-scene" aria-label="이 사이트를 만든 사람들">
+  <img class="cd-photo" src="/assets/about-cd/cd-row.jpg" alt="CD 케이스가 일렬로 서 있고, 가운데 두 케이스에 minsoeklee와 taejeong0416이 적혀 있다" width="1220" height="400">
 
-      <div class="about-book-entry about-book-entry--ink" data-about-book>
-        <button class="about-book-control" type="button" aria-label="taejeong0416 책 선택" aria-pressed="false">
-          <span class="about-book-spine" aria-hidden="true"><span>taejeong0416</span></span>
-          <span class="about-book-cover" aria-hidden="true"><span>taejeong0416</span></span>
-        </button>
-        <div class="about-book-detail" data-about-detail aria-hidden="true" inert>
-          <h2>박태정</h2>
-          <p>공동 개발</p>
-          <a href="https://github.com/taejeong0416" target="_blank" rel="noopener">GitHub ↗</a>
-        </div>
-      </div>
-
-      <span class="about-decor" aria-hidden="true" style="--book-width: 38px; --book-height: 284px; --book-color: #e0dfd9"></span>
-      <span class="about-decor" aria-hidden="true" style="--book-width: 27px; --book-height: 310px; --book-color: #c9cfda"></span>
-      <span class="about-decor" aria-hidden="true" style="--book-width: 44px; --book-height: 273px; --book-color: #e8e2d8"></span>
-      <span class="about-decor" aria-hidden="true" style="--book-width: 31px; --book-height: 295px; --book-color: #bac4d3"></span>
-      <span class="about-decor" aria-hidden="true" style="--book-width: 52px; --book-height: 320px; --book-color: #dedbd3"></span>
-      <span class="about-decor" aria-hidden="true" style="--book-width: 35px; --book-height: 267px; --book-color: #d5d9d6"></span>
-      <span class="about-decor" aria-hidden="true" style="--book-width: 28px; --book-height: 306px; --book-color: #bdc9d8"></span>
-      <span class="about-decor" aria-hidden="true" style="--book-width: 47px; --book-height: 281px; --book-color: #e4dcd2"></span>
-      <span class="about-decor" aria-hidden="true" style="--book-width: 33px; --book-height: 317px; --book-color: #cdd0cf"></span>
-      <span class="about-decor" aria-hidden="true" style="--book-width: 40px; --book-height: 290px; --book-color: #d7dce4"></span>
+  <article class="cd-spot" data-cd="minsoeklee" style="--x: 27.4%; --y: 4.4%; --w: 21.6%; --h: 88.6%">
+    <button class="cd-open" type="button" aria-expanded="false" aria-controls="details-minsoeklee" aria-label="minsoeklee 소개 보기"></button>
+    <div class="cd-card" id="details-minsoeklee" hidden>
+      <p class="cd-handle">minsoeklee</p>
+      <h2>이민석</h2>
+      <p class="cd-role">채점 서버 · 사이트</p>
+      <a href="https://github.com/minsoeklee" target="_blank" rel="noopener">GitHub ↗</a>
+      <button class="cd-return" type="button" aria-label="minsoeklee 소개 닫기">↶</button>
     </div>
-  </section>
+  </article>
 
+  <article class="cd-spot" data-cd="taejeong0416" style="--x: 50.8%; --y: 7.4%; --w: 20.8%; --h: 85.6%">
+    <button class="cd-open" type="button" aria-expanded="false" aria-controls="details-taejeong0416" aria-label="taejeong0416 소개 보기"></button>
+    <div class="cd-card" id="details-taejeong0416" hidden>
+      <p class="cd-handle">taejeong0416</p>
+      <h2>박태정</h2>
+      <p class="cd-role">공동 개발</p>
+      <a href="https://github.com/taejeong0416" target="_blank" rel="noopener">GitHub ↗</a>
+      <button class="cd-return" type="button" aria-label="taejeong0416 소개 닫기">↶</button>
+    </div>
+  </article>
+</section>
 </main>
 </body>
 </html>

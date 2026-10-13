@@ -1,25 +1,18 @@
+// 가운데 두 케이스: 누르면 그 자리에 소개 카드가 나타나고, ↶ 버튼이나 Esc로 닫는다.
 (() => {
-  const shelf = document.getElementById("aboutShelf");
-  if (!shelf) return;
-
-  const books = [...shelf.querySelectorAll("[data-about-book]")];
-
-  function selectBook(selected) {
-    books.forEach((book) => {
-      const active = book === selected;
-      const control = book.querySelector(".about-book-control");
-      const detail = book.querySelector("[data-about-detail]");
-
-      book.classList.toggle("is-active", active);
-      control.setAttribute("aria-pressed", String(active));
-      detail.inert = !active;
-      detail.setAttribute("aria-hidden", String(!active));
-    });
+  const spots = [...document.querySelectorAll("[data-cd]")];
+  function toggle(spot, open, focus = true) {
+    const button = spot.querySelector(".cd-open"), card = spot.querySelector(".cd-card");
+    card.hidden = !open;
+    button.setAttribute("aria-expanded", String(open));
+    button.tabIndex = open ? -1 : 0;
+    if (focus) (open ? spot.querySelector(".cd-return") : button).focus({ preventScroll: true });
   }
-
-  books.forEach((book) => {
-    book.querySelector(".about-book-control").addEventListener("click", () => selectBook(book));
+  spots.forEach((spot) => {
+    spot.querySelector(".cd-open").addEventListener("click", () => toggle(spot, true));
+    spot.querySelector(".cd-return").addEventListener("click", () => toggle(spot, false));
+    spot.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !spot.querySelector(".cd-card").hidden) { e.stopPropagation(); toggle(spot, false); }
+    });
   });
-
-  selectBook(books.find((book) => book.classList.contains("is-active")) || books[0]);
 })();

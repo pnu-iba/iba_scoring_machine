@@ -50,13 +50,21 @@
   function saveBest(v) { try { localStorage.setItem(BEST_KEY, String(v)); } catch (_) {} }
 
   // 고해상도 화면에서 흐려지지 않도록 캔버스 픽셀 수를 화면 배율에 맞춘다. 그리는 좌표는 그대로 480×640이다.
+  // 화면(또는 미니게임 창)이 낮으면 게임 화면이 한눈에 들어오도록 보이는 크기를 비율 그대로 줄인다.
+  function displayScale() {
+    const embedded = window.parent !== window;
+    const screenH = embedded ? window.parent.innerHeight - 16 * 2 - 36 : window.innerHeight;   // 창 위아래 여백과 제목줄
+    const room = screenH - cv.getBoundingClientRect().top - window.scrollY - 24;
+    return Math.max(360, Math.min(H, Math.floor(room))) / H;
+  }
   function fitCanvas() {
     dpr = window.devicePixelRatio || 1;
-    cv.width = Math.round(W * dpr);
-    cv.height = Math.round(H * dpr);
-    cv.style.width = W + "px";
-    cv.style.height = H + "px";
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const s = displayScale();
+    cv.width = Math.round(W * s * dpr);
+    cv.height = Math.round(H * s * dpr);
+    cv.style.width = Math.round(W * s) + "px";
+    cv.style.height = Math.round(H * s) + "px";
+    ctx.setTransform(dpr * s, 0, 0, dpr * s, 0, 0);
   }
 
   function makeStars() {

@@ -20,7 +20,8 @@
     .game-stage.playing canvas { cursor: none; }
     .power-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 12.5px; color: var(--ink-2); }
     .power-legend li { display: flex; align-items: center; gap: 8px; }
-    .power-legend .chip { flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #0b1a2e; }
+    /* 공통 .chip의 좌우 여백(9px)·테두리·줄 높이를 지워야 20px 원 정가운데에 글자가 온다 */
+    .power-legend .chip { flex: none; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; line-height: 1; color: #0b1a2e; }
   </style>
 </head>
 <body>

@@ -24,6 +24,7 @@ import io
 import os
 import secrets
 import zipfile
+from dataclasses import replace
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Callable
@@ -88,12 +89,27 @@ def get_settings(store: Store = Depends(get_store)) -> ContestSettings:
     return store.get_settings()
 
 
+# 사이트 구경용 계정: 실제 팀 없이 "Team IBA"로 보이고, 리더보드는 목데이터로, 제출은 저장하지 않고 채점만 한다.
+DEMO_USERNAME = "iba_dev"
+DEMO_TEAM = "IBA"
+
+
+def _is_demo(u: User | None) -> bool:
+    return u is not None and u.username == DEMO_USERNAME
+
+
+def _as_demo(u: User) -> User:
+    """가입 때 적은 팀은 DB에 그대로 두고, 화면과 채점에서는 실제 팀과 섞이지 않는 IBA 팀으로 다룬다."""
+    return replace(u, team_key=f"demo:{DEMO_TEAM.lower()}", team_display=DEMO_TEAM) if _is_demo(u) else u
+
+
 def current_user(
     store: Store = Depends(get_store),
     iba_session: str | None = Cookie(default=None),
 ) -> User | None:
     user_id = auth.read_session(iba_session)
-    return store.get_user(user_id) if user_id is not None else None
+    user = store.get_user(user_id) if user_id is not None else None
+    return _as_demo(user) if user is not None else None
 
 
 def require_user(user: User | None = Depends(current_user)) -> User:
@@ -113,7 +129,11 @@ def require_admin(user: User = Depends(require_user)) -> User:
 
 
 def _user_body(u: User) -> dict:
-    return {"username": u.username, "nickname": "Admin" if u.is_admin else u.nickname, "team": u.team_display, "is_admin": u.is_admin}
+    u = _as_demo(u)
+    body = {"username": u.username, "nickname": "Admin" if u.is_admin else u.nickname, "team": u.team_display, "is_admin": u.is_admin}
+    if _is_demo(u):
+        body["demo"] = True
+    return body
 
 
 def _set_session(response: Response, u: User) -> None:
@@ -369,6 +389,8 @@ async def submit(
             status_code=403,
             content={"error_code": "admin_cannot_submit", "message": "관리자 계정은 제출할 수 없습니다. 관리자 페이지의 채점 확인을 쓰세요."},
         )
+    if _is_demo(user):
+        return _demo_submit(await file.read(), answers)
     team_key = user.team_key
     now = now_fn()
     state = clock.status(now, settings)
@@ -427,6 +449,24 @@ async def submit(
     }
 
 
+def _demo_submit(data: bytes, answers: Answers):
+    """구경용 계정: 대회 기간·하루 횟수와 상관없이 채점만 하고 기록은 남기지 않는다(리더보드·현황에 섞이지 않는다)."""
+    try:
+        full, public = _score_both(data, answers)
+    except SubmissionError as e:
+        return JSONResponse(status_code=400, content=e.to_dict())
+    return {
+        "rmse": public.rmse,
+        "r2": public.r2,
+        "negative_clipped": full.negative_clipped,
+        "remaining_today": None,
+        "unlimited": True,
+        "demo": True,
+        "rank": None,
+        "team": DEMO_TEAM,
+    }
+
+
 def _score_both(data: bytes, answers: Answers):
     """제출 CSV를 전체 데이터와 public 구간으로 각각 채점한다. 형식이 틀리면 SubmissionError."""
     parsed = parse_submission(data, answers.ids)
@@ -461,6 +501,8 @@ def quota(
 ):
     body = _quota_body(store, user.team_key, now_fn(), settings.daily_limit)
     body["limit"] = settings.daily_limit
+    if _is_demo(user):
+        body.update(used_today=0, remaining_today=None, unlimited=True)
     return body
 
 
@@ -527,7 +569,7 @@ def admin_overview(
     now = now_fn()
     day_start, day_end = clock.day_window(now)
     active = [s for s in store.list_submissions() if s.deleted_at is None]
-    users = [u for u in store.list_users() if not u.is_admin]
+    users = [u for u in store.list_users() if not u.is_admin and not _is_demo(u)]   # 구경용 계정은 참가자 수에서 뺀다
     return {
         "status": clock.status(now, settings),
         "start_at": clock.start_at(settings).isoformat(),
@@ -639,6 +681,7 @@ def admin_restore_submission(submission_id: int, store: Store = Depends(get_stor
 
 
 def _admin_user_row(u: User) -> dict:
+    u = _as_demo(u)
     return {
         "id": u.id,
         "username": u.username,

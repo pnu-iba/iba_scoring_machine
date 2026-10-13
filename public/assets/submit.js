@@ -507,6 +507,25 @@
     start();
   }
 
+  // 구경용 계정(iba_dev): 예시 제출 파일을 미리 첨부해 두어 Submit만 누르면 채점 결과를 볼 수 있게 한다.
+  let demo = false;
+  let demoFile = null;
+  async function attachDemo() {
+    if (!demo || busy || fileEl.files.length) return;
+    try {
+      if (!demoFile) {
+        const res = await fetch("/data/demo_submission.csv");
+        if (!res.ok) return;
+        demoFile = new File([await res.blob()], "sample_data.csv", { type: "text/csv" });
+      }
+      if (busy || fileEl.files.length) return;
+      const dt = new DataTransfer();
+      dt.items.add(demoFile);
+      fileEl.files = dt.files;
+      fileEl.dispatchEvent(new Event("change"));
+    } catch { /* 첨부하지 못하면 평소처럼 직접 고르면 된다 */ }
+  }
+
   async function init() {
     const user = await window.IBA.me;
     if (!user) {
@@ -515,6 +534,8 @@
       return;
     }
     el("formCard").hidden = false;
+    demo = !!user.demo;
+    attachDemo();
   }
   init();
 
@@ -566,6 +587,7 @@
         busy = false; controller = null;
         btn.disabled = fileEl.disabled = false;
         updateButton();
+        attachDemo();   // 구경용 계정은 결과를 본 뒤에도 같은 파일로 바로 다시 제출할 수 있다
       }
     }
   });

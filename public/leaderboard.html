@@ -147,8 +147,10 @@
     const { entries, final, user } = last;
     document.getElementById("status").textContent = final ? "Closed" : "Active";
     document.getElementById("boardFoot").textContent = final ? NOTES.public : NOTES.live;
-    // 기록이 있는 것만 보인다(없으면 표가 비어 있다).
-    tbody.innerHTML = entries.map((e, i) => entryHtml(e, i, user && user.team)).join("");
+    // 기록이 있는 것만 보인다. 하나도 없으면 표 너비 전체에 안내 한 줄을 타자기 글씨로 적는다.
+    tbody.innerHTML = entries.length
+      ? entries.map((e, i) => entryHtml(e, i, user && user.team)).join("")
+      : `<tr class="empty-row"><td colspan="6">No submissions yet.</td></tr>`;
   }
 
   // 서버에서 새로 받아 last를 바꾼다(그리지는 않는다).

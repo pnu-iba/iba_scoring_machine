@@ -56,6 +56,7 @@ main.page.board-page { padding-top: 88px; padding-bottom: 40px; overflow: clip; 
 /* R²: 타자기 글꼴에는 위첨자 ²가 작고 흐리게 나와, 2를 직접 올려 쓴다 */
 .file-table .sq { font-size: 0.8em; line-height: 0; vertical-align: 0.45em; margin-left: 1px; }
 .file-table tr { position: relative; }
+.file-table .empty-row td { height: 64px; text-align: center; color: var(--ink-soft); letter-spacing: 0.04em; }   /* 기록이 없을 때 안내 한 줄 */
 /* 마감 전 최종 RMSE: 마커로 칠한 듯한 가림 막대(팀 대표 제출 칸에만) */
 .redact { display: inline-block; width: 86px; height: 13px; vertical-align: middle; background: var(--ink-dark); filter: url(#marker); }
 

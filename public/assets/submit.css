@@ -48,13 +48,23 @@ main.page.submit-page {
 .submit-page .file-box:disabled { cursor: progress; }
 .submit-page .file-box:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 /* 아이콘이 주인공: 크게, 가는 선으로 */
-.file-box-icon { width: 112px; height: 121px; stroke: var(--accent); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
+.file-box-icon { margin-bottom: 24px; width: 96px; height: 104px; stroke: var(--accent); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
 .file-box-icon .back { opacity: 0.4; }
 /* 첨부 뒤(채점 중 포함): 아이콘이 가운데 세로축을 중심으로 천천히 돈다 */
 .file-box.has-file .file-box-icon, .file-box:disabled .file-box-icon { animation: file-icon-spin 4s linear infinite; }
 @keyframes file-icon-spin { from { transform: perspective(500px) rotateY(0deg); } to { transform: perspective(500px) rotateY(360deg); } }
 @media (prefers-reduced-motion: reduce) { .file-box .file-box-icon { animation: none !important; } }
-.file-box-name { display: block; width: 100%; text-align: center; font-family: var(--mono); font-size: 13px; line-height: 1.4; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 14px 0 -10px; }   /* 긴 이름은 한 줄로 자르고 … 로 줄인다 */
+.submit-page .file-box { position: relative; }
+.file-box-text {
+  position: absolute; left: 32px; right: 32px; top: calc(50% - 12px + 52px + 22px);   /* 아이콘을 12px 올린 만큼 + 아이콘 절반(52) + 간격 */
+  display: flex; flex-direction: column; align-items: center; gap: 18px;
+}
+/* 파일 이름은 아이콘 위에 따로 띄운다(아이콘 위치는 그대로). 긴 이름은 한 줄로 자르고 … 로 줄인다 */
+.file-box-name {
+  position: absolute; left: 32px; right: 32px; bottom: calc(50% + 12px + 52px + 18px);   /* 아이콘을 올린 12 + 아이콘 절반(52) + 간격 */
+  display: block; text-align: center; font-family: var(--mono); font-size: 13px; line-height: 1.4; color: var(--ink-2);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 /* 첨부 뒤 박스 아래에 글자만 있는 다시 고르기 버튼 */
 .change-file {
   display: block; margin: 2px auto 0; padding: 0; height: auto;

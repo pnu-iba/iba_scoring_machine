@@ -1,11 +1,8 @@
-/* 랜딩 — 첫 화면은 제목과 소제목만, 아래로 내리면 세 장씩 이어지는 사진 줄.
+/* 랜딩 — 한 화면에 제목과 소제목만(아래로 내리는 영역 없음).
    나머지 페이지는 좌상단 메뉴 버튼의 호버 사이드바로. 색 토큰·메뉴·하단 바는 chrome.css에 있다. */
 
-/* 아래로 내려 보므로 오른쪽 위 두 줄은 화면에 고정하지 않고 첫 화면과 함께 올라가게 둔다.
-   메뉴 버튼은 어디서든 닿도록 고정 그대로. */
-.corner-links { position: absolute; }
 
-/* ── 히어로: 제목 + 소제목만. 첫 화면을 꽉 채우고, 사진은 그 아래에서 시작한다 ── */
+/* ── 히어로: 제목 + 소제목만. 첫 화면을 꽉 채운다 ── */
 .hero {
   min-height: 100vh;
   display: flex; flex-direction: column;
@@ -30,40 +27,5 @@
   color: var(--ink-2);
 }
 
-/* ── 사진 줄 ─────────────────────────────────────────────────
-   한 줄에 세로 2:3 사진 세 장. 줄 사이를 넓게 띄워 한 줄씩 차례로 지나가며 보게 한다.
-   좌우 88px 이상은 본문 페이지와 같은 여백 — 고정된 메뉴 버튼과 겹치지 않는다. */
-.gallery {
-  max-width: 1320px;
-  margin: 0 auto;
-  padding: 48px 88px 120px;   /* 위: 첫 화면이 끝나고 첫 줄이 오기까지 한 박자 쉬는 여백 */
-  display: flex; flex-direction: column;
-  gap: 120px;
-}
-.gallery-row {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
-}
-.shot {
-  margin: 0;
-  aspect-ratio: 2 / 3;
-  overflow: hidden;
-  background: var(--subtle);   /* 사진이 들어오기 전에는 따뜻한 회색 빈 틀 */
-}
-.shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
-
-/* ── 하단 바 ─────────────────────────────────────────────────
-   첫 화면 바닥(원래 자리)에 고정해 두고, 스크롤하는 동안에는 숨긴다.
-   맨 위·맨 아래에서 다시 보이게 하는 것은 index.html의 스크립트가 body.foot-hidden으로 정한다. */
-.site-foot {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 5;
-  transition: opacity 240ms var(--ease), visibility 0s;
-}
-.foot-hidden .site-foot {
-  opacity: 0; visibility: hidden;
-  transition: opacity 240ms var(--ease), visibility 0s linear 240ms;
-}
-@media (prefers-reduced-motion: reduce) {
-  .site-foot { transition-duration: 1ms !important; }
-}
+/* ── 하단 바: 첫 화면 바닥에 고정 ── */
+.site-foot { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; }

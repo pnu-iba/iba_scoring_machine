@@ -30,7 +30,6 @@
       <li><a href="/submit.html"><span>Submit</span></a></li>
       <li><a href="/leaderboard.html"><span>Leaderboard</span></a></li>
       <li><a href="/minigame.html"><span>Minigame</span></a></li>
-      <li><a href="/mypage.html"><span>My page</span></a></li>
     </ul>
 
     <div class="side-foot">
@@ -54,38 +53,6 @@
     <h1 class="wordmark">IBA</h1>
     <p class="tagline">Regression Project Scoring Service</p>
   </section>
-
-  <!-- 아래로 내리면 한 줄에 세 장씩 사진이 이어진다(ZARA 신상품 목록처럼 끊김 없는 스크롤).
-       지금은 빈 틀만 있다. 사진을 넣을 때는 figure 안에
-       <img src="/assets/photos/파일명.jpg" alt="사진 설명">을 넣으면 틀(세로 2:3)에 맞춰 잘려 채워진다.
-       줄을 늘리거나 줄이려면 gallery-row 한 덩이를 더하거나 뺀다. -->
-  <section class="gallery" aria-label="Photos">
-    <div class="gallery-row">
-      <figure class="shot"></figure>
-      <figure class="shot"></figure>
-      <figure class="shot"></figure>
-    </div>
-    <div class="gallery-row">
-      <figure class="shot"></figure>
-      <figure class="shot"></figure>
-      <figure class="shot"></figure>
-    </div>
-    <div class="gallery-row">
-      <figure class="shot"></figure>
-      <figure class="shot"></figure>
-      <figure class="shot"></figure>
-    </div>
-    <div class="gallery-row">
-      <figure class="shot"></figure>
-      <figure class="shot"></figure>
-      <figure class="shot"></figure>
-    </div>
-    <div class="gallery-row">
-      <figure class="shot"></figure>
-      <figure class="shot"></figure>
-      <figure class="shot"></figure>
-    </div>
-  </section>
 </main>
 
 <!-- 하단 바: 배경 없이 사이트와 같은 바탕. 줄글 한 덩이 + 한 줄 저작권. -->
@@ -108,23 +75,7 @@
 </footer>
 
 <script>
-// 하단 바는 첫 화면 바닥에 붙어 있다가, 내려가는 동안에는 사진을 가리지 않게 숨는다.
-// 맨 위로 돌아오거나 맨 아래까지 내려가면 다시 나타난다.
-(function () {
-  const EDGE = 2;         // 스크롤 위치가 소수점으로 떨어지는 브라우저를 위해 약간의 여유
-  const TOP_GRACE = 40;   // 아주 살짝 내린 정도로는 숨지 않고 이만큼(px)은 버틴다
-  const sync = () => {
-    const doc = document.documentElement;
-    const atTop = window.scrollY <= TOP_GRACE;
-    const atBottom = window.innerHeight + window.scrollY >= doc.scrollHeight - EDGE;
-    document.body.classList.toggle("foot-hidden", !(atTop || atBottom));
-  };
-  window.addEventListener("scroll", sync, { passive: true });
-  window.addEventListener("resize", sync);
-  sync();
-})();
-
-// 로그인했으면 Sign in 자리에 내 이름(마이페이지로)과 로그아웃을 둔다.
+// 로그인했으면 Sign in 자리에 내 이름과 로그아웃을 둔다.
 (async function () {
   const res = await fetch("/api/me", { credentials: "same-origin" }).catch(() => null);
   if (!res || !res.ok) return;
@@ -134,9 +85,8 @@
   if (user.is_admin) {
     document.querySelector("#sidebar .side-nav").insertAdjacentHTML("beforeend", '<li><a href="/admin.html"><span>Admin</span></a></li>');
   }
-  const who = document.createElement("a");
+  const who = document.createElement("span");
   who.className = "who";
-  who.href = "/mypage.html";
   who.textContent = `[Team ${user.team}] ${user.nickname}`;
   const out = document.createElement("button");
   out.type = "button";

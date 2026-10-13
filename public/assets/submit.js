@@ -8,25 +8,71 @@
   const node = document.createTextNode("");
   text.insertBefore(node, caret);
   const reduced = matchMedia("(prefers-reduced-motion: reduce)");
-  // 이 프로젝트와 동아리 PNU IBA에 대한 혼잣말
-  const fragments = [
+  // 프로젝트·동아리 이야기와 채점기의 속마음
+  const base = [
     "a scoring machine is just a patient reader / it reads every row and never gets tired",
+    "reading row one / reading row two / still reading / this is fine",
     "pnu iba :: people who like data a little more than they should / since the first meetup",
+    "id and price / id and price / i like it when the columns behave",
     "the devil is in the details / so we count the details one by one",
+    "i do not judge / i only subtract and square and take the mean",
     "rmse is honest / it does not care how late you stayed up / it only cares how close you got",
+    "somewhere a teammate is refreshing the leaderboard / hello",
     "one csv / one guess at the future / one number that comes back",
+    "thirty percent now / the rest after the deadline / patience is part of the game",
     "late nights in the club room / cold coffee / a notebook full of half finished ideas",
+    "every file gets the same careful attention / even the ones sent at three am",
     "the leaderboard is not the point / the point is the next idea you try",
     "busan / blue sea / blue accent / a quiet place to make careful models",
     "every submission is a small letter to the test set / and the test set always answers",
+    "counting / comparing / almost there / one more row",
     "we built this so the scoring could stay fair and the thinking could stay yours",
     "features / folds / seeds / patience :: the four seasons of a competition",
     "if it scored badly / good / now you know one more thing that does not work",
+    "back to waiting for the next file / it is never long",
   ];
-  // 줄바꿈 없이 이어 붙여 영역을 끝까지 빈틈없이 채운다.
-  const script = Array.from({ length: 96 }, (_, i) =>
-    `${fragments[i % fragments.length]} :: ${fragments[(i + 3) % fragments.length]}`
-  ).join(" / ");
+  // 끼워 넣을 글은 코드에 두지 않고 data/lyrics-*.txt에서 읽는다(한 줄씩, 빈 줄로 묶음 구분). 파일이 비면 그 자리는 건너뛴다.
+  const inserts = { a: [], b: [], c: [] };
+  const readInsert = (name) => fetch(`/data/lyrics-${name}.txt`).then((r) => (r.ok ? r.text() : "")).catch(() => "");
+  const blocks = (t) => t.split(/\n\s*\n/).map((b) => b.split("\n").map((l) => l.trim()).filter(Boolean)).filter((b) => b.length);
+  Promise.all([readInsert("wonderwall"), readInsert("morning-always-comes"), readInsert("set4")]).then(([a, b, c]) => {
+    inserts.a = blocks(a).flat();
+    inserts.b = blocks(b).flat();
+    inserts.c = blocks(c);
+  });
+  // 세트마다 앞(head)과 끝(tail)에 둘 문장. 그 사이는 base를 섞은 문장으로 채운다.
+  // 2·3번은 끼운 글이, 4번은 둘째 묶음이 영역 끝에서 한 문장 앞에 온다(4번 첫 묶음은 앞쪽).
+  const sets = [
+    () => ({ head: [], tail: [] }),
+    () => ({ head: [], tail: inserts.a }),
+    () => ({ head: [], tail: inserts.b }),
+    () => {
+      const [x = [], y = []] = inserts.c;
+      return { head: [...base.slice(0, 3), ...x, ...base.slice(3, 7)], tail: y };
+    },
+  ];
+  const mixed = (f) => Array.from({ length: 96 }, (_, k) => `${f[k % f.length]} :: ${f[(k + 3) % f.length]}`).join(" / ");
+  let lastSet = -1;
+  // 제출할 때마다 세트 하나를 고른다(직전과 같은 세트는 피한다).
+  function pickSet() {
+    let i = Math.floor(Math.random() * sets.length);
+    if (i === lastSet) i = (i + 1) % sets.length;
+    lastSet = i;
+    return sets[i]();
+  }
+  // 끝에 둘 글이 있으면, 영역에 딱 들어가도록 가운데 채움 문장의 길이를 재서 끝 글이 마지막 줄에 오게 한다.
+  function layoutScript({ head, tail }) {
+    const filler = mixed(base);
+    const front = head.length ? head.join(" / ") + " / " : "";
+    if (!tail.length) return front + filler;
+    const back = " / " + [...tail, ...base.slice(-1)].join(" / ");   // 끼운 글 뒤에 한 문장을 더 두어 끝에서 조금 앞에 오게
+    const build = (n) => front + filler.slice(0, n).replace(/\s+\S*$/, "") + back;
+    let lo = 0, hi = filler.length;
+    while (lo < hi - 1) { const mid = (lo + hi) >> 1; paint(build(mid)); if (fits()) lo = mid; else hi = mid; }
+    paint("");
+    return build(lo);
+  }
+  let script = "";
   let frame = 0, timer = 0, releaseWait = null;
   let serial = 0, busy = false, controller = null, currentText = "";
 
@@ -78,18 +124,33 @@
     resetSequence();
     idle.hidden = true;
     el("sequenceContent").hidden = false;
+    script = layoutScript(pickSet());   // 영역이 보이는 상태에서 재야 하므로 위에서 먼저 연다
     if (reduced.matches) { fillTo(script.length); return; }
     caret.hidden = false;
-    let count = 0, last = start, fraction = 0;
+    let count = 0, last = start, fraction = 0, perLine = 0, lineWait = 0;
+    const lineHeight = parseFloat(getComputedStyle(text).lineHeight) || 15;
     filled = new Promise((done) => {
       const tick = (now) => {
         if (token !== serial) return done();
         if (reduced.matches) { fillTo(script.length); return done(); }
-        // 처음부터 끝까지 같은 속도로 글자 단위로 찍는다(프레임이 밀려도 한 번에 건너뛰지 않게 제한).
-        fraction += Math.min(40, now - last) * 1.4;
+        const dt = Math.min(40, now - last);
         last = now;
-        const step = Math.min(24, Math.floor(fraction));
-        fraction -= step;
+        if (!perLine && text.offsetHeight >= viewport.clientHeight * 0.4) {
+          // 영역의 40%까지 찼으면 지금까지 한 줄에 들어간 글자 수를 재고, 이후로는 한 줄씩 찍는다.
+          perLine = Math.max(20, Math.round(count / Math.max(1, text.offsetHeight / lineHeight)));
+        }
+        let step;
+        if (perLine) {
+          lineWait += dt;
+          if (lineWait < 110) { frame = requestAnimationFrame(tick); return; }
+          lineWait = 0;
+          step = perLine;
+        } else {
+          // 앞쪽 40%는 글자 단위로 천천히 찍는다(프레임이 밀려도 한 번에 건너뛰지 않게 제한).
+          fraction += dt * 0.15;
+          step = Math.min(4, Math.floor(fraction));
+          fraction -= step;
+        }
         count = Math.min(script.length, count + step);
         if (fillTo(count) || count >= script.length) return done();
         frame = requestAnimationFrame(tick);
@@ -99,22 +160,25 @@
   }
   async function finishSequence(token) {
     // 채점이 일찍 끝나도 글자가 아래 끝까지 찬 뒤에 결과를 보여 준다.
-    await Promise.race([filled, new Promise((r) => setTimeout(r, 8000))]);
+    await Promise.race([filled, new Promise((r) => setTimeout(r, 60000))]);
     cancelMotion();
     if (token !== serial) return;
     const base = currentText.replace(/\s+$/, "") + "\n";
-    const ending = "...success!";
+    // 마지막 문구: 점 세 개는 한 글자씩 천천히, success는 한 번에, 잠시 뒤 !
+    const steps = [[".", 520], ["..", 520], ["...", 760], ["...success", 620], ["...success!", 700]];   // ! 뒤 잠깐 쉬었다가 점수를 보여 준다
     if (!reduced.matches) {
-      for (let i = 1; i <= ending.length; i++) {
+      await wait(900);   // 글자가 다 찬 뒤 첫 점이 나오기 전 잠깐 멈춘다
+      for (const [part, pause] of steps) {
         if (token !== serial) return;
-        paint(base + ending.slice(0, i));
-        await wait(18);
+        paint(base + part);
+        if (pause) await wait(pause);
       }
-    } else paint(base + ending);
+    } else paint(base + "...success!");
     caret.hidden = true;
   }
   function updateButton() {
     const file = fileEl.files[0];
+    // 첨부 전에는 아이콘만 둔다(글자 없음).
     el("fileBoxLabel").textContent = busy ? "Scoring…" : file ? "Submit" : "add file";
     btn.classList.toggle("has-file", Boolean(file) && !busy);
     btn.setAttribute("aria-label", busy ? "Scoring" : file ? `Submit ${file.name}` : "add file");

@@ -36,8 +36,11 @@
           <path d="M9 8h18l10 10v32a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V10a2 2 0 0 1 2-2Z"/>
           <path d="M27 8v10h10M14 30h16M14 37h16M14 44h9"/>
         </svg>
+        <!-- 글자는 아이콘 아래에 따로 띄워, 첨부해도 아이콘이 박스 가운데에서 움직이지 않는다 -->
         <span class="file-box-name" id="fileBoxName" hidden></span>
-        <span id="fileBoxLabel">add file</span>
+        <span class="file-box-text">
+          <span id="fileBoxLabel">add file</span>
+        </span>
       </button>
       <button type="button" class="change-file" id="changeFile" hidden>change file</button>
     </form>

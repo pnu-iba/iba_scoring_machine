@@ -5,7 +5,6 @@
     ["/submit.html", "Submit"],
     ["/leaderboard.html", "Leaderboard"],
     ["/minigame.html", "Minigame"],
-    ["/mypage.html", "My page"],
   ];
   const FOOT_PAGES = [
     ["/about.html", "About us"],
@@ -92,7 +91,7 @@
       if (here !== "/thanks.html" && here !== "/about.html" && here !== "/submit.html") main.insertAdjacentHTML("afterbegin", `
         <header class="page-head${variant}">
           <p class="page-eyebrow">Regression Project Scoring Service</p>
-          ${here === "/mypage.html" ? "" : `<h1 class="page-title">${title}</h1>`}
+          <h1 class="page-title">${title}</h1>
         </header>`);
     }
 
@@ -123,7 +122,7 @@
     if (user.is_admin) {
       document.querySelector("#sidebar .side-nav").insertAdjacentHTML("beforeend", `<li>${link(ADMIN_PAGE)}</li>`);
     }
-    corner.insertAdjacentHTML("beforeend", `<a class="who" href="/mypage.html">[Team ${esc(user.team)}] ${esc(user.nickname)}</a><button type="button" id="logoutBtn">Sign out</button>`);
+    corner.insertAdjacentHTML("beforeend", `<span class="who">[Team ${esc(user.team)}] ${esc(user.nickname)}</span><button type="button" id="logoutBtn">Sign out</button>`);
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await api("/api/logout", { method: "POST" });
       location.reload();

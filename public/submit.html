@@ -29,7 +29,8 @@
   <section id="formCard" hidden>
     <form id="form" novalidate>
       <input type="file" name="file" id="file" accept=".csv,text/csv" hidden>
-      <button type="button" class="file-box" id="submitBtn">
+      <!-- 첨부 전에는 박스 전체가 파일 고르기 버튼, 첨부 뒤에는 안쪽의 Submit·change file만 버튼이다(submit.js) -->
+      <div class="file-box" id="fileBox" role="button" tabindex="0" aria-label="add file">
         <!-- 아이콘: 겹친 종이 두 장(뒤 장은 옅게) -->
         <svg class="file-box-icon" viewBox="0 0 52 56" fill="none" aria-hidden="true">
           <path class="back" d="M18 6h18l10 10v32a2 2 0 0 1-2 2"/>
@@ -40,9 +41,10 @@
         <span class="file-box-name" id="fileBoxName" hidden></span>
         <span class="file-box-text">
           <span id="fileBoxLabel">add file</span>
+          <button type="button" class="file-box-action" id="submitBtn" hidden>Submit</button>
+          <button type="button" class="change-file" id="changeFile" hidden>change file</button>
         </span>
-      </button>
-      <button type="button" class="change-file" id="changeFile" hidden>change file</button>
+      </div>
     </form>
   </section>
   <div class="result" id="result" hidden></div>

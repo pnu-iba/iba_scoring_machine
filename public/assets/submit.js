@@ -1,7 +1,7 @@
 // Decorative text is independent of the uploaded data and the scoring service.
 (function () {
   const el = (id) => document.getElementById(id);
-  const form = el("form"), fileEl = el("file"), btn = el("submitBtn");
+  const form = el("form"), fileEl = el("file"), btn = el("submitBtn"), box = el("fileBox");
   const result = el("result"), announcement = el("submitAnnouncement");
   const viewport = el("sequenceViewport"), text = el("sequenceText");
   const idle = el("sequenceIdle"), caret = el("typingCaret");
@@ -179,26 +179,34 @@
   function updateButton() {
     const file = fileEl.files[0];
     // 첨부 전에는 아이콘만 둔다(글자 없음).
-    el("fileBoxLabel").textContent = busy ? "Scoring…" : file ? "Submit" : "add file";
-    btn.classList.toggle("has-file", Boolean(file) && !busy);
-    btn.setAttribute("aria-label", busy ? "Scoring" : file ? `Submit ${file.name}` : "add file");
+    const label = el("fileBoxLabel");
+    label.textContent = busy ? "Scoring…" : "add file";
+    label.hidden = Boolean(file) && !busy;
+    box.classList.toggle("has-file", Boolean(file) && !busy);
+    box.classList.toggle("scoring", busy);
+    // 첨부 전에만 박스 전체가 버튼이다. 첨부 뒤에는 Submit·change file 버튼으로 넘긴다.
+    const idle = !file && !busy;
+    if (idle) { box.setAttribute("role", "button"); box.tabIndex = 0; box.setAttribute("aria-label", "add file"); }
+    else { box.removeAttribute("role"); box.removeAttribute("tabindex"); box.removeAttribute("aria-label"); }
+    box.setAttribute("aria-busy", String(busy));
+    btn.hidden = !file || busy;
+    btn.setAttribute("aria-label", file ? `Submit ${file.name}` : "Submit");
     el("fileBoxName").textContent = file ? file.name : "";
     el("fileBoxName").title = file ? file.name : "";
     el("fileBoxName").hidden = !file;
-    el("changeFile").hidden = !file;
-    el("changeFile").disabled = busy;
+    el("changeFile").hidden = !file || busy;
   }
   el("changeFile").addEventListener("click", () => { if (!busy) fileEl.click(); });
 
   // 파일을 상자에 끌어다 놓기
-  ["dragenter", "dragover"].forEach((type) => btn.addEventListener(type, (e) => {
+  ["dragenter", "dragover"].forEach((type) => box.addEventListener(type, (e) => {
     if (busy || !e.dataTransfer || ![...e.dataTransfer.types].includes("Files")) return;
     e.preventDefault();
-    btn.classList.add("dragging");
+    box.classList.add("dragging");
   }));
-  ["dragleave", "dragend"].forEach((type) => btn.addEventListener(type, () => btn.classList.remove("dragging")));
-  btn.addEventListener("drop", (e) => {
-    btn.classList.remove("dragging");
+  ["dragleave", "dragend"].forEach((type) => box.addEventListener(type, () => box.classList.remove("dragging")));
+  box.addEventListener("drop", (e) => {
+    box.classList.remove("dragging");
     if (busy || !e.dataTransfer || !e.dataTransfer.files.length) return;
     e.preventDefault();
     const dt = new DataTransfer();
@@ -206,15 +214,18 @@
     fileEl.files = dt.files;
     fileEl.dispatchEvent(new Event("change"));
   });
-  btn.addEventListener("click", () => {
-    if (busy) return;
-    if (fileEl.files.length) form.requestSubmit();
-    else fileEl.click();
+  // 첨부 전: 박스 어디를 눌러도(또는 Enter·Space) 파일 고르기. 첨부 뒤에는 박스 클릭은 아무 일도 하지 않는다.
+  box.addEventListener("click", () => { if (!busy && !fileEl.files.length) fileEl.click(); });
+  box.addEventListener("keydown", (e) => {
+    if (e.target !== box || (e.key !== "Enter" && e.key !== " ")) return;
+    e.preventDefault();
+    if (!busy && !fileEl.files.length) fileEl.click();
   });
+  btn.addEventListener("click", () => { if (!busy && fileEl.files.length) form.requestSubmit(); });
   fileEl.addEventListener("change", () => {
     result.hidden = true;
     updateButton();
-    if (fileEl.files[0]) announcement.textContent = `${fileEl.files[0].name} 선택됨. 박스를 다시 눌러 채점을 시작하세요.`;
+    if (fileEl.files[0]) announcement.textContent = `${fileEl.files[0].name} 선택됨. Submit 버튼을 눌러 채점을 시작하세요.`;
   });
   const esc = (s) => window.IBA.esc(s);
   // 오류도 오른쪽 결과 영역에 한 글자씩 찍는다. 제목과 설명 사이는 한 줄 띄운다.

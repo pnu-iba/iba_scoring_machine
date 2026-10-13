@@ -203,19 +203,19 @@ def test_user_list_hides_password_hash(client, store):
 
 
 def test_change_team_moves_future_submissions_only(client, store):
-    login_as(client, team="7", nickname="a")
+    login_as(client, team="2", nickname="a")
     client.post("/api/submit", files={"file": ("s.csv", csv_bytes(perfect_rows()), "text/csv")})
-    student = store.list_users("7")[0]
+    student = store.list_users("2")[0]
 
     login_admin(client, store)
-    r = client.patch(f"/api/admin/users/{student.id}", json={"team": "08"})
+    r = client.patch(f"/api/admin/users/{student.id}", json={"team": "03"})
     assert r.status_code == 200
-    assert r.json()["team"] == "8"
+    assert r.json()["team"] == "3"
 
-    login_as(client, team="7", nickname="a")
+    login_as(client, team="2", nickname="a")
     client.post("/api/submit", files={"file": ("s.csv", csv_bytes(perfect_rows()), "text/csv")})
     teams = sorted(s.team_key for s in store.list_submissions())
-    assert teams == ["7", "8"]
+    assert teams == ["2", "3"]
 
 
 def test_reset_password_issues_working_temporary_password(client, store):

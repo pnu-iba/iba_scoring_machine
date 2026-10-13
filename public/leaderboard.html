@@ -122,8 +122,6 @@
   const tbody = document.querySelector("#board tbody");
   const meta = document.getElementById("meta");
   const btn = document.getElementById("refresh");
-  // 이번 기수 팀 번호. 제출하지 않은 팀도 표에 항상 보인다.
-  const TEAMS = ["1", "2", "3", "4"];
   const switcher = document.getElementById("boardSwitch");
 
   // 마감 뒤에는 최종 순위를 기본으로 보이고, 대회 중 public 순위로 바꿔 볼 수 있다.
@@ -138,10 +136,10 @@
     },
   };
   let view = "final";
-  let last = null;  // 마지막 응답 {rows, final}과 사용자
+  let last = null;  // 마지막 응답 {rows, final, teams}와 사용자
 
   function draw() {
-    const { rows, final, user } = last;
+    const { rows, final, teams, user } = last;
     if (final) {
       const v = VIEWS[view];
       document.getElementById("boardTitle").textContent = v.title;
@@ -153,7 +151,8 @@
       switcher.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
     }
     const shown = final && view === "public" ? [...rows].sort((a, b) => a.public_rank - b.public_rank) : rows;
-    const missing = TEAMS.filter((t) => !rows.some((r) => r.team === t)).map((team) => ({ team }));
+    // 이번 기수 팀은 제출하지 않았어도 표에 항상 보인다.
+    const missing = teams.filter((t) => !rows.some((r) => r.team === t)).map((team) => ({ team }));
     tbody.innerHTML = window.IBA.boardRows([...shown, ...missing], user && user.team, final ? view : null);
   }
 
@@ -164,8 +163,8 @@
     btn.disabled = false;
     if (!r.ok) { meta.textContent = `불러오지 못했습니다 (HTTP ${r.status})`; return; }
     const f = window.IBA.fmt;
-    const { rows, final } = r.body;
-    last = { rows, final, user };
+    const { rows, final, teams } = r.body;
+    last = { rows, final, teams, user };
     draw();
     const now = new Date();
     meta.textContent = `${rows.length}팀 제출 · ${f.time(now.toISOString())} 기준 · 1분마다 자동 갱신`;

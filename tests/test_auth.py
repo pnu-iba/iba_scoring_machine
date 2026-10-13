@@ -24,13 +24,15 @@ def test_signup_validation(client):
     assert signup(client, "valid_id", team="1" * 41).json()["error_code"] == "bad_name"
     assert signup(client, "valid_id", team="3조").json()["error_code"] == "bad_name"   # 팀 번호는 숫자만
     assert signup(client, "valid_id", team="-3").json()["error_code"] == "bad_name"
+    assert signup(client, "valid_id", team="5").json()["error_code"] == "bad_name"     # 이번 기수 팀(1-4)만
+    assert signup(client, "valid_id", team="0").json()["error_code"] == "bad_name"
     assert signup(client, "valid_id", nickname="").json()["error_code"] == "bad_name"
 
 
 def test_team_number_ignores_leading_zeros(client):
-    signup(client, "first_1", team="7")
-    r = signup(client, "second_2", team="  007 ")
-    assert r.json()["team"] == "7"
+    signup(client, "first_1", team="2")
+    r = signup(client, "second_2", team="  002 ")
+    assert r.json()["team"] == "2"
 
 
 def test_login_logout(client):
@@ -60,11 +62,11 @@ def test_submit_and_quota_require_login(client):
 
 
 def test_submission_uses_account_team_and_nickname(client):
-    signup(client, "dave_123", team="12", nickname="태정")
+    signup(client, "dave_123", team="4", nickname="태정")
     r = client.post("/api/submit", files={"file": ("s.csv", csv_bytes(perfect_rows()), "text/csv")})
     assert r.status_code == 200, r.text
     board = client.get("/api/leaderboard").json()["rows"]
-    assert (board[0]["team"], board[0]["nickname"]) == ("12", "태정")
+    assert (board[0]["team"], board[0]["nickname"]) == ("4", "태정")
 
 
 def test_tampered_or_expired_session_is_rejected(client):

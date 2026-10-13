@@ -34,8 +34,8 @@
       </label>
     </div>
     <div class="signup-field">
-      <label class="sf-inner"><span class="field-name" data-text="Team No. (Only Number)"></span>
-        <span class="sf-input"><span class="sf-input-inner"><input type="text" name="team" maxlength="40" autocomplete="off" pattern="[0-9]*" tabindex="-1"></span></span>
+      <label class="sf-inner"><span class="field-name" data-text="Team No. (1-4)"></span>
+        <span class="sf-input"><span class="sf-input-inner"><input type="text" name="team" maxlength="1" autocomplete="off" pattern="[1-4]" tabindex="-1"></span></span>
       </label>
     </div>
     <p class="msg-error" id="error" hidden></p>
@@ -140,12 +140,12 @@
     if (id === run) retype(btnLabel, "Sign in", id);
   }
 
-  // 팀 번호 칸에는 숫자만 남긴다
+  // 팀 번호 칸에는 1-4만 남긴다
   if (window.IBA_LOCAL_PREVIEW) {
     form.noValidate = true;
     form.team.removeAttribute("pattern");
   } else {
-    form.team.addEventListener("input", () => { form.team.value = form.team.value.replace(/\D/g, ""); });
+    form.team.addEventListener("input", () => { form.team.value = form.team.value.replace(/[^1-4]/g, ""); });
   }
 
   toggle.addEventListener("click", (e) => {

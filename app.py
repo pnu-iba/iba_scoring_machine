@@ -37,7 +37,7 @@ from scoring import clock
 from scoring.clock import ContestSettings
 from scoring.metrics import score
 from scoring.parse import SubmissionError, parse_submission
-from scoring.teams import NameError_, clean_nickname, clean_team_display, normalize_team
+from scoring.teams import TEAMS, NameError_, clean_nickname, clean_team_display, normalize_team, signup_team
 from store import Answers, DuplicateUsername, GameScore, Notice, PostgresStore, Store, Submission, User
 
 app = FastAPI(title="IBA Scoring Machine", docs_url=None, redoc_url=None)
@@ -220,7 +220,7 @@ def signup(
         username = auth.clean_username(body.username)
         auth.check_password_rules(body.password)
         nickname = clean_nickname(body.nickname)
-        team_key = normalize_team(body.team)
+        team_key = signup_team(body.team)
         team_display = clean_team_display(body.team)
     except auth.AccountError as e:
         return _bad_request("bad_account", str(e))
@@ -416,6 +416,7 @@ def leaderboard(
     return {
         "final": final,
         "final_at": clock.final_at(settings).isoformat(),
+        "teams": list(TEAMS),
         "rows": [_leaderboard_row(r, final) for r in store.leaderboard(final)],
     }
 

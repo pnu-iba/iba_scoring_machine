@@ -45,12 +45,12 @@ def test_fourth_submission_same_day_is_rejected(client):
 
 
 def test_team_number_variants_share_quota(client):
-    assert submit(client, csv_bytes(perfect_rows()), team="5").status_code == 200
-    assert submit(client, csv_bytes(perfect_rows()), team=" 05 ").status_code == 200
-    assert submit(client, csv_bytes(perfect_rows()), team="５").status_code == 200
-    assert submit(client, csv_bytes(perfect_rows()), team="005").status_code == 429
+    assert submit(client, csv_bytes(perfect_rows()), team="4").status_code == 200
+    assert submit(client, csv_bytes(perfect_rows()), team=" 04 ").status_code == 200
+    assert submit(client, csv_bytes(perfect_rows()), team="４").status_code == 200
+    assert submit(client, csv_bytes(perfect_rows()), team="004").status_code == 429
     board = client.get("/api/leaderboard").json()["rows"]
-    assert [row["team"] for row in board] == ["5"]
+    assert [row["team"] for row in board] == ["4"]
 
 
 def test_quota_resets_at_kst_midnight(client, clock):

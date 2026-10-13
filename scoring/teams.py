@@ -11,6 +11,8 @@ import unicodedata
 
 MAX_TEAM_LEN = 40
 MAX_NICKNAME_LEN = 40
+# 이번 기수 팀 번호. 가입은 이 번호로만 받고, 리더보드는 제출이 없어도 이 팀들을 보여준다.
+TEAMS = ("1", "2", "3", "4")
 
 _WS = re.compile(r"\s+")
 
@@ -33,6 +35,13 @@ def normalize_team(raw: str) -> str:
     if not (text.isascii() and text.isdigit()):
         raise NameError_("팀 번호는 숫자만 입력하세요.")
     return str(int(text))
+
+
+def signup_team(raw: str) -> str:
+    team = normalize_team(raw)
+    if team not in TEAMS:
+        raise NameError_(f"팀 번호는 {', '.join(TEAMS)} 중 하나여야 합니다.")
+    return team
 
 
 def clean_team_display(raw: str) -> str:

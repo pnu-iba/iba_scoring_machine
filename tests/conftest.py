@@ -106,5 +106,7 @@ def login_admin(client: TestClient, store) -> None:
     """관리자 계정으로 로그인한다. 처음이면 가입한 뒤 저장소에서 관리자로 지정한다."""
     r = client.post("/api/login", json={"username": "operator", "password": PASSWORD})
     if r.status_code == 401:
-        assert signup(client, "operator", team="0", nickname="운영진").status_code == 200
-        store.get_user_by_username("operator").is_admin = True
+        assert signup(client, "operator", team="1", nickname="운영진").status_code == 200
+        # 운영진은 가입 뒤 관리자 페이지에서 팀 0으로 옮긴다.
+        op = store.get_user_by_username("operator")
+        op.is_admin, op.team_key, op.team_display = True, "0", "0"

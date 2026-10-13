@@ -23,6 +23,10 @@
 <section class="card flush">
   <div class="card-head">
     <h2 id="boardTitle">Public 리더보드</h2>
+    <div class="board-switch" id="boardSwitch" role="group" aria-label="순위 기준" hidden>
+      <button type="button" data-view="final" aria-pressed="true">최종</button>
+      <button type="button" data-view="public" aria-pressed="false">Public</button>
+    </div>
     <div class="board-meta">
       <span id="meta">불러오는 중…</span>
       <button class="ghost" id="refresh" type="button"><i data-icon="refresh-cw"></i>새로고침</button>
@@ -121,6 +125,37 @@
   const empty = document.getElementById("empty");
   const table = document.getElementById("board");
   const btn = document.getElementById("refresh");
+  const switcher = document.getElementById("boardSwitch");
+
+  // 마감 뒤에는 최종 순위를 기본으로 보이고, 대회 중 public 순위로 바꿔 볼 수 있다.
+  const VIEWS = {
+    final: {
+      title: "최종 리더보드", score: "최종 RMSE", compare: "Public RMSE (순위)",
+      foot: "팀마다 public 점수가 가장 좋았던 제출을 test.csv 전체로 다시 채점한 최종 순위입니다. 괄호 안은 대회 중 public 순위입니다.",
+    },
+    public: {
+      title: "Public 리더보드", score: "Public RMSE", compare: "최종 RMSE (순위)",
+      foot: "대회 기간에 보이던 순위입니다. test.csv의 30%로 매긴 public 점수 기준 팀별 최고 기록이며, 괄호 안은 최종 순위입니다.",
+    },
+  };
+  let view = "final";
+  let last = null;  // 마지막 응답 {rows, final}과 사용자
+
+  function draw() {
+    const { rows, final, user } = last;
+    if (final) {
+      const v = VIEWS[view];
+      document.getElementById("boardTitle").textContent = v.title;
+      document.getElementById("scoreHead").textContent = v.score;
+      document.getElementById("publicHead").textContent = v.compare;
+      document.getElementById("publicHead").hidden = false;
+      document.getElementById("boardFoot").textContent = v.foot;
+      switcher.hidden = false;
+      switcher.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
+    }
+    const shown = final && view === "public" ? [...rows].sort((a, b) => a.public_rank - b.public_rank) : rows;
+    tbody.innerHTML = window.IBA.boardRows(shown, user && user.team, final ? view : null);
+  }
 
   async function load() {
     btn.disabled = true;
@@ -130,14 +165,8 @@
     if (!r.ok) { meta.textContent = `불러오지 못했습니다 (HTTP ${r.status})`; return; }
     const f = window.IBA.fmt;
     const { rows, final } = r.body;
-    if (final) {
-      document.getElementById("boardTitle").textContent = "최종 리더보드";
-      document.getElementById("scoreHead").textContent = "최종 RMSE";
-      document.getElementById("publicHead").hidden = false;
-      document.getElementById("boardFoot").textContent =
-        "팀마다 public 점수가 가장 좋았던 제출을 test.csv 전체로 다시 채점한 최종 순위입니다. 괄호 안은 대회 중 public 순위입니다.";
-    }
-    tbody.innerHTML = window.IBA.boardRows(rows, user && user.team, final);
+    last = { rows, final, user };
+    draw();
     const hasRows = rows.length > 0;
     table.hidden = !hasRows;
     empty.hidden = hasRows;
@@ -145,6 +174,12 @@
     meta.textContent = `${rows.length}팀 · ${f.time(now.toISOString())} 기준 · 1분마다 자동 갱신`;
   }
 
+  switcher.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-view]");
+    if (!b || !last) return;
+    view = b.dataset.view;
+    draw();
+  });
   btn.addEventListener("click", load);
   document.addEventListener("DOMContentLoaded", () => {
     load();

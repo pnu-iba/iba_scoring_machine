@@ -12,40 +12,118 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&family=Playfair+Display:wght@700;900&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/assets/chrome.css">
   <link rel="stylesheet" href="/assets/style.css">
-  <link rel="stylesheet" href="/assets/about.css?v=cd-2">
+  <link rel="stylesheet" href="/assets/about.css?v=cd-flip-2">
   <script src="/assets/icons.js" defer></script>
   <script src="/assets/app.js?v=2" defer blocking="render"></script>
   <script src="/assets/chrome.js" defer blocking="render"></script>
-  <script src="/assets/about.js?v=cd-2" defer></script>
+  <script src="/assets/about.js?v=cd-flip-1" defer></script>
 </head>
 <body>
 <main class="page about-page">
-<!-- 레퍼런스 사진(케이스 줄)을 그대로 쓰고, 가운데 두 케이스 위에 보이지 않는 버튼을 얹는다.
-     누르면 그 케이스 자리에 소개 카드가 나타난다(about.js). -->
-<section class="cd-scene" aria-label="이 사이트를 만든 사람들">
-  <img class="cd-photo" src="/assets/about-cd/cd-row.jpg" alt="CD 케이스가 일렬로 서 있고, 가운데 두 케이스에 minsoeklee와 taejeong0416이 적혀 있다" width="1220" height="400">
-
-  <article class="cd-spot" data-cd="minsoeklee" style="--x: 27.4%; --y: 4.4%; --w: 21.6%; --h: 88.6%">
-    <button class="cd-open" type="button" aria-expanded="false" aria-controls="details-minsoeklee" aria-label="minsoeklee 소개 보기"></button>
-    <div class="cd-card" id="details-minsoeklee" hidden>
-      <p class="cd-handle">minsoeklee</p>
-      <h2>이민석</h2>
-      <p class="cd-role">채점 서버 · 사이트</p>
-      <a href="https://github.com/minsoeklee" target="_blank" rel="noopener">GitHub ↗</a>
-      <button class="cd-return" type="button" aria-label="minsoeklee 소개 닫기">↶</button>
+<!-- Each layer clips the same photograph to one visible case. The right-hand cases face the opposite direction: each outline includes its own RIGHT spine. The ground uses those same outlines. -->
+<section class="cd-scene" aria-label="이 사이트를 만든 사람들의 CD 컬렉션">
+<svg class="cd-ground" viewBox="0 0 1220 400" aria-hidden="true" focusable="false">
+ <defs><!-- 케이스 자리 + 그 아래 8px(바닥과 맞닿은 회색 경계)을 지워, 케이스가 떠올라도 바닥에 아무것도 남지 않게 한다 -->
+ <mask id="cd-ground-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="1220" height="400"><rect width="1220" height="400" fill="white"/>
+  <polygon points="28,33 43,23 136,30 137,378 44,392 27,385" fill="black"/>
+  <polygon points="131,33 144,24 235,28 236,378 145,391 130,384" fill="black"/>
+  <polygon points="231,31 244,23 334,25 336,378 245,392 230,385" fill="black"/>
+  <polygon points="324,29 344,14 605,35 607,369 346,395 324,386" fill="black"/>
+  <polygon points="614,40 640,34 878,15 897,20 899,31 882,35 882,368 900,369 900,385 875,389 642,389 614,380" fill="black"/>
+  <polygon points="877,42 951,27 966,25 980,29 985,34 985,372 978,378 962,377 895,376 877,370" fill="black"/>
+  <polygon points="985,34 1058,25 1066,23 1080,28 1085,34 1085,371 1078,378 1066,378 985,371" fill="black"/>
+  <polygon points="1085,35 1166,26 1177,25 1187,31 1187,372 1181,379 1168,380 1085,372" fill="black"/>
+ </mask></defs>
+ <!-- 케이스가 떠오를 때 드러나는 자리: 사진 바닥과 같은 색 흐름(케이스 아래쪽 바닥은 조금 더 밝다) -->
+ <linearGradient id="cd-floor" x1="0" y1="0" x2="0" y2="400" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f5f4f0"/><stop offset=".86" stop-color="#f6f5f1"/><stop offset=".95" stop-color="#f7f6f2"/><stop offset="1" stop-color="#f5f4f0"/></linearGradient>
+ <rect width="1220" height="400" fill="url(#cd-floor)"/>
+ <image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" mask="url(#cd-ground-mask)"/>
+ <!-- minsoeklee 케이스 자리(위에서 지운 모양과 같음)는 사이트 바탕색으로 채운다: 케이스가 들려도 아래가 페이지 바탕과 같은 색 -->
+ <filter id="cd-soft-edge" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="1.6"/></filter>
+ <polygon points="324,29 344,14 605,35 607,369 346,395 324,386" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
+ <polygon points="614,40 640,34 878,15 897,20 899,31 882,35 882,368 900,369 900,385 875,389 642,389 614,380" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
+<polygon points="28,33 43,23 136,30 137,378 44,392 27,385" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
+<polygon points="131,33 144,24 235,28 236,378 145,391 130,384" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
+<polygon points="231,31 244,23 334,25 336,378 245,392 230,385" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
+ <!-- 가운데 두 케이스 사이 틈 아래쪽(사진 좌표 x 598–620, y 343–365)에 원래 찍혀 있던 회색 그늘을 바닥색으로 옅게 덮는다 -->
+ <filter id="cd-soften" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+ <ellipse cx="609" cy="355" rx="13" ry="14" fill="#f5f4f0" opacity=".85" filter="url(#cd-soften)"/>
+</svg>
+<div class="cd-layer cd-decor" aria-hidden="true" data-side="left" style="--depth:1; --x:2.45902%; --y:5.75000%; --w:8.60656%; --h:87.00000%; --ratio:105/348; --turn:-1deg; --outline:polygon(0.0000% 2.8736%, 12.3810% 0.0000%, 100.0000% 2.0115%, 100.0000% 96.2644%, 13.3333% 100.0000%, 0.0000% 98.2759%)">
+ <div class="cd-hover-zone" aria-hidden="true"></div>
+ <div class="cd-motion">
+  <svg class="cd-image" viewBox="30 23 105 348" aria-hidden="true" focusable="false"><defs><clipPath id="cd-outline-01"><polygon points="30,33 43,23 135,30 135,358 44,371 30,365"/></clipPath></defs><image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" clip-path="url(#cd-outline-01)"/></svg>
+ </div>
+</div>
+<div class="cd-layer cd-decor" aria-hidden="true" data-side="left" style="--depth:2; --x:10.81967%; --y:6.00000%; --w:8.44262%; --h:86.50000%; --ratio:103/346; --turn:-1deg; --outline:polygon(0.0000% 2.6012%, 11.6505% 0.0000%, 99.0291% 1.1561%, 100.0000% 96.5318%, 12.6214% 100.0000%, 0.0000% 98.2659%)">
+ <div class="cd-hover-zone" aria-hidden="true"></div>
+ <div class="cd-motion">
+  <svg class="cd-image" viewBox="132 24 103 346" aria-hidden="true" focusable="false"><defs><clipPath id="cd-outline-02"><polygon points="132,33 144,24 234,28 235,358 145,370 132,364"/></clipPath></defs><image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" clip-path="url(#cd-outline-02)"/></svg>
+ </div>
+</div>
+<div class="cd-layer cd-decor" aria-hidden="true" data-side="left" style="--depth:3; --x:19.01639%; --y:5.75000%; --w:8.44262%; --h:87.00000%; --ratio:103/348; --turn:-1deg; --outline:polygon(0.0000% 2.2989%, 11.6505% 0.0000%, 99.0291% 0.5747%, 100.0000% 96.2644%, 12.6214% 100.0000%, 0.0000% 98.2759%)">
+ <div class="cd-hover-zone" aria-hidden="true"></div>
+ <div class="cd-motion">
+  <svg class="cd-image" viewBox="232 23 103 348" aria-hidden="true" focusable="false"><defs><clipPath id="cd-outline-03"><polygon points="232,31 244,23 334,25 335,358 245,371 232,365"/></clipPath></defs><image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" clip-path="url(#cd-outline-03)"/></svg>
+ </div>
+</div>
+<article class="cd-layer cd-person" data-cd="minsoeklee" aria-label="minsoeklee CD" data-side="left" style="--rest-yaw:48deg; --depth:4; --x:27.04918%; --y:4.50000%; --w:22.04918%; --h:89.00000%; --ratio:269/356; --turn:-1deg; --outline:polygon(0.0000% 3.3708%, 5.5762% 0.0000%, 100.0000% 5.6180%, 100.0000% 92.9775%, 5.9480% 100.0000%, 0.0000% 97.1910%)">
+ <div class="cd-motion">
+  <div class="cd-stage">
+   <div class="cd-anchor"><div class="cd-advance"><div class="cd-pose"><div class="cd-flip">
+    <div class="cd-face cd-front" aria-hidden="false">
+     <svg class="cd-face-texture" viewBox="95 120 480 414" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="minsoeklee-front-crop"><polygon points="96,125 100,120 569,120 574,124 574,530 570,534 99,534 95,530"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.png" width="1254" height="1254" clip-path="url(#minsoeklee-front-crop)"/></svg>
+     <button class="cd-toggle cd-front-toggle" type="button" aria-expanded="false" aria-controls="details-minsoeklee" aria-label="minsoeklee 뒷면 보기"></button>
     </div>
-  </article>
-
-  <article class="cd-spot" data-cd="taejeong0416" style="--x: 50.8%; --y: 7.4%; --w: 20.8%; --h: 85.6%">
-    <button class="cd-open" type="button" aria-expanded="false" aria-controls="details-taejeong0416" aria-label="taejeong0416 소개 보기"></button>
-    <div class="cd-card" id="details-taejeong0416" hidden>
-      <p class="cd-handle">taejeong0416</p>
-      <h2>박태정</h2>
-      <p class="cd-role">공동 개발</p>
-      <a href="https://github.com/taejeong0416" target="_blank" rel="noopener">GitHub ↗</a>
-      <button class="cd-return" type="button" aria-label="taejeong0416 소개 닫기">↶</button>
+    <div class="cd-face cd-back" id="details-minsoeklee" aria-hidden="true" inert>
+     <svg class="cd-face-texture" viewBox="95 722 480 425" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="minsoeklee-back-crop"><polygon points="95,729 100,722 569,722 575,727 575,1140 570,1147 99,1147 95,1142"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.png" width="1254" height="1254" clip-path="url(#minsoeklee-back-crop)"/></svg>
+     <div class="cd-description" id="description-minsoeklee"><p>minsoeklee</p><p>10th member</p><p>Statistics</p><p>Worked on: Frontend , Design</p><p>In progress: Traveling</p></div>
+     <button class="cd-toggle cd-back-toggle" type="button" tabindex="-1" aria-expanded="false" aria-controls="details-minsoeklee" aria-describedby="description-minsoeklee" aria-label="minsoeklee 앞면으로 돌아가기"></button>
     </div>
-  </article>
+    <div class="cd-edge cd-edge-left" aria-hidden="true"></div><div class="cd-edge cd-edge-right" aria-hidden="true"></div>
+    <div class="cd-edge cd-edge-top" aria-hidden="true"></div><div class="cd-edge cd-edge-bottom" aria-hidden="true"></div>
+   </div></div></div></div>
+  </div>
+ </div>
+</article>
+<article class="cd-layer cd-person" data-cd="taejeong0416" aria-label="taejeong0416 CD" data-side="right" style="--rest-yaw:-48deg; --depth:4; --x:50.73770%; --y:5.00000%; --w:22.54098%; --h:88.75000%; --ratio:275/355; --turn:1deg; --outline:polygon(0.0000% 6.7606%, 8.0000% 5.3521%, 93.0909% 0.0000%, 98.9091% 0.8451%, 99.6364% 2.2535%, 93.8182% 2.8169%, 93.8182% 96.6197%, 100.0000% 96.9014%, 100.0000% 98.5915%, 93.0909% 100.0000%, 10.1818% 100.0000%, 0.0000% 97.1831%)">
+ <div class="cd-motion">
+  <div class="cd-stage">
+   <div class="cd-anchor"><div class="cd-advance"><div class="cd-pose"><div class="cd-flip">
+    <div class="cd-face cd-front" aria-hidden="false">
+     <svg class="cd-face-texture" viewBox="683 120 477 414" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="taejeong0416-front-crop"><polygon points="684,125 688,120 1154,120 1159,124 1159,530 1155,534 688,534 683,530"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.png" width="1254" height="1254" clip-path="url(#taejeong0416-front-crop)"/></svg>
+     <button class="cd-toggle cd-front-toggle" type="button" aria-expanded="false" aria-controls="details-taejeong0416" aria-label="taejeong0416 뒷면 보기"></button>
+    </div>
+    <div class="cd-face cd-back" id="details-taejeong0416" aria-hidden="true" inert>
+     <svg class="cd-face-texture" viewBox="683 722 478 425" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><defs><clipPath id="taejeong0416-back-crop"><polygon points="683,729 688,722 1155,722 1161,727 1161,1142 1155,1147 688,1147 683,1142"/></clipPath></defs><image href="/assets/about-cd/personalized-faces.png" width="1254" height="1254" clip-path="url(#taejeong0416-back-crop)"/></svg>
+     <div class="cd-description" id="description-taejeong0416"><p>taejeong0416</p><p>10th member</p><p>Computer Engineering</p><p>Worked on: Backend , Management</p><p>In progress: Building something big</p></div>
+     <button class="cd-toggle cd-back-toggle" type="button" tabindex="-1" aria-expanded="false" aria-controls="details-taejeong0416" aria-describedby="description-taejeong0416" aria-label="taejeong0416 앞면으로 돌아가기"></button>
+    </div>
+    <div class="cd-edge cd-edge-left" aria-hidden="true"></div><div class="cd-edge cd-edge-right" aria-hidden="true"></div>
+    <div class="cd-edge cd-edge-top" aria-hidden="true"></div><div class="cd-edge cd-edge-bottom" aria-hidden="true"></div>
+   </div></div></div></div>
+  </div>
+ </div>
+</article>
+<div class="cd-layer cd-decor" aria-hidden="true" data-side="right" style="--depth:3; --x:71.88525%; --y:6.25000%; --w:8.85246%; --h:86.25000%; --ratio:108/345; --turn:1deg; --outline:polygon(0.0000% 4.9275%, 68.5185% 0.5797%, 82.4074% 0.0000%, 95.3704% 1.1594%, 100.0000% 2.6087%, 100.0000% 98.2609%, 93.5185% 100.0000%, 78.7037% 99.7101%, 16.6667% 99.4203%, 0.0000% 97.6812%)">
+ <div class="cd-hover-zone" aria-hidden="true"></div>
+ <div class="cd-motion">
+  <svg class="cd-image" viewBox="877 25 108 345" aria-hidden="true" focusable="false"><defs><clipPath id="cd-outline-06"><polygon points="877,42 951,27 966,25 980,29 985,34 985,364 978,370 962,369 895,368 877,362"/></clipPath></defs><image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" clip-path="url(#cd-outline-06)"/></svg>
+ </div>
+</div>
+<div class="cd-layer cd-decor" aria-hidden="true" data-side="right" style="--depth:2; --x:80.73770%; --y:5.75000%; --w:8.19672%; --h:86.75000%; --ratio:100/347; --turn:1deg; --outline:polygon(0.0000% 3.1700%, 73.0000% 0.5764%, 81.0000% 0.0000%, 95.0000% 1.4409%, 100.0000% 3.1700%, 100.0000% 97.9827%, 93.0000% 100.0000%, 81.0000% 100.0000%, 0.0000% 97.9827%)">
+ <div class="cd-hover-zone" aria-hidden="true"></div>
+ <div class="cd-motion">
+  <svg class="cd-image" viewBox="985 23 100 347" aria-hidden="true" focusable="false"><defs><clipPath id="cd-outline-07"><polygon points="985,34 1058,25 1066,23 1080,28 1085,34 1085,363 1078,370 1066,370 985,363"/></clipPath></defs><image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" clip-path="url(#cd-outline-07)"/></svg>
+ </div>
+</div>
+<div class="cd-layer cd-decor" aria-hidden="true" data-side="right" style="--depth:1; --x:88.93443%; --y:6.25000%; --w:8.36066%; --h:86.75000%; --ratio:102/347; --turn:1deg; --outline:polygon(0.0000% 2.8818%, 79.4118% 0.2882%, 90.1961% 0.0000%, 100.0000% 1.7291%, 100.0000% 97.6945%, 94.1176% 99.7118%, 81.3725% 100.0000%, 0.0000% 97.6945%)">
+ <div class="cd-hover-zone" aria-hidden="true"></div>
+ <div class="cd-motion">
+  <svg class="cd-image" viewBox="1085 25 102 347" aria-hidden="true" focusable="false"><defs><clipPath id="cd-outline-08"><polygon points="1085,35 1166,26 1177,25 1187,31 1187,364 1181,371 1168,372 1085,364"/></clipPath></defs><image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" clip-path="url(#cd-outline-08)"/></svg>
+ </div>
+</div>
+<p class="cd-state-live cd-description" role="status" aria-live="polite" aria-atomic="true"></p>
 </section>
 </main>
 </body>

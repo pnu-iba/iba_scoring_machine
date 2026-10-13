@@ -88,10 +88,14 @@
       // 게임 화면은 캔버스가 한 화면에 들어오도록 제목을 줄인다.
       const variant = here in AUTH_TITLES ? " centered" : here.startsWith("/games/") ? " compact" : "";
       if (variant === " compact") main.classList.add("compact");
+      // How to use는 큰 제목 없이 윗줄(서비스 이름)만 둔다.
+      const head = here === "/how-to-use.html"
+        ? `<p class="page-eyebrow service-line">Regression Project Scoring Service</p>`
+        : `<p class="page-eyebrow">Regression Project Scoring Service</p>
+          <h1 class="page-title">${title}</h1>`;
       if (!["/thanks.html", "/about.html", "/submit.html", "/leaderboard.html", "/admin.html"].includes(here)) main.insertAdjacentHTML("afterbegin", `
         <header class="page-head${variant}">
-          <p class="page-eyebrow">Regression Project Scoring Service</p>
-          <h1 class="page-title">${title}</h1>
+          ${head}
         </header>`);
     }
 

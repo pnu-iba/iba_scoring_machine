@@ -1,10 +1,11 @@
-/* About us: 레퍼런스 사진(CD 케이스 줄)을 그대로 쓰고, 가운데 두 케이스만 눌러 소개를 본다. */
+/* Independent silhouettes preserve the perspective already captured in the photograph. */
 main.page.about-page { max-width: 1440px; padding: 140px 48px 72px; display: grid; align-items: center; }
 .about-page .page-head { display: none; }
 
-.cd-scene { position: relative; width: min(100%, 1220px); margin: 0 auto; }
+.cd-scene { position: relative; width: min(100%, 1220px); aspect-ratio: 1220 / 400; margin: 0 auto; isolation: isolate; }
 /* 사진 바탕(옅은 회백색)이 페이지 바탕에 녹아들도록 네 가장자리를 부드럽게 흐린다 */
-.cd-photo {
+.cd-ground {
+  position: absolute; inset: 0; pointer-events: none;
   display: block; width: 100%; height: auto; user-select: none;
   -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent), linear-gradient(to bottom, transparent, #000 5%, #000 92%, transparent);
   -webkit-mask-composite: source-in;
@@ -12,40 +13,67 @@ main.page.about-page { max-width: 1440px; padding: 140px 48px 72px; display: gri
   mask-composite: intersect;
 }
 
-/* 가운데 케이스 위 클릭 영역: 사진 속 케이스 앞면 크기·위치(%)에 맞춘다 */
-.cd-spot { position: absolute; left: var(--x); top: var(--y); width: var(--w); height: var(--h); }
-.cd-open {
+/* Static silhouette hit areas keep the hover stable as the image lifts off the floor. */
+.cd-layer { position: absolute; left: var(--x); top: var(--y); width: var(--w); height: var(--h); pointer-events: none; z-index: var(--depth); }
+/* The nearer cases overlap outward on both sides of the central pair. */
+.cd-decor[data-side="left"] { --hinge: 0% 90%; }
+.cd-decor[data-side="right"] { --hinge: 100% 90%; }
+.cd-hover-zone { position: absolute; inset: 0; clip-path: var(--outline); pointer-events: auto; }
+.cd-motion { z-index: 1; }
+/* 케이스 아래 모서리: 맨 아래 투명 테두리를 몇 px 흐리게 끝내, 떠오를 때 밝은 띠가 칼같이 잘려 보이지 않게 */
+.cd-image {
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 9px), rgba(0, 0, 0, .15) calc(100% - 2px), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 9px), rgba(0, 0, 0, .15) calc(100% - 2px), transparent);
+}
+.cd-motion { position: absolute; inset: 0; transform-origin: var(--hinge, 50% 90%); transition: transform 280ms var(--ease); }
+.cd-image { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none; user-select: none; }
+.cd-layer.is-active, .cd-layer.is-turning { z-index: 5; }
+.cd-toggle {
   position: absolute; inset: 0; width: 100%; height: 100%; padding: 0;
-  border: 0; border-radius: 3px; background: transparent; cursor: pointer;
-  transition: background-color 200ms var(--ease), box-shadow 200ms var(--ease);
+  border: 0; border-radius: 0; background: transparent; cursor: pointer;
+  pointer-events: auto; backface-visibility: hidden; -webkit-backface-visibility: hidden;
 }
-.cd-open:hover { background: rgba(255, 255, 255, 0.08); box-shadow: inset 0 0 0 1px rgba(31, 30, 27, 0.18); }
-.cd-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.cd-toggle:hover { background: transparent; }
+.cd-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -4px; }
+@media (hover: hover) and (pointer: fine) {
+  .cd-decor:hover .cd-motion { transform: translateY(-3px) rotate(calc(var(--turn) * .4)); }
+  .cd-person:not(.is-active):not(.is-turning):hover .cd-motion { transform: translateY(-8px) rotate(var(--turn)); }
+}
+/* 키보드로 옮겨 온 포커스일 때만 들어 올린다. 마우스 클릭 뒤 남는 포커스로는 들린 채 남지 않게 */
+.cd-person:not(.is-active):not(.is-turning):has(:focus-visible) .cd-motion { transform: translateY(-8px) rotate(var(--turn)); }
 
-/* 소개 카드: 케이스 앞면 자리에 같은 크기의 종이처럼 나타난다 */
-.cd-card {
-  position: absolute; inset: 3% 2% 3% 6%;
-  display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 8px;
-  padding: 8% 10%;
-  background: #efede5; border-radius: 2px;
-  box-shadow: 0 1px 2px rgba(31, 30, 27, 0.16), 0 10px 22px -12px rgba(31, 30, 27, 0.35);
-  animation: cd-card-in 320ms var(--ease) both;
-}
-.cd-card[hidden] { display: none; }
-@keyframes cd-card-in { from { opacity: 0; transform: translateY(6px) scale(.98); } to { opacity: 1; transform: none; } }
-.cd-handle { margin: 0 0 4px; font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: -0.02em; }
-.cd-card h2 { margin: 0; font-size: clamp(20px, 2vw, 28px); line-height: 1.2; letter-spacing: -0.03em; }
-.cd-role { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
-.cd-card a { font-family: var(--mono); font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
-.cd-return { position: absolute; right: 8px; bottom: 6px; height: 30px; padding: 0 8px; border: 0; border-radius: 0; background: none; color: var(--ink-2); font-size: 22px; cursor: pointer; }
-.cd-return:hover { background: none; color: var(--accent); }
-.cd-card :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* The original photograph remains on decorative cases. Only the two people use
+   frontal textures on a solid case; hover, rest pose and flip are separate layers. */
+.cd-person .cd-motion { transform-style: preserve-3d; }
+.cd-stage { position: absolute; inset: 0; perspective: 2200px; perspective-origin: 50% 50%; }
+.cd-anchor { position: absolute; left: 50%; top: 50%; width: var(--case-width, 147%); height: var(--case-height, 96%); transform: translate3d(-50%, -50%, 0); }
+.cd-anchor, .cd-advance, .cd-pose, .cd-flip { transform-style: preserve-3d; }
+.cd-advance, .cd-pose, .cd-flip { position: absolute; inset: 0; }
+.cd-advance { transform: translate3d(var(--case-centering, 0px), 0, var(--advance, 0px)); }
+.cd-pose { transform: rotateY(var(--pose-yaw, var(--rest-yaw))); }
+.cd-flip { transform: rotateY(var(--flip-yaw, 0deg)); }
+.cd-face { position: absolute; inset: 0; background: #d8d8cf; border: 1px solid #bfc0b7; border-radius: 2px; box-sizing: border-box; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.cd-front { transform: translateZ(3px); }
+.cd-back { transform: rotateY(180deg) translateZ(3px); }
+.cd-face-texture { display: block; width: 100%; height: 100%; pointer-events: none; user-select: none; }
+.cd-face[inert] { pointer-events: none; }
+.cd-face[inert] .cd-toggle { pointer-events: none; }
+.cd-edge { position: absolute; backface-visibility: visible; pointer-events: none; }
+.cd-edge-left, .cd-edge-right { top: 0; height: 100%; width: 6px; transform-origin: left center; transform: rotateY(90deg) translateX(-3px); }
+.cd-edge-left { left: 0; background: repeating-linear-gradient(to right, #292a27 0 1px, #51524c 1px 2px); }
+.cd-edge-right { left: 100%; background: linear-gradient(to right, #b5b9ae, #e3e5dc, #b4b8ad); }
+.cd-edge-top, .cd-edge-bottom { left: 0; width: 100%; height: 6px; transform-origin: center top; transform: rotateX(90deg) translateY(-3px); background: #c9cdc1; }
+.cd-edge-top { top: 0; }
+.cd-edge-bottom { top: 100%; }
+.cd-description { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 
 @media (max-width: 700px) {
   main.page.about-page { padding: 130px 16px 48px; }
-  .cd-card { padding: 6% 8%; gap: 4px; }
-  .cd-card h2 { font-size: 18px; }
+  .cd-scene { display: grid; width: min(100%, 320px); aspect-ratio: auto; gap: 36px; }
+  .cd-ground, .cd-decor { display: none; }
+  .cd-person { position: relative; left: auto; top: auto; width: 100%; height: auto; aspect-ratio: 480 / 420; }
+  .cd-anchor { width: var(--case-width, 100%); height: var(--case-height, 100%); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .cd-card { animation: none; }
+  .cd-motion { transition: none; transform: none !important; }
 }

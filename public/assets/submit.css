@@ -1,10 +1,10 @@
 main.page.submit-page {
   --submit-gutter: clamp(32px, 4vw, 72px);
   max-width: none;
-  padding: 136px var(--submit-gutter) 24px;
+  padding: 160px var(--submit-gutter) 24px;   /* 오른쪽 위 Sign out과 붙어 보이지 않게 위 여백을 넉넉히 */
   /* 오른쪽 글자 영역 높이. 파일 박스는 여기에 점수 줄(92px)까지 더해 오른쪽 전체와 높이를 맞춘다.
-     박스 아래 change file 줄이 하단 바 바로 위에 들어가도록 뺀다 */
-  --stage-h: max(240px, calc(100svh - 224px - 92px - 16px));
+     위 여백을 늘린 만큼(24px) 줄여 하단 바가 스크롤 없이 보이게 한다 */
+  --stage-h: max(240px, calc(100svh - 224px - 92px - 16px - 24px));
   --outcome-h: 92px;
 }
 /* 구분선: 화면 끝에서 끝까지 가는 점선 한 줄(작은 체크 무늬는 깨진 글자처럼 보여 바꿨다) */

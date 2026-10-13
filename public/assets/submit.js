@@ -163,7 +163,17 @@
     await Promise.race([filled, new Promise((r) => setTimeout(r, 60000))]);
     cancelMotion();
     if (token !== serial) return;
-    const base = currentText.replace(/\s+$/, "") + "\n";
+    // 실제 줄 높이가 계산값보다 조금 크면 남겨 둔 한 줄로는 모자라 success가 영역 밖으로 잘린다.
+    // 그래서 "...success!"까지 넣고도 영역 안에 들어오도록 앞 글을 뒤에서부터 줄인다.
+    let kept = currentText.replace(/\s+$/, "");
+    const fitsWithEnding = (s) => { paint(s + "\n...success!"); return text.offsetHeight <= viewport.clientHeight; };
+    if (!fitsWithEnding(kept)) {
+      let lo = 0, hi = kept.length;
+      while (lo < hi - 1) { const mid = (lo + hi) >> 1; if (fitsWithEnding(kept.slice(0, mid))) lo = mid; else hi = mid; }
+      kept = kept.slice(0, lo).replace(/\s+$/, "");
+    }
+    paint(kept);
+    const base = kept + "\n";
     // 마지막 문구: 점 세 개는 한 글자씩 천천히, success는 한 번에, 잠시 뒤 !
     const steps = [[".", 520], ["..", 520], ["...", 760], ["...success", 620], ["...success!", 700]];   // ! 뒤 잠깐 쉬었다가 점수를 보여 준다
     if (!reduced.matches) {

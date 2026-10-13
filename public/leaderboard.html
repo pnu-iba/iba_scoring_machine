@@ -9,177 +9,277 @@
   <link rel="icon" href="/favicon.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&family=Playfair+Display:wght@700;900&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&family=Playfair+Display:wght@700;900&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap">
   <link rel="stylesheet" href="/assets/chrome.css">
   <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/leaderboard.css">
   <script src="/assets/icons.js" defer></script>
   <script src="/assets/app.js" defer blocking="render"></script>
   <script src="/assets/chrome.js" defer blocking="render"></script>
 </head>
 <body>
-<main class="page">
-<div class="cols">
-  <div>
-<section class="card flush">
-  <div class="card-head">
-    <h2 id="boardTitle">Public 리더보드</h2>
-    <div class="board-switch" id="boardSwitch" role="group" aria-label="순위 기준" hidden>
-      <button type="button" data-view="final" aria-pressed="true">최종</button>
-      <button type="button" data-view="public" aria-pressed="false">Public</button>
-    </div>
-    <div class="board-meta">
-      <span id="meta">불러오는 중…</span>
-      <button class="ghost" id="refresh" type="button"><i data-icon="refresh-cw"></i>새로고침</button>
-    </div>
+<main class="page board-page">
+<!-- 기밀 문서 한 장처럼 보이는 순위표. 도장·클립·가림 막대는 장식이라 화면 낭독기에서는 읽지 않는다. -->
+<div class="file-holder">
+  <!-- 종이 위쪽 가장자리에 끼운 클립. 가장자리(y=30) 위로는 뒤쪽 고리 두 개가, 아래로는 앞쪽 긴 고리가 보인다 -->
+  <svg class="file-clip" viewBox="0 0 40 120" aria-hidden="true">
+    <defs>
+      <linearGradient id="clipMetal" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#8a8f96"/><stop offset=".4" stop-color="#f1f2f4"/><stop offset=".6" stop-color="#b8bcc2"/><stop offset="1" stop-color="#6c7178"/>
+      </linearGradient>
+      <clipPath id="clipAbove"><rect x="0" y="0" width="40" height="30"/></clipPath>
+      <clipPath id="clipBelow"><rect x="0" y="30" width="40" height="90"/></clipPath>
+      <filter id="clipShadow" x="-50%" y="-10%" width="200%" height="130%"><feDropShadow dx="1.6" dy="1.8" stdDeviation="1.1" flood-color="#1f1e1b" flood-opacity=".32"/></filter>
+    </defs>
+    <!-- 뒤쪽(종이 뒤로 들어가는) 바깥·안쪽 고리 윗부분 -->
+    <g clip-path="url(#clipAbove)" fill="none" stroke-linecap="round">
+      <path d="M9 42V12a11 11 0 0 1 22 0V30M15 74V21a6 6 0 0 1 12 0V74" stroke="#6c7178" stroke-width="3.4"/>
+      <path d="M9 42V12a11 11 0 0 1 22 0V30M15 74V21a6 6 0 0 1 12 0V74" stroke="url(#clipMetal)" stroke-width="2.6"/>
+      <path d="M9 42V12a11 11 0 0 1 22 0V30M15 74V21a6 6 0 0 1 12 0V74" stroke="#fff" stroke-opacity=".7" stroke-width=".7" transform="translate(-.6 0)"/>
+    </g>
+    <!-- 앞쪽 긴 고리: 오른쪽 다리에서 내려와 바닥을 돌아 왼쪽 짧은 끝까지 -->
+    <g clip-path="url(#clipBelow)" fill="none" stroke-linecap="round">
+      <g filter="url(#clipShadow)"><path d="M31 28V104a11 11 0 0 1-22 0V50" stroke="#6c7178" stroke-width="3.4"/></g>
+      <path d="M31 28V104a11 11 0 0 1-22 0V50" stroke="url(#clipMetal)" stroke-width="2.6"/>
+      <path d="M31 28V104a11 11 0 0 1-22 0V50" stroke="#fff" stroke-opacity=".7" stroke-width=".7" transform="translate(-.6 0)"/>
+    </g>
+  </svg>
+<article class="file" aria-labelledby="fileTitle">
+  <span class="file-surface" aria-hidden="true"></span>
+  <!-- 가림 막대 가장자리를 마커로 칠한 듯 거칠게 만드는 필터 -->
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <filter id="marker"><feTurbulence type="fractalNoise" baseFrequency="0.08 0.6" numOctaves="2" seed="4"/><feDisplacementMap in="SourceGraphic" scale="3"/></filter>
+  </svg>
+
+  <header class="file-head">
+    <p class="file-label">Internal file — do not distribute</p>
+    <h1 class="file-title" id="fileTitle">Leaderboard</h1>
+    <p class="file-no">File no.<b>IBA-REG-01</b></p>
+  </header>
+
+  <div class="file-meta">
+    <span><span class="v">Used car price regression</span></span>
+    <span><span class="k">Status:</span><span class="v" id="status">—</span></span>
+    <span><span class="k">Updated:</span><span class="v" id="updated">—</span><button type="button" class="file-reload" id="reload" aria-label="새로고침"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 6.2A5.4 5.4 0 1 0 13.4 9.6"/><path d="M13.6 2.6v3.8H9.8"/></svg></button></span>
   </div>
 
-  <div class="table-wrap">
-    <table id="board">
-      <thead>
-        <tr><th>순위</th><th>팀</th><th class="num" id="scoreHead">Public RMSE</th><th class="num">R²</th><th class="num" id="publicHead" hidden>Public RMSE (순위)</th><th class="num">제출 시각</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-  <div class="card-foot" id="boardFoot">test.csv의 30%로 매긴 public 점수 기준 팀별 최고 기록입니다. RMSE가 낮을수록 높은 순위이고, 같으면 R²가 높은 쪽, 그다음 먼저 제출한 쪽이 앞섭니다. 최종 순위는 마감 뒤 전체 데이터로 다시 매깁니다.</div>
-</section>
-  </div>
+  <table class="file-table" id="board">
+    <thead>
+      <tr><th>Rank</th><th>Team</th><th class="num">RMSE</th><th class="num" aria-label="R squared">R<sup class="sq">2</sup></th><th class="num">Final RMSE (rank)</th><th class="num">Submitted</th></tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <p class="sr-only" id="meta" role="status" aria-live="polite"></p>
 
-  <!-- 대회 정보·공지사항: 예전 홈에 있던 것을 리더보드 옆으로 옮겼다 -->
-  <div>
-  <section class="card">
-    <div class="card-head"><h2>대회 정보</h2></div>
-  <p class="status idle" id="status">대회 정보를 불러오는 중…</p>
-    <span class="chip">회귀 · 중고차 가격 예측</span>
-    <p class="info-title">중고차 가격 예측 챌린지</p>
-    <p class="info-desc">영국 중고차 거래 데이터로 차량 가격을 예측하는 모델을 만들어 예측 결과를 제출합니다.</p>
-    <div class="progress" id="progress" hidden>
-      <div class="row"><span>대회 진행률</span><span id="progressText"></span></div>
-      <div class="bar"><i id="progressBar"></i></div>
+  <footer class="file-foot">
+    <div class="sign">
+      <p class="k">Approved by:</p>
+      <span class="seal">PNU IBA</span>
     </div>
-    <ul class="kv">
-      <li><i data-icon="calendar"></i><span class="k">기간</span><span class="v" id="period">–</span></li>
-      <li><i data-icon="database"></i><span class="k">데이터셋</span><span class="v">train 58,627 · test 39,085행</span></li>
-      <li><i data-icon="target"></i><span class="k">평가 기준</span><span class="v">RMSE (파운드)</span></li>
-    </ul>
-    <a class="btn block" href="/data/dataset.zip" download><i data-icon="download"></i>데이터셋 내려받기</a>
-  </section>
-
-  <section class="card">
-    <div class="card-head"><h2>공지사항</h2></div>
-    <ul class="notices" id="notices"></ul>
-  </section>
-  </div>
+    <p class="file-note" id="boardFoot"></p>
+  </footer>
+</article>
 </div>
 </main>
 
 <script>
 (function () {
-  const DAY = 86400000;
-  const WEEK = "일월화수목금토";
-  const kstDate = (s) => new Date(s + "T00:00:00+09:00");
-  const label = (s) => {
-    const d = new Date(s + "T00:00:00Z");
-    return `${String(d.getUTCMonth() + 1).padStart(2, "0")}.${String(d.getUTCDate()).padStart(2, "0")} (${WEEK[d.getUTCDay()]})`;
-  };
-  function esc(s) { return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c])); }
-
-  // 대회 기간과 공지는 관리자 페이지에서 바꾸고 /api/contest로 받는다.
-  async function render() {
-    const r = await window.IBA.api("/api/contest");
-    if (!r.ok) return;
-    const c = r.body;
-    const statusEl = document.getElementById("status");
-    const start = kstDate(c.start), end = kstDate(c.end);
-    const total = Math.round((end - start) / DAY) + 1;
-    const day = Math.floor((Date.now() - start) / DAY) + 1;  // 오늘이 대회 며칠째인지(KST)
-
-    document.getElementById("period").textContent = `${label(c.start)} ~ ${label(c.end)}`;
-
-    if (day < 1) {
-      statusEl.textContent = `대회 시작 전 · ${1 - day}일 뒤 시작`;
-    } else if (day > total) {
-      statusEl.textContent = "대회 종료";
-    } else {
-      const left = total - day;
-      statusEl.classList.remove("idle");
-      statusEl.textContent = left === 0 ? "대회 진행 중 · 오늘 마감" : `대회 진행 중 · 마감까지 ${left}일 남음`;
-      document.getElementById("progress").hidden = false;
-      document.getElementById("progressText").textContent = `${day}일 차 / ${total}일`;
-      document.getElementById("progressBar").style.width = `${(day / total) * 100}%`;
-    }
-
-    document.getElementById("notices").innerHTML = c.notices.length === 0 ? '<li><div><div class="d">공지가 없습니다.</div></div></li>' : c.notices.map((n) =>
-      `<li><div><div class="t">${esc(n.title)}</div><div class="d">${n.date.replaceAll("-", ".")}</div></div></li>`).join("");
-  }
-
-  document.addEventListener("DOMContentLoaded", render);
-})();
-</script>
-
-<script>
-(function () {
   const tbody = document.querySelector("#board tbody");
-  const meta = document.getElementById("meta");
-  const btn = document.getElementById("refresh");
-  const switcher = document.getElementById("boardSwitch");
+  // app.js(defer)가 이 스크립트보다 늦게 실행되므로 IBA는 쓸 때 읽는다.
+  const esc = (s) => window.IBA.esc(s);
+  const f = new Proxy({}, { get: (_, k) => window.IBA.fmt[k] });
 
-  // 마감 뒤에는 최종 순위를 기본으로 보이고, 대회 중 public 순위로 바꿔 볼 수 있다.
-  const VIEWS = {
-    final: {
-      title: "최종 리더보드", score: "최종 RMSE", compare: "Public RMSE (순위)",
-      foot: "팀마다 public 점수가 가장 좋았던 제출을 test.csv 전체로 다시 채점한 최종 순위입니다. 괄호 안은 대회 중 public 순위입니다.",
-    },
-    public: {
-      title: "Public 리더보드", score: "Public RMSE", compare: "최종 RMSE (순위)",
-      foot: "대회 기간에 보이던 순위입니다. test.csv의 30%로 매긴 public 점수 기준 팀별 최고 기록이며, 괄호 안은 최종 순위입니다.",
-    },
+  // 대회 중 올라온 모든 제출을 public 점수 순으로. 팀별 최고 제출의 최종 RMSE는 마감 전까지 가림 막대로 가린다.
+  const NOTES = {
+    live: "대회 중 올라온 모든 제출의 public 점수 순위. 최종 순위는 Final RMSE를 기준으로, 팀별로 public 점수가 가장 좋았던 제출에만 매겨진다. 해당 순위는 최종 마감 후 공개된다.",
+    public: "대회 중 올라온 모든 제출의 public 점수 순위. 최종 순위는 Final RMSE를 기준으로, 팀별로 public 점수가 가장 좋았던 제출에만 매겨진다. 해당 순위는 최종 마감 후 공개된다.",
   };
-  let view = "final";
-  let last = null;  // 마지막 응답 {rows, final, teams}와 사용자
+  const REDACT = '<span class="redact" aria-hidden="true"></span><span class="sr-only">마감 뒤 공개</span>';
 
+  // 로컬 개발 서버에서만 표 모양을 볼 수 있게 임시 기록 몇 줄을 섞는다(배포 사이트에서는 쓰지 않는다).
+  const DEV_SAMPLE = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+  const SAMPLE_ROWS = [
+    { team: "2", rmse: 1942.37, r2: 0.9611, public_rmse: 1888.10, public_r2: 0.9632, submitted_at: "2026-10-04T21:14:00+09:00" },
+    { team: "1", rmse: 2015.82, r2: 0.9583, public_rmse: 1951.46, public_r2: 0.9607, submitted_at: "2026-10-05T09:02:00+09:00" },
+    { team: "4", rmse: 2290.05, r2: 0.9462, public_rmse: 2203.77, public_r2: 0.9499, submitted_at: "2026-10-03T16:40:00+09:00" },
+    { team: "3", rmse: 2511.60, r2: 0.9353, public_rmse: 2589.31, public_r2: 0.9310, submitted_at: "2026-10-02T23:51:00+09:00" },
+  ];
+  // 팀 대표가 아닌, 점수가 덜 좋은 예전 제출들
+  const SAMPLE_EXTRA = [
+    { team: "2", rmse: 2104.52, r2: 0.9547, submitted_at: "2026-10-02T14:20:00+09:00" },
+    { team: "1", rmse: 2240.83, r2: 0.9489, submitted_at: "2026-10-01T19:05:00+09:00" },
+    { team: "4", rmse: 2467.19, r2: 0.9378, submitted_at: "2026-09-29T11:47:00+09:00" },
+  ];
+  function withSampleEntries(entries, final) {
+    const add = SAMPLE_ROWS.filter((s) => !entries.some((e) => e.team === s.team)).flatMap((s) => [
+      { team: s.team, rmse: s.public_rmse, r2: s.public_r2, best: true, submitted_at: s.submitted_at, ...(final ? { final_rmse: s.rmse } : {}) },
+      ...SAMPLE_EXTRA.filter((x) => x.team === s.team).map((x) => ({ ...x, best: false })),
+    ]);
+    const all = [...entries, ...add].sort((a, b) => a.rmse - b.rmse);
+    // 임시 기록이 섞였으니 최종 순위를 다시 매긴다(팀 대표 제출끼리 최종 RMSE 순).
+    all.filter((e) => e.final_rmse != null).sort((a, b) => a.final_rmse - b.final_rmse).forEach((e, i) => { e.final_rank = i + 1; });
+    return all;
+  }
+
+  let last = null;  // 마지막 응답 {entries, final}과 사용자
+  const two = (n) => String(n).padStart(2, "0");
+  const teamCell = (team, myTeam) => `<td>Team ${esc(team)}${myTeam && team === myTeam ? '<span class="sr-only"> (우리 팀)</span>' : ""}</td>`;
+
+  // Public: 제출 한 건이 한 줄. 최종 RMSE 칸은 팀 대표 제출에만(마감 전에는 가림 막대, 뒤에는 값), 나머지는 빈칸.
+  function entryHtml(e, i, myTeam) {
+    const finalCell = !e.best ? "" : e.final_rmse != null ? `${f.rmse(e.final_rmse)} (${two(e.final_rank)})` : REDACT;
+    return `<tr><td><span class="rank">${two(i + 1)}</span></td>${teamCell(e.team, myTeam)}
+      <td class="num">${f.rmse(e.rmse)}</td>
+      <td class="num">${f.r2(e.r2)}</td>
+      <td class="num soft">${finalCell}</td>
+      <td class="num soft">${f.time(e.submitted_at)}</td></tr>`;
+  }
   function draw() {
-    const { rows, final, teams, user } = last;
-    if (final) {
-      const v = VIEWS[view];
-      document.getElementById("boardTitle").textContent = v.title;
-      document.getElementById("scoreHead").textContent = v.score;
-      document.getElementById("publicHead").textContent = v.compare;
-      document.getElementById("publicHead").hidden = false;
-      document.getElementById("boardFoot").textContent = v.foot;
-      switcher.hidden = false;
-      switcher.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
-    }
-    const shown = final && view === "public" ? [...rows].sort((a, b) => a.public_rank - b.public_rank) : rows;
-    // 이번 기수 팀은 제출하지 않았어도 표에 항상 보인다.
-    const missing = teams.filter((t) => !rows.some((r) => r.team === t)).map((team) => ({ team }));
-    tbody.innerHTML = window.IBA.boardRows([...shown, ...missing], user && user.team, final ? view : null);
+    const { entries, final, user } = last;
+    document.getElementById("status").textContent = final ? "Closed" : "Active";
+    document.getElementById("boardFoot").textContent = final ? NOTES.public : NOTES.live;
+    // 기록이 있는 것만 보인다(없으면 표가 비어 있다).
+    tbody.innerHTML = entries.map((e, i) => entryHtml(e, i, user && user.team)).join("");
   }
 
-  async function load() {
-    btn.disabled = true;
-    meta.textContent = "불러오는 중…";
+  // 서버에서 새로 받아 last를 바꾼다(그리지는 않는다).
+  async function fetchBoard() {
     const [r, user] = await Promise.all([window.IBA.api("/api/leaderboard"), window.IBA.me]);
-    btn.disabled = false;
-    if (!r.ok) { meta.textContent = `불러오지 못했습니다 (HTTP ${r.status})`; return; }
-    const f = window.IBA.fmt;
-    const { rows, final, teams } = r.body;
-    last = { rows, final, teams, user };
-    draw();
-    const now = new Date();
-    meta.textContent = `${rows.length}팀 제출 · ${f.time(now.toISOString())} 기준 · 1분마다 자동 갱신`;
+    if (!r.ok) { document.getElementById("updated").textContent = `HTTP ${r.status}`; return false; }
+    // 로컬에서 주소 끝에 ?preview=live를 붙이면 마감 전 화면(최종 RMSE 가림)을 미리 본다.
+    const previewLive = DEV_SAMPLE && new URLSearchParams(location.search).get("preview") === "live";
+    const final = previewLive ? false : r.body.final;
+    const served = (r.body.entries || []).map((e) => (previewLive ? { ...e, final_rmse: undefined, final_rank: undefined } : e));
+    const entries = DEV_SAMPLE ? withSampleEntries(served, final) : served;
+    last = { entries, final, user };
+    const now = new Date().toISOString();
+    document.getElementById("updated").textContent = `${f.time(now)} KST`;
+    document.getElementById("meta").textContent = `갱신됨 · 제출 ${entries.length}건 · ${f.time(now)} 기준`;
+    return true;
+  }
+  // 처음 열 때 받아 그린다. 다시 받을 때는 새로고침 버튼을 쓴다.
+  async function load() { if (await fetchBoard()) draw(); }
+
+  // ── 종이 교체: 새로고침하면 종이가 살짝 기울며 아래로 빠졌다가, 새 기록을 적은 채 아래에서 올라온다 ──
+  // 클립은 종이 밖에 있어 그 자리에 그대로 남는다.
+  const paper = document.querySelector(".file");
+  const reload = document.getElementById("reload");
+  const calm = matchMedia("(prefers-reduced-motion: reduce)");
+  let busy = false;
+  const DROP = 1000, RISE = 1200;   // 빠지기·올라오기(ms)
+  // 시작과 끝만 살짝 부드럽고 가운데는 거의 일정한 속도(sine in-out보다 더 납작한 곡선)
+  const EASE = "cubic-bezier(.33, .08, .67, .92)";
+  // 올라오기는 같은 흐름이되 마지막 착지 구간만 조금 더 길게 감속한다
+  const EASE_LAND = "cubic-bezier(.33, .08, .4, 1)";
+  // 탭이 가려져 애니메이션이 멈춰도 버튼·스크롤이 묶이지 않게, 정해진 시간이 지나면 끝난 것으로 본다.
+  const settle = (anim, ms) => Promise.race([anim.finished.catch(() => {}), new Promise((r) => setTimeout(r, ms + 250))]);
+
+  const holder = paper.parentElement;
+  const main = document.querySelector("main");
+  // 본문(main) 아래 끝 밖까지. main이 overflow: clip이라 그 아래로 내려간 부분은 감춰지고 스크롤도 생기지 않는다
+  const dropDistance = () => Math.max(main.getBoundingClientRect().bottom - holder.getBoundingClientRect().top + 40, 300);
+  const LOW = (d) => `translate(24px, ${d}px) rotate(3.5deg)`;   // 올라오기 시작 자세(아래, 오른쪽으로 기움)
+
+  // 클립의 뒤쪽 고리는 종이 윗변보다 위에 있는 부분만 보인다. 종이가 움직이는 동안 매 프레임,
+  // 클립이 있는 가로 위치에서 종이 윗변이 실제로 어디 있는지 계산해 그 높이까지만 보이게 한다.
+  // (종이가 내려가면 가려졌던 고리가 조금씩 드러나고, 올라오면 조금씩 다시 가려진다)
+  const clipSvg = holder.querySelector(".file-clip");
+  const clipEdge = clipSvg.querySelector("#clipAbove rect");
+  function syncClip() {
+    const h = holder.getBoundingClientRect(), c = clipSvg.getBoundingClientRect();
+    const m = new DOMMatrix(getComputedStyle(paper).transform);
+    // 종이의 변형 기준점은 가운데. 클립 가운데 x의, 종이 윗변(y=0) 점이 변형 뒤 어디로 가는지 구한다
+    const ox = paper.offsetWidth / 2, oy = paper.offsetHeight / 2;
+    const p = m.transformPoint(new DOMPoint((c.left + c.width / 2 - h.left) - ox, -oy));
+    const top = h.top + oy + p.y;                       // 화면 기준 종이 윗변 높이(클립 위치에서)
+    const units = (top - c.top) / (c.height / 120);     // 클립 그림 좌표(세로 120)로 환산
+    clipEdge.setAttribute("height", Math.max(0, Math.min(120, units)).toFixed(2));
+  }
+  function followClip(ms) {
+    const end = performance.now() + ms + 50;
+    const tick = (now) => { syncClip(); if (now < end) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
   }
 
-  switcher.addEventListener("click", (e) => {
-    const b = e.target.closest("button[data-view]");
-    if (!b || !last) return;
-    view = b.dataset.view;
-    draw();
+  // 클립 덜컹임: 아래로 살짝 당겨졌다 위로 조금 튀고 제자리로. 기울기는 아주 조금만
+  function jolt(strength, delay) {
+    clipSvg.animate([
+      { transform: "translateY(0) rotate(0deg)" },
+      { transform: `translateY(${3.2 * strength}px) rotate(${-2.4 * strength}deg)`, offset: 0.25 },
+      { transform: `translateY(${-1.2 * strength}px) rotate(${1.3 * strength}deg)`, offset: 0.55 },
+      { transform: `translateY(${0.4 * strength}px) rotate(${-0.4 * strength}deg)`, offset: 0.8 },
+      { transform: "translateY(0) rotate(0deg)" },
+    ], { duration: 500, delay, easing: "ease-out" });
+  }
+
+  // 아래로 빠지기: 왼쪽으로 기운 채 화면 아래로. 처음·중간·끝의 속도 차이가 크지 않은 완만한 곡선
+  async function dropOut(d) {
+    followClip(DROP);
+    jolt(1, 120);                                        // 종이가 클립에서 빠져나가는 순간
+    await settle(paper.animate([
+      { transform: "translateY(0) rotate(0deg)" },
+      { transform: `translate(-20px, ${d}px) rotate(-4deg)` },
+    ], { duration: DROP, easing: EASE, fill: "forwards" }), DROP);
+    syncClip();
+  }
+  // 아래에서 올라오기: 오른쪽으로 기운 채 올라와 같은 완만한 곡선으로 제자리에 선다
+  async function riseIn(d) {
+    followClip(RISE);
+    jolt(0.6, RISE - 160);                               // 다시 클립에 끼워지는 순간
+    await settle(paper.animate([
+      { transform: LOW(d) },
+      { transform: "translateY(0) rotate(0deg)" },
+    ], { duration: RISE, easing: EASE_LAND, fill: "forwards" }), RISE);
+    paper.style.transform = "";
+    paper.getAnimations().forEach((a) => a.cancel());
+    clipEdge.setAttribute("height", "30");             // 제자리: 종이 윗변(클립 그림의 y=30)
+  }
+
+  // 새로고침 버튼·F5·Cmd/Ctrl+R: 빠졌다가 새 기록을 적은 채 올라온다
+  async function refresh() {
+    if (busy) return;
+    busy = true;
+    reload.disabled = true;
+    reload.classList.add("spinning");
+    const fetching = fetchBoard();
+    if (calm.matches) {
+      if (await fetching) { draw(); tbody.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120 }); }
+    } else {
+      const d = dropDistance();
+      await dropOut(d);
+      if (await fetching) draw();
+      await riseIn(d);
+    }
+    reload.classList.remove("spinning");
+    reload.disabled = false;
+    busy = false;
+  }
+  reload.addEventListener("click", refresh);
+
+  // 키보드 새로고침(F5, Cmd/Ctrl+R)은 페이지를 다시 열지 않고 같은 애니메이션으로 새로 받는다.
+  // Shift를 함께 누른 강력 새로고침은 브라우저에 맡긴다.
+  document.addEventListener("keydown", (e) => {
+    const isReload = e.key === "F5" || ((e.metaKey || e.ctrlKey) && (e.key === "r" || e.key === "R"));
+    if (!isReload || e.shiftKey || e.altKey) return;
+    e.preventDefault();
+    refresh();
   });
-  btn.addEventListener("click", load);
-  document.addEventListener("DOMContentLoaded", () => {
-    load();
-    window.IBA.refreshEvery(load, 60000);
+
+  // 처음 열 때(브라우저 새로고침 버튼 포함): 종이를 화면 아래에 둔 채 기록을 받고, 아래에서 올라오게 한다.
+  // 이 스크립트는 첫 화면이 그려지기 전에 실행되므로 종이가 제자리에 잠깐 보였다가 사라지지 않는다.
+  if (!calm.matches) {
+    busy = true;
+    reload.disabled = true;
+    paper.style.transform = LOW(dropDistance());
+    syncClip();
+  }
+  document.addEventListener("DOMContentLoaded", async () => {
+    await load();
+    if (!calm.matches) {
+      await riseIn(dropDistance());
+      reload.disabled = false;
+      busy = false;
+    }
   });
 })();
 </script>

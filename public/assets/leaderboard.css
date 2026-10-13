@@ -1,0 +1,106 @@
+/* 리더보드 — 옛 타자기로 친 기밀 문서 한 장처럼 보이는 순위표.
+   종이·먹색에 빨간 인장(서명) 하나만 쓰고, 사이트 파란색은 선택된 탭 밑줄에만 쓴다. */
+main.page.board-page { padding-top: 88px; padding-bottom: 40px; overflow: clip; }   /* 종이가 아래로 빠질 때 스크롤 높이가 늘지 않게, 본문 아래 끝에서 잘라 감춘다 */
+
+.file {
+  --paper: #f3efe6;
+  --ink-dark: #1f1e1b;
+  --ink-soft: #5c5850;
+  --stamp: #b42318;
+  --ink-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -3 2.4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+  position: relative; z-index: 0;   /* 늘 자기만의 쌓임 맥락: 움직일 때도 아래 그림자 순서가 바뀌지 않게 */
+  max-width: 880px; margin: 0 auto;
+  padding: 52px 56px 36px;
+  color: var(--ink-dark);
+  font-family: "Courier Prime", "Courier New", "Noto Sans KR", monospace;   /* 옛 타자기 문서 */
+}
+/* 종이 면(색·결)은 별도 층에 둔다. 말린 모서리 그림자(-2)는 그 아래(-1 위쪽이 종이 면), 글자는 그 위 */
+.file-surface {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-color: var(--paper);
+  /* 아주 옅은 종이 결 */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.03 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* 책상 위에 놓인 종이: 바로 닿는 가는 그림자 + 넓게 퍼지는 옅은 그림자. 떠 보이지 않을 만큼만 */
+  box-shadow:
+    0 1px 1px rgba(31, 30, 27, 0.10),
+    0 3px 6px rgba(31, 30, 27, 0.06),
+    0 12px 24px -8px rgba(31, 30, 27, 0.10);
+}
+
+/* 머리 */
+.file-head { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 16px; padding-bottom: 18px; border-bottom: 1px solid var(--ink-dark); }
+.file-label { margin: 0; font-family: "Special Elite", monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); padding-top: 6px; }
+.file-title { margin: 14px 0 0; font-family: "Special Elite", "Courier Prime", monospace; font-size: 30px; font-weight: 400; letter-spacing: clamp(0.25em, 0.9vw, 0.6em); margin-right: calc(-1 * clamp(0.25em, 0.9vw, 0.6em));   /* 좁은 창에서는 자간을 줄여 머리 칸을 넘지 않게 */ text-transform: uppercase; }
+.file-no { white-space: nowrap; justify-self: end; margin: 0; padding: 6px 10px; border: 1px solid var(--ink-dark); font-size: 11px; letter-spacing: 0.12em; line-height: 1.5; text-transform: uppercase; }
+.file-no b { display: block; font-family: "Special Elite", monospace; font-weight: 400; font-size: 13px; letter-spacing: 0.08em; }
+
+/* 메타 줄 */
+.file-meta { font-family: "Special Elite", "Courier Prime", monospace; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 10px 24px;   /* 세 항목을 한 줄에 고르게 */ padding: 16px 0 14px; border-bottom: 1px dashed rgba(31, 30, 27, 0.35); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+.file-meta .k { color: var(--ink-soft); margin-right: 8px; }
+.file-meta .v { font-weight: 500; }
+
+/* 순위표 */
+.file-table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
+.file-table th {
+  font-family: "Special Elite", "Courier Prime", monospace;
+  height: 36px; padding: 0 10px; text-align: left; vertical-align: bottom; padding-bottom: 8px;
+  font-size: 13.5px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft);
+  border-bottom: 1px solid var(--ink-dark); background: none;
+}
+.file-table td { height: 44px; padding: 0 10px; border-bottom: 1px dashed rgba(31, 30, 27, 0.3); background: none; }
+.file-table tbody tr:last-child td { border-bottom: 0; }
+.file-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.file-table th:first-child, .file-table td:first-child { padding-left: 0; width: 72px; }
+.file-table th:last-child, .file-table td:last-child { padding-right: 0; }
+.file-table .soft { color: var(--ink-soft); }
+/* R²: 타자기 글꼴에는 위첨자 ²가 작고 흐리게 나와, 2를 직접 올려 쓴다 */
+.file-table .sq { font-size: 0.8em; line-height: 0; vertical-align: 0.45em; margin-left: 1px; }
+.file-table tr { position: relative; }
+/* 마감 전 최종 RMSE: 마커로 칠한 듯한 가림 막대(팀 대표 제출 칸에만) */
+.redact { display: inline-block; width: 86px; height: 13px; vertical-align: middle; background: var(--ink-dark); filter: url(#marker); }
+
+.rank { position: relative; display: inline-block; font-weight: 700; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+
+/* 꼬리 */
+.file-foot { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 16px 24px; margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--ink-dark); }
+.sign .k { margin: 0; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
+/* 서명 대신 빨간 인장: 테두리 상자 + 잉크가 군데군데 빠진 질감, 살짝 기울여 찍은 느낌 */
+.seal {
+  position: relative; display: inline-block; margin-top: -4px; padding: 6px 14px 5px;   /* APPROVED BY: 글자에 살짝 걸치게 찍는다 */
+  border: 2.5px solid var(--stamp); outline: 1px solid var(--stamp); outline-offset: 2px;
+  color: var(--stamp); font-family: "Special Elite", monospace; font-size: 22px; letter-spacing: 0.18em; -webkit-text-stroke: 0.9px currentColor;   /* Special Elite는 굵기가 하나뿐이라 획을 덧그려 두껍게 */
+  opacity: 0.85; transform: rotate(-6deg);
+  -webkit-mask-image: var(--ink-mask); mask-image: var(--ink-mask);
+}
+.file-note { grid-column: 1 / -1; margin: 0; font-size: 12px; line-height: 1.6; color: var(--ink-soft); font-family: "Courier Prime", "Noto Sans KR", monospace; }
+
+/* 클립 하나: 종이 위쪽 가장자리에 끼워져 있다. 종이 밖(감싸는 칸)에 있어 종이가 움직여도 제자리에 남는다 */
+.file-holder { position: relative; max-width: 880px; margin: 0 auto; }
+.file-clip { transform-origin: 50% 18%; position: absolute; z-index: 2; top: -26px; left: 40px; width: 34px; height: 102px; pointer-events: none; }   /* 그림의 y=30(종이 가장자리)이 종이 윗변에 오도록 */
+
+/* 아래 두 모서리가 살짝 들린 종이: 모서리 밑에만 조금 더 진한 그림자가 비스듬히 깔린다 */
+.file::before, .file::after {
+  content: ""; position: absolute; z-index: -2;   /* 종이 면(-1)보다 아래 */ bottom: 10px;
+  width: 42%; height: 24px;
+  box-shadow: 0 12px 12px rgba(31, 30, 27, 0.18);
+  pointer-events: none;
+}
+.file::before { left: 14px; transform: rotate(-2.2deg); }
+.file::after { right: 14px; transform: rotate(2.2deg); }
+
+/* UPDATED 시각 옆 동그란 새로고침 버튼 */
+.file-reload {
+  display: inline-grid; place-items: center; width: 17px; height: 17px; margin-left: 8px; padding: 0;
+  border: 1px solid rgba(31, 30, 27, 0.55); border-radius: 50%; background: none; color: var(--ink-dark); cursor: pointer;
+  vertical-align: -1.3px; transition: background-color 160ms ease, border-color 160ms ease;   /* 대문자 글자 높이의 가운데에 원의 가운데를 맞춘다 */
+}
+.file-reload:hover { background: rgba(31, 30, 27, 0.08); border-color: var(--ink-dark); }
+.file-reload:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.file-reload:disabled { cursor: progress; }
+.file-reload svg { width: 10px; height: 10px; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.file-reload.spinning svg { animation: file-reload-spin 0.9s linear infinite; }
+@keyframes file-reload-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .file-reload.spinning svg { animation: none; } }

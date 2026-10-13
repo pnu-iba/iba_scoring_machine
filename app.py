@@ -167,6 +167,36 @@ def _leaderboard_row(row, final: bool) -> dict:
     return body
 
 
+def _public_entries(store: Store, final: bool) -> list[dict]:
+    """Public 리더보드용 전체 제출 목록(public 점수 순). 팀별 public 최고 제출에는 best를 표시한다.
+
+    최종 점수(final_rmse)와 최종 순위(final_rank)는 마감 뒤, 그리고 팀 대표(best) 제출에만 넣는다. 대회 중에는 어떤 제출의 최종 점수도 내보내지 않는다.
+    """
+    active = [s for s in store.list_submissions() if s.deleted_at is None]
+    key = lambda s: (s.public_rmse, -s.public_r2, s.submitted_at)  # noqa: E731 — store._rank의 public 기준과 같다
+    best_ids = {}
+    for s in active:
+        cur = best_ids.get(s.team_key)
+        if cur is None or key(s) < key(cur):
+            best_ids[s.team_key] = s
+    best = {s.id for s in best_ids.values()}
+    final_rank = {r.team_key: r.rank for r in store.leaderboard(True)} if final else {}
+    entries = []
+    for s in sorted(active, key=key):
+        e = {
+            "team": s.team_display,
+            "rmse": s.public_rmse,
+            "r2": s.public_r2,
+            "best": s.id in best,
+            "submitted_at": s.submitted_at.astimezone(clock.KST).isoformat(),
+        }
+        if final and s.id in best:
+            e["final_rmse"] = s.rmse
+            e["final_rank"] = final_rank.get(s.team_key)
+        entries.append(e)
+    return entries
+
+
 def _kst(dt: datetime) -> str:
     return dt.astimezone(clock.KST).isoformat()
 
@@ -418,6 +448,7 @@ def leaderboard(
         "final_at": clock.final_at(settings).isoformat(),
         "teams": list(TEAMS),
         "rows": [_leaderboard_row(r, final) for r in store.leaderboard(final)],
+        "entries": _public_entries(store, final),
     }
 
 

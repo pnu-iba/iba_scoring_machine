@@ -218,6 +218,15 @@ def test_change_team_moves_future_submissions_only(client, store):
     assert teams == ["2", "3"]
 
 
+def test_change_team_rejects_team_outside_this_term(client, store):
+    signup(client, "student1", team="2")
+    uid = store.get_user_by_username("student1").id
+    login_admin(client, store)
+    r = client.patch(f"/api/admin/users/{uid}", json={"team": "9"})
+    assert r.status_code == 400
+    assert store.get_user(uid).team_key == "2"
+
+
 def test_reset_password_issues_working_temporary_password(client, store):
     signup(client, "student1")
     uid = store.get_user_by_username("student1").id

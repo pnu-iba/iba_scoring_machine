@@ -233,7 +233,7 @@
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ score }),
     });
     if (!r.ok) { note.textContent = "점수를 기록하지 못했습니다."; return; }
-    note.textContent = `${user.team} 팀 ${r.body.rank}위 · 팀 최고 ${fmt.int(r.body.team_best)}점`;
+    note.textContent = `${user.team}팀 ${r.body.rank}위 · 팀 최고 ${fmt.int(r.body.team_best)}점`;
     loadGameBoard(game);
   }
 

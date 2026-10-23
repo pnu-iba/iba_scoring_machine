@@ -22,12 +22,19 @@ class NameError_(ValueError):
     pass
 
 
+def _josa(word: str, with_final: str, without_final: str) -> str:
+    """마지막 글자의 받침 여부에 맞는 조사(을/를, 은/는)."""
+    last = word[-1]
+    has_final = "가" <= last <= "힣" and (ord(last) - ord("가")) % 28 != 0
+    return with_final if has_final else without_final
+
+
 def clean_display(raw: str, max_len: int, label: str) -> str:
     text = _WS.sub(" ", unicodedata.normalize("NFKC", raw)).strip()
     if not text:
-        raise NameError_(f"{label}을(를) 입력하세요.")
+        raise NameError_(f"{label}{_josa(label, '을', '를')} 입력하세요.")
     if len(text) > max_len:
-        raise NameError_(f"{label}은(는) {max_len}자 이하여야 합니다.")
+        raise NameError_(f"{label}{_josa(label, '은', '는')} {max_len}자 이하여야 합니다.")
     return text
 
 

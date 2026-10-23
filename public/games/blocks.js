@@ -407,7 +407,7 @@
   const KEYS = { ArrowLeft: "left", ArrowRight: "right" };
   document.addEventListener("keydown", (e) => {
     if (state === "ready" || state === "over") {
-      if (e.code === "Space" || e.code === "Enter") {
+      if (e.code === "Space" || e.code === "Enter" || (state === "over" && e.code === "KeyR")) {
         e.preventDefault();
         if (e.repeat) return;
         if (state === "ready") start(); else restart();

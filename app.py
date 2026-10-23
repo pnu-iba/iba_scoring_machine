@@ -721,7 +721,7 @@ def admin_update_user(
     u = _target_user(store, user_id)
     if body.team is not None:
         try:
-            team_key = normalize_team(body.team)
+            team_key = signup_team(body.team)   # 가입과 같이 이번 기수 팀 번호로만 옮긴다
         except NameError_ as e:
             return _bad_request("bad_name", str(e))
         # 이미 낸 제출은 원래 팀에 남는다. 표기는 옮겨 가는 팀의 첫 표기를 따른다.

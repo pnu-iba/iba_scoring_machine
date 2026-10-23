@@ -526,7 +526,7 @@
     // 시작 전부터 누르고 있던 방향키도 게임이 시작되면 바로 먹히도록 상태와 상관없이 기록한다.
     if (KEYS[e.code]) held[KEYS[e.code]] = true;
     if (state === "ready" || state === "over") {
-      if (e.code === "Space" || e.code === "Enter") {
+      if (e.code === "Space" || e.code === "Enter" || (state === "over" && e.code === "KeyR")) {
         e.preventDefault();
         if (e.repeat) return;
         if (state === "ready") start(); else restart();

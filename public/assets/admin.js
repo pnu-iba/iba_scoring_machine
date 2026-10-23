@@ -109,6 +109,8 @@
     $("#contestMsg").textContent = r.ok ? "저장했습니다." : errMsg(r);
     if (r.ok) await loadContest();
   });
+  // 값을 고치기 시작하면 앞선 저장 결과 문구를 지운다
+  $("#contestForm").addEventListener("input", () => { $("#contestMsg").textContent = ""; });
 
   // --- 제출 -------------------------------------------------------------------
   loaders.submissions = async () => {
@@ -150,7 +152,7 @@
     let r;
     if (btn.dataset.act === "del") {
       const cells = tr.querySelectorAll("td");
-      if (!confirm(`${cells[1].textContent}팀 ${cells[2].textContent}의 제출 #${id}를 삭제할까요?`)) return;
+      if (!confirm(`${cells[1].textContent}팀 ${cells[2].textContent}의 제출 #${id}번을 삭제할까요?`)) return;
       r = await api(`/api/admin/submissions/${id}`, { method: "DELETE" });
     } else {
       r = await api(`/api/admin/submissions/${id}/restore`, { method: "POST" });

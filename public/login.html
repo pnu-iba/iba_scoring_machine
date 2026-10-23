@@ -184,7 +184,7 @@
       btn.classList.remove("is-loading");
       btn.setAttribute("aria-busy", "false");
       if (signup) { btnLabel.textContent = "Success!"; await wait(1000); }
-      location.assign("/");
+      location.assign(window.IBA.nextPath());   // 로그인 화면으로 오기 전에 보던 페이지로 돌아간다
     } catch (error) {
       errorEl.textContent = error.message || "연결에 실패했습니다. 다시 시도해 주세요.";
       errorEl.hidden = false;

@@ -58,6 +58,11 @@ main.page.submit-page {
 @keyframes file-icon-spin { from { transform: perspective(500px) rotateY(0deg); } to { transform: perspective(500px) rotateY(360deg); } }
 @media (prefers-reduced-motion: reduce) { .file-box .file-box-icon { animation: none !important; } }
 .submit-page .file-box { position: relative; }
+/* 상자 아래쪽 가운데의 남은 제출 횟수 한 줄 */
+.file-box-quota {
+  position: absolute; left: 16px; right: 16px; bottom: 20px;
+  font-family: var(--mono); font-size: 12px; line-height: 1.4; color: var(--ink-2);
+}
 .file-box-text {
   position: absolute; left: 32px; right: 32px; top: calc(50% - 12px + 52px + 22px);   /* 아이콘을 12px 올린 만큼 + 아이콘 절반(52) + 간격 */
   display: flex; flex-direction: column; align-items: center; gap: 6px;

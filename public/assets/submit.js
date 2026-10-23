@@ -526,6 +526,17 @@
     } catch { /* 첨부하지 못하면 평소처럼 직접 고르면 된다 */ }
   }
 
+  // 오늘 남은 제출 횟수. 관리자 계정은 제출할 수 없어 보여 주지 않는다.
+  let dailyLimit = null;
+  function showQuota(remaining, unlimited, resetsAt) {
+    if (dailyLimit === null) return;
+    const line = el("quotaLine");
+    if (unlimited) line.textContent = "no daily limit";
+    else if (remaining > 0) line.textContent = `${remaining} of ${dailyLimit} submissions left today`;
+    else line.textContent = `no submissions left today, resets ${window.IBA.fmt.time(resetsAt)} KST`;
+    line.hidden = false;
+  }
+
   async function init() {
     const user = await window.IBA.me;
     if (!user) {
@@ -536,6 +547,11 @@
     el("formCard").hidden = false;
     demo = !!user.demo;
     attachDemo();
+    if (user.is_admin) return;
+    const q = await window.IBA.api("/api/quota");
+    if (!q.ok) return;
+    dailyLimit = q.body.limit;
+    showQuota(q.body.remaining_today, q.body.unlimited, q.body.resets_at);
   }
   init();
 
@@ -565,6 +581,7 @@
         await finishSequence(token);
         if (token !== serial) return;
         showScore(r.body);
+        showQuota(r.body.remaining_today, r.body.unlimited, r.body.resets_at);
       } else if (r.status === 401) {
         showError("로그인이 풀렸습니다.", "다시 로그인한 뒤 제출하세요.");
       } else if (r.status === 503 && r.body && r.body.message) {
@@ -575,6 +592,7 @@
         const limit = ((r.body && r.body.message) || "").match(/(\d+)회/);
         const used = limit ? ` (${limit[1]}/${limit[1]})` : "";
         const resets = window.IBA.fmt.time(r.body.resets_at);
+        showQuota(0, false, r.body.resets_at);
         showNotice([`daily limit reached${used}`, "", `resets ${resets} KST`], (r.body && r.body.message) || "Daily limit reached.");
       } else if (r.body && r.body.message) {
         showError("제출이 거부되었습니다" + (r.body.row ? ` (${r.body.row}행)` : ""), r.body.message);

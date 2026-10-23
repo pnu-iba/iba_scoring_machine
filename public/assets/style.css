@@ -218,10 +218,12 @@ main.page.auth-main {
 /* 로그인·회원가입 화면에서는 우측 상단 링크를 표시하지 않는다. */
 body:has(.auth-main) .corner-links { display: none; }
 /* 사진: 화면 위아래에 똑같이 20px씩 띄우고 그 사이 높이를 꽉 채운다(하단 바와는 좌우로 겹치지 않는다).
-   오른쪽 절반의 가운데에 선다 */
+   오른쪽 절반의 가운데에 서고, 창이 좁아 그 높이로는 오른쪽 절반을 넘치면 오른쪽 절반 폭에 맞춰 줄어든다 */
 .auth-visual {
-  position: fixed; top: 20px; bottom: 20px; z-index: 1;
-  right: calc(25vw - (100vh - 40px) * 3 / 8);
+  --photo-w: min((100vh - 40px) * 3 / 4, 50vw - 48px);
+  position: fixed; z-index: 1;
+  width: var(--photo-w); top: calc(50vh - var(--photo-w) * 2 / 3);
+  right: calc(25vw - var(--photo-w) / 2);
   aspect-ratio: 3 / 4; margin: 0;
   border-radius: 14px; overflow: hidden;
   box-shadow: 0 0 0 1px rgba(21, 24, 29, 0.08), 0 24px 56px rgba(21, 24, 29, 0.16);
@@ -343,6 +345,7 @@ main.page.desk-main { max-width: none; padding: 68px 40px 0; }
   height: calc(100vh - 133px);
   width: min(calc(100vw - 80px), calc((100vh - 133px) * 1.9));
   margin: 0 auto;
+  container-type: inline-size;   /* Dock 아이콘 크기를 화면 폭에 맞춘다 */
   border-radius: 18px; overflow: hidden;
   background:
     radial-gradient(120% 90% at 50% 0%, #f4f2ee 0%, #e9e6e0 55%, #dedbd4 100%);
@@ -413,9 +416,10 @@ main.page.desk-main { max-width: none; padding: 68px 40px 0; }
   color: #fff;
 }
 
-/* Dock: 화면 아래 가운데의 반투명 유리 막대. 앱 아이콘은 장식이고, 커서 가까운 것일수록 커진다(--s). */
+/* Dock: 화면 아래 가운데의 반투명 유리 막대. 앱 아이콘은 장식이고, 커서 가까운 것일수록 커진다(--s).
+   화면이 좁으면 아홉 칸이 화면 안에 들어오도록 아이콘을 줄인다 */
 .dock {
-  --icon: 44px;
+  --icon: min(44px, (100cqw - 120px) / 9);
   position: absolute; left: 50%; bottom: 12px;
   transform: translateX(-50%);
   display: flex; align-items: flex-end; gap: 7px;
@@ -594,6 +598,12 @@ body.embed main:has(.apple-layout) { padding: 16px; }
 .crew .role { font-size: 12px; font-weight: 600; color: var(--muted); }
 .crew .name { font-size: 15px; font-weight: 600; color: var(--ink); }
 .crew .note { font-size: 13px; color: var(--ink-2); }
+
+/* 좁은 PC 창: 사진을 빼고 폼만 화면 가운데에 둔다 */
+@media (max-width: 820px) {
+  main.page.auth-main { width: auto; padding: 72px 24px 32px; }
+  .auth-visual { display: none; }
+}
 
 /* 가입·로그인 처리 중 버튼 전체를 반투명하게 표시한다. */
 .auth-main #submitBtn {

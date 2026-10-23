@@ -137,3 +137,21 @@ main.page.board-page { padding-top: 88px; padding-bottom: 40px; overflow: clip; 
   position: absolute; left: 62%; top: 80%; width: 70px; height: 34px; overflow: visible;
   fill: none; stroke: var(--stamp); stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round;
 }
+
+/* 좁은 PC 창: 종이 여백과 칸 간격을 줄이고, 긴 머리글은 두 줄로 접어 표가 종이 안에 들어오게 한다 */
+@media (max-width: 760px) {
+  .file { padding: 44px 24px 32px; }
+  .file-clip { left: 20px; }
+  .file-table { font-size: 13px; }
+  .file-table th, .file-table td { padding-left: 6px; padding-right: 6px; }
+  .file-table th:first-child, .file-table td:first-child { width: 44px; }
+  #board th { white-space: normal; }
+  .file-photo { margin-right: 8px; }
+}
+/* 더 좁으면 표를 종이 안에서 가로로 밀어 보고, 서명란과 사진은 위아래로 놓는다 */
+@media (max-width: 600px) {
+  .file-head { grid-template-columns: minmax(0, 1fr) auto; }
+  .file-title { grid-column: 1 / -1; grid-row: 2; margin-top: 4px; }
+  .file-table { display: block; overflow-x: auto; }
+  .file-foot { grid-template-columns: minmax(0, 1fr); }
+}

@@ -50,6 +50,7 @@ button.danger:hover:not(:disabled) { background: #923d34; }
 
 @media (max-width: 1100px) {
   .admin { grid-template-columns: minmax(0, 1fr); }
-  .admin-tabs { position: static; grid-auto-flow: column; justify-content: start; }
+  .admin-tabs { position: static; display: flex; flex-wrap: wrap; }   /* 좁으면 탭 이름을 쪼개지 않고 다음 줄로 넘긴다 */
+  .admin-tabs a { white-space: nowrap; }
   .field-row { grid-template-columns: minmax(0, 1fr); }
 }

@@ -1,4 +1,4 @@
-// 공통 도우미: 틀(메뉴·페이지 제목·하단 바) 렌더링, 로그인 상태, 아이콘, 숫자 포맷, API 호출, 리더보드 행, 미니게임 팀 순위.
+// 공통 도우미: 틀(메뉴·페이지 제목·하단 바) 렌더링, 로그인 상태, 아이콘, 숫자 포맷, API 호출, 리더보드 행, 미니게임 순위.
 (function () {
   // 사이드바 메뉴. 랜딩(index.html)의 메뉴와 같은 항목·같은 이름이다. 홈은 워드마크(IBA)로 간다.
   const PAGES = [
@@ -191,10 +191,10 @@
     document.addEventListener("visibilitychange", () => { if (!document.hidden) fn(); });
   }
 
-  // --- 미니게임 팀 순위 --------------------------------------------------------
-  // 게임 페이지의 #gameBoard 표를 채운다. 팀별 최고 점수, 점수 내림차순.
+  // --- 미니게임 순위 ------------------------------------------------------------
+  // 게임 페이지의 #gameBoard 표를 채운다. 사람별 최고 점수, 점수 내림차순.
   async function loadGameBoard(game) {
-    const [r, user] = await Promise.all([api(`/api/games/${game}/leaderboard`), me]);
+    const r = await api(`/api/games/${game}/leaderboard`);
     const table = document.getElementById("gameBoard");
     const emptyEl = document.getElementById("gameBoardEmpty");
     if (!r.ok) { emptyEl.textContent = `순위를 불러오지 못했습니다 (HTTP ${r.status})`; return; }
@@ -202,17 +202,14 @@
     table.hidden = rows.length === 0;
     emptyEl.hidden = rows.length > 0;
     emptyEl.textContent = "아직 기록이 없습니다. 첫 기록을 남겨 보세요.";
-    const teamIcon = icon("users");
-    table.querySelector("tbody").innerHTML = rows.map((row) => {
-      const mine = user && row.team === user.team;
-      return `
-      <tr${mine ? ' class="mine"' : ""}>
+    const userIcon = icon("user");
+    table.querySelector("tbody").innerHTML = rows.map((row) => `
+      <tr${row.mine ? ' class="mine"' : ""}>
         <td><span class="rank-badge${row.rank === 1 ? " first" : ""}">${row.rank}</span></td>
-        <td><div class="team"><span class="avatar">${teamIcon}</span><div><div class="name">${esc(row.team)}${mine ? ' <span class="tag">우리 팀</span>' : ""}</div><div class="sub">${esc(row.nickname)}</div></div></div></td>
+        <td><div class="team"><span class="avatar">${userIcon}</span><div><div class="name">${esc(row.nickname)}${row.mine ? ' <span class="tag">나</span>' : ""}</div><div class="sub">Team ${esc(row.team)}</div></div></div></td>
         <td class="num score-main">${fmt.int(row.score)}</td>
         <td class="num faint" title="${fmt.time(row.played_at)}">${fmt.ago(row.played_at)}</td>
-      </tr>`;
-    }).join("");
+      </tr>`).join("");
   }
 
   function gameBoard(game) {
@@ -220,20 +217,20 @@
     refreshEvery(() => loadGameBoard(game), 60000);
   }
 
-  // 게임이 끝났을 때 점수를 팀 기록으로 올리고, 결과 문구를 overlay의 버튼 위에 붙인다.
+  // 게임이 끝났을 때 점수를 내 기록으로 올리고, 결과 문구를 overlay의 버튼 위에 붙인다.
   async function reportScore(game, score, overlay) {
     const note = document.createElement("div");
     note.className = "small";
     overlay.insertBefore(note, overlay.querySelector("button"));
     const user = await me;
-    if (!user) { note.textContent = "로그인하면 팀 순위에 기록됩니다."; return; }
+    if (!user) { note.textContent = "로그인하면 순위에 기록됩니다."; return; }
     if (score <= 0) return;
     if (user.demo) { note.textContent = "구경용 계정이라 점수는 기록되지 않습니다."; return; }
     const r = await api(`/api/games/${game}/score`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ score }),
     });
     if (!r.ok) { note.textContent = "점수를 기록하지 못했습니다."; return; }
-    note.textContent = `${user.team}팀 ${r.body.rank}위 · 팀 최고 ${fmt.int(r.body.team_best)}점`;
+    note.textContent = `${r.body.rank}위 · 내 최고 ${fmt.int(r.body.best)}점`;
     loadGameBoard(game);
   }
 

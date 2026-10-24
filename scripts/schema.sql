@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS game_scores (
     team_display     TEXT NOT NULL,
     nickname         TEXT NOT NULL,
     score            INTEGER NOT NULL,
-    played_at        TIMESTAMPTZ NOT NULL
+    played_at        TIMESTAMPTZ NOT NULL,
+    user_id          BIGINT                -- 기록한 사람(사람별 순위 기준)
 );
 
 CREATE INDEX IF NOT EXISTS game_scores_game ON game_scores (game);
@@ -56,6 +57,9 @@ ALTER TABLE submissions ALTER COLUMN public_r2 SET NOT NULL;
 
 -- 관리자 계정과 대회 설정. 여러 번 실행해도 된다.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_admin BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 미니게임 사람별 순위. 여러 번 실행해도 된다. 그 전의 기록은 비어 있고 팀과 닉네임으로 묶는다.
+ALTER TABLE game_scores ADD COLUMN IF NOT EXISTS user_id BIGINT;
 
 CREATE TABLE IF NOT EXISTS contest_settings (
     id          INTEGER PRIMARY KEY CHECK (id = 1), -- 한 행만 둔다

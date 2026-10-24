@@ -535,11 +535,11 @@ kbd {
 .game-stats > .stat-action { display: flex; align-items: flex-end; }
 .game-stats > .stat-action button { width: 100%; }
 
-/* 게임 옆 칸에 넣은 팀 순위(사과게임). 칸이 좁아 표 여백을 줄이고 기록 시각 열은 숨기며,
+/* 게임 옆 칸에 넣은 순위(사과게임). 칸이 좁아 표 여백을 줄이고 기록 시각 열은 숨기며,
    기록이 많으면 표만 스크롤한다. */
 /* 사과게임: 게임판(674px) 오른쪽에 좁은 칸 하나만 두고 여백을 줄여 창을 작게 만든다 */
 /* 오른쪽 칸은 게임판 높이에 맞춰 늘어나고(contain: size로 칸 내용이 줄 높이를 키우지 못하게),
-   팀 순위가 그 높이를 채워 칸 아래가 비지 않게 한다. 기록이 많으면 표만 스크롤. */
+   순위가 그 높이를 채워 칸 아래가 비지 않게 한다. 기록이 많으면 표만 스크롤. */
 .apple-layout { gap: 16px; flex-wrap: nowrap; align-items: stretch; }
 .apple-layout .game-side { flex: 0 0 210px; min-width: 0; max-width: none; gap: 14px; contain: size; }
 .apple-layout .side-board { flex: 1; min-height: 0; display: flex; flex-direction: column; }

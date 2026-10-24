@@ -89,6 +89,7 @@ class GameScore:
     nickname: str
     score: int
     played_at: datetime
+    user_id: int | None = None   # 사람별 순위 기준. user_id 열을 만들기 전의 기록은 비어 있다.
 
 
 @dataclass(frozen=True)
@@ -98,18 +99,19 @@ class GameRow:
     nickname: str
     score: int
     played_at: datetime
-    team_key: str = field(repr=False)
+    user_id: int | None = field(repr=False)
 
 
 def _rank_game(rows: list[GameScore]) -> list[GameRow]:
-    best: dict[str, GameScore] = {}
+    best: dict = {}
     for s in rows:
-        cur = best.get(s.team_key)
+        key = s.user_id if s.user_id is not None else (s.team_key, s.nickname)   # 사용자 id가 없는 예전 기록
+        cur = best.get(key)
         if cur is None or (-s.score, s.played_at) < (-cur.score, cur.played_at):
-            best[s.team_key] = s
+            best[key] = s
     ordered = sorted(best.values(), key=lambda s: (-s.score, s.played_at))
     return [
-        GameRow(rank=i + 1, team=s.team_display, nickname=s.nickname, score=s.score, played_at=s.played_at, team_key=s.team_key)
+        GameRow(rank=i + 1, team=s.team_display, nickname=s.nickname, score=s.score, played_at=s.played_at, user_id=s.user_id)
         for i, s in enumerate(ordered)
     ]
 
@@ -425,9 +427,9 @@ class PostgresStore:
     def insert_game_score(self, s: GameScore) -> int:
         with self._connect() as conn:
             row = conn.execute(
-                "INSERT INTO game_scores (game, team_key, team_display, nickname, score, played_at) "
-                "VALUES (%s, %s, %s, %s, %s, %s) RETURNING id",
-                (s.game, s.team_key, s.team_display, s.nickname, s.score, s.played_at),
+                "INSERT INTO game_scores (game, team_key, team_display, nickname, score, played_at, user_id) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s) RETURNING id",
+                (s.game, s.team_key, s.team_display, s.nickname, s.score, s.played_at, s.user_id),
             ).fetchone()
             conn.commit()
         s.id = int(row[0])
@@ -436,17 +438,17 @@ class PostgresStore:
     def game_leaderboard(self, game: str) -> list[GameRow]:
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT id, game, team_key, team_display, nickname, score, played_at FROM game_scores WHERE game = %s",
+                "SELECT id, game, team_key, team_display, nickname, score, played_at, user_id FROM game_scores WHERE game = %s",
                 (game,),
             ).fetchall()
-        return _rank_game([GameScore(int(r[0]), r[1], r[2], r[3], r[4], int(r[5]), r[6]) for r in rows])
+        return _rank_game([GameScore(int(r[0]), r[1], r[2], r[3], r[4], int(r[5]), r[6], r[7]) for r in rows])
 
     def list_game_scores(self) -> list[GameScore]:
         with self._connect() as conn:
             rows = conn.execute(
-                "SELECT id, game, team_key, team_display, nickname, score, played_at FROM game_scores ORDER BY id"
+                "SELECT id, game, team_key, team_display, nickname, score, played_at, user_id FROM game_scores ORDER BY id"
             ).fetchall()
-        return [GameScore(int(r[0]), r[1], r[2], r[3], r[4], int(r[5]), r[6]) for r in rows]
+        return [GameScore(int(r[0]), r[1], r[2], r[3], r[4], int(r[5]), r[6], r[7]) for r in rows]
 
     def list_users(self, team_key: str | None = None) -> list[User]:
         with self._connect() as conn:

@@ -10,7 +10,7 @@
 - GET    /api/leaderboard            팀별 기록. 대회 중에는 public 순위, 마감 뒤에는 최종 순위
 - GET    /api/quota                  (로그인) 우리 팀 오늘 남은 횟수
 - POST   /api/games/{game}/score     (로그인) 미니게임 점수 기록
-- GET    /api/games/{game}/leaderboard  미니게임 팀별 최고 점수
+- GET    /api/games/{game}/leaderboard  미니게임 사람별 최고 점수
 - /api/admin/*                       (관리자 계정) 대회 현황·설정·공지, 채점 확인, 제출·사용자 관리,
                                      결과 내보내기, 기수 초기화
 
@@ -506,13 +506,14 @@ def quota(
     return body
 
 
-def _game_row(row) -> dict:
+def _game_row(row, user: User | None) -> dict:
     return {
         "rank": row.rank,
         "team": row.team,
         "nickname": row.nickname,
         "score": row.score,
         "played_at": row.played_at.astimezone(clock.KST).isoformat(),
+        "mine": user is not None and row.user_id == user.id,
     }
 
 
@@ -529,20 +530,20 @@ def record_game_score(
     if not 0 <= body.score <= GAME_MAX_SCORE[game]:
         return _bad_request("bad_score", "점수가 올바르지 않습니다.")
     if _is_demo(user):   # 구경용 계정의 점수는 미니게임 리더보드에 남기지 않는다
-        return {"rank": None, "team_best": None, "demo": True}
+        return {"rank": None, "best": None, "demo": True}
     store.insert_game_score(
-        GameScore(0, game, user.team_key, user.team_display, user.nickname, body.score, now_fn())
+        GameScore(0, game, user.team_key, user.team_display, user.nickname, body.score, now_fn(), user.id)
     )
     rows = store.game_leaderboard(game)
-    mine = next(r for r in rows if r.team_key == user.team_key)
-    return {"rank": mine.rank, "team_best": mine.score}
+    mine = next(r for r in rows if r.user_id == user.id)
+    return {"rank": mine.rank, "best": mine.score}
 
 
 @app.get("/api/games/{game}/leaderboard")
-def game_leaderboard(game: str, store: Store = Depends(get_store)):
+def game_leaderboard(game: str, store: Store = Depends(get_store), user: User | None = Depends(current_user)):
     if game not in GAME_MAX_SCORE:
         raise HTTPException(status_code=404, detail="없는 게임입니다.")
-    return [_game_row(r) for r in store.game_leaderboard(game)]
+    return [_game_row(r, user) for r in store.game_leaderboard(game)]
 
 
 # --- 관리자 -------------------------------------------------------------------

@@ -54,19 +54,18 @@
       </ul>
       <p class="small">패들 끝에 맞힐수록 공이 비스듬히 튕깁니다. 위쪽 줄 블록일수록 점수가 높고, 점이 찍힌 블록은 점 개수만큼 맞혀야 깨집니다. 패들에 닿지 않고 블록을 이어 깨면 콤보 배수가 붙습니다. 공을 모두 놓치면 게임이 끝나고, 블록을 모두 깨면 공이 빨라진 다음 스테이지가 시작됩니다.</p>
     </div>
+    <div class="side-board">
+      <h3>순위</h3>
+      <div class="table-wrap">
+        <table id="gameBoard" hidden>
+          <thead><tr><th>순위</th><th>이름</th><th class="num">점수</th><th class="num">기록 시각</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="empty" id="gameBoardEmpty">불러오는 중…</p>
+      <p class="small">사람별 최고 점수입니다. 로그인한 상태로 게임을 마치면 내 기록으로 올라갑니다.</p>
+    </div>
   </div>
-</section>
-
-<section class="card flush">
-  <div class="card-head"><h2>순위</h2></div>
-  <div class="table-wrap">
-    <table id="gameBoard" hidden>
-      <thead><tr><th>순위</th><th>이름</th><th class="num">점수</th><th class="num">기록 시각</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-  <p class="empty" id="gameBoardEmpty">불러오는 중…</p>
-  <div class="card-foot">사람별 최고 점수입니다. 로그인한 상태로 게임을 마치면 내 기록으로 올라갑니다.</div>
 </section>
 </main>
 </body>

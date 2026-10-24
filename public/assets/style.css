@@ -560,6 +560,14 @@ body.embed main:has(.apple-layout) { padding: 16px; }
 .side-board .team .avatar { display: none; }
 .side-board .empty { padding: 10px 0; }
 .side-board .small { margin: 8px 0 0; line-height: 1.55; }
+/* 나머지 게임의 순위 칸. 게임 창 안에서는 게임판 오른쪽에 두고 사과게임처럼 게임판 높이에 맞춘다.
+   창 밖에서 연 게임 페이지는 폭이 모자랄 수 있어 게임 아래 한 줄을 다 쓴다. */
+.game-layout > .side-board { flex: 1 0 100%; }
+.game-layout > .side-board .table-wrap { max-height: none; }
+.embed .game-layout:has(> .side-board) { flex-wrap: nowrap; align-items: stretch; }
+.embed .game-layout > .side-board { flex: 0 0 210px; min-height: 0; display: flex; flex-direction: column; contain: size; }
+.embed .game-layout > .side-board .table-wrap { min-height: 0; flex: 0 1 auto; overflow-y: auto; }
+.embed .game-layout > .side-board > .small { margin-top: auto; padding-top: 8px; }
 
 @media (max-width: 1100px) {
   .cols { grid-template-columns: minmax(0, 1fr); }

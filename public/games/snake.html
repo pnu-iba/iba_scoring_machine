@@ -44,19 +44,18 @@
       </dl>
       <p class="small">먹이를 먹을 때마다 뱀이 한 칸 길어지고 조금씩 빨라집니다. 먹이 5개마다 단계가 오르고, 먹이 하나의 점수는 단계 × 10점입니다. 벽이나 자기 몸에 부딪히면 게임이 끝납니다. 다른 탭으로 옮기면 일시정지됩니다.</p>
     </div>
+    <div class="side-board">
+      <h3>순위</h3>
+      <div class="table-wrap">
+        <table id="gameBoard" hidden>
+          <thead><tr><th>순위</th><th>이름</th><th class="num">점수</th><th class="num">기록 시각</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="empty" id="gameBoardEmpty">불러오는 중…</p>
+      <p class="small">사람별 최고 점수입니다. 로그인한 상태로 게임을 마치면 내 기록으로 올라갑니다.</p>
+    </div>
   </div>
-</section>
-
-<section class="card flush">
-  <div class="card-head"><h2>순위</h2></div>
-  <div class="table-wrap">
-    <table id="gameBoard" hidden>
-      <thead><tr><th>순위</th><th>이름</th><th class="num">점수</th><th class="num">기록 시각</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-  <p class="empty" id="gameBoardEmpty">불러오는 중…</p>
-  <div class="card-foot">사람별 최고 점수입니다. 로그인한 상태로 게임을 마치면 내 기록으로 올라갑니다.</div>
 </section>
 </main>
 </body>

@@ -336,15 +336,15 @@ input[type="file"]::file-selector-button {
    macOS 화면을 그림 없이 색과 음영만으로 구분한 둥근 판. 사이트 바탕보다 조금 짙고 푸른 기가 도는 색에,
    안쪽 위 가장자리 그늘과 바깥 그림자를 준다. 위쪽 바탕에 게임 아이콘, 아래쪽에 Dock(desktop.js). */
 .desk-main .page-head { display: none; }   /* 제목 없이 화면만 둔다 */
-/* 화면은 오른쪽 위 IBA·계정·Sign out 세 줄 아래(144px)에서 시작해 그 글자와 겹치지 않는다.
-   양옆은 메뉴 버튼·오른쪽 위 글자보다 아래에 있으므로 넓게 쓴다 */
-main.page.desk-main { max-width: none; padding: 144px 40px 0; }
+body:has(.desk-main) .corner-links > :not(.home-mark) { display: none; }   /* 계정 줄과 Sign in·Sign out을 숨겨 화면 위와 겹치지 않게 한다 */
+/* 화면은 메뉴 버튼·IBA 줄 바로 아래(68px)에서 시작해, 양옆은 그 버튼들에 가리지 않으므로 넓게 쓴다 */
+main.page.desk-main { max-width: none; padding: 68px 40px 0; }
 .screen {
   position: relative;
-  /* 가로로 긴 화면. 높이는 위 144px + 하단 바 53px + 숨 쉴 틈 12px = 209px를 뺀 만큼,
+  /* 가로로 긴 화면. 높이는 위 68px + 하단 바 53px + 숨 쉴 틈 12px = 133px를 뺀 만큼,
      폭은 좌우 40px씩을 뺀 만큼(아주 넓은 모니터에서는 높이의 1.9배까지) */
-  height: calc(100vh - 209px);
-  width: min(calc(100vw - 80px), calc((100vh - 209px) * 1.9));
+  height: calc(100vh - 133px);
+  width: min(calc(100vw - 80px), calc((100vh - 133px) * 1.9));
   margin: 0 auto;
   container-type: inline-size;   /* Dock 아이콘 크기를 화면 폭에 맞춘다 */
   border-radius: 18px; overflow: hidden;

@@ -192,13 +192,27 @@
   }
 
   // --- 미니게임 순위 ------------------------------------------------------------
+  // 구경용 계정(iba_dev)이 보는 목데이터. [닉네임, 팀, 점수, 몇 분 전]
+  const SAMPLE_GAME_ROWS = {
+    apple: [["서윤", "2", 138, 42], ["도현", "1", 131, 95], ["하린", "4", 124, 210], ["민준", "3", 117, 18], ["지우", "2", 109, 330], ["예준", "1", 96, 1440]],
+    tetris: [["도현", "1", 58420, 64], ["시우", "3", 41870, 150], ["서윤", "2", 33150, 27], ["유나", "4", 21960, 480], ["하린", "4", 14300, 900], ["민준", "3", 8750, 2100]],
+    blocks: [["지우", "2", 24860, 75], ["예준", "1", 19340, 33], ["유나", "4", 15720, 260], ["시우", "3", 11280, 610], ["도현", "1", 7940, 1300]],
+    shooter: [["민준", "3", 186400, 12], ["하린", "4", 142900, 140], ["서윤", "2", 98350, 390], ["예준", "1", 67200, 55], ["지우", "2", 41500, 1720]],
+    snake: [["유나", "4", 3420, 88], ["시우", "3", 2780, 21], ["도현", "1", 2150, 340], ["서윤", "2", 1690, 760], ["민준", "3", 1130, 1500]],
+  };
+  function sampleGameRows(game) {
+    return (SAMPLE_GAME_ROWS[game] || []).map(([nickname, team, score, mins], i) => ({
+      rank: i + 1, team, nickname, score, played_at: new Date(Date.now() - mins * 60000).toISOString(), mine: false,
+    }));
+  }
+
   // 게임 페이지의 #gameBoard 표를 채운다. 사람별 최고 점수, 점수 내림차순.
   async function loadGameBoard(game) {
-    const r = await api(`/api/games/${game}/leaderboard`);
+    const [r, user] = await Promise.all([api(`/api/games/${game}/leaderboard`), me]);
     const table = document.getElementById("gameBoard");
     const emptyEl = document.getElementById("gameBoardEmpty");
     if (!r.ok) { emptyEl.textContent = `순위를 불러오지 못했습니다 (HTTP ${r.status})`; return; }
-    const rows = r.body;
+    const rows = user && user.demo ? sampleGameRows(game) : r.body;
     table.hidden = rows.length === 0;
     emptyEl.hidden = rows.length > 0;
     emptyEl.textContent = "아직 기록이 없습니다. 첫 기록을 남겨 보세요.";

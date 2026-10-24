@@ -7,6 +7,11 @@ main.page.submit-page {
   --stage-h: max(240px, calc(100svh - 224px - 92px - 16px - 24px));
   --outcome-h: 92px;
 }
+/* 로그인 여부를 알기 전에는 본문을 감춰 둔다. 로그인 화면(구분선·오른쪽 영역)이 먼저 그려졌다가
+   로그인 안내로 바뀌며 화면이 튀지 않게, 상태가 정해지면 submit.js가 is-pending을 떼고 한 번에 나타낸다 */
+.submit-divider, .submit-layout { transition: opacity 320ms ease-out; }
+.submit-page.is-pending .submit-divider, .submit-page.is-pending .submit-layout { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .submit-divider, .submit-layout { transition: none; } }
 /* 구분선: 화면 끝에서 끝까지 가는 점선 한 줄(작은 체크 무늬는 깨진 글자처럼 보여 바꿨다) */
 .submit-divider {
   display: block;

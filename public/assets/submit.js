@@ -537,14 +537,19 @@
     line.hidden = false;
   }
 
+  // 로그인 여부가 정해진 뒤에 본문을 보여 준다(submit.css의 is-pending)
+  const reveal = () => document.querySelector("main.submit-page")?.classList.remove("is-pending");
   async function init() {
-    const user = await window.IBA.me;
+    let user = null;
+    try { user = await window.IBA.me; } catch { /* 확인하지 못하면 로그인 전 화면으로 */ }
     if (!user) {
       el("needLogin").hidden = false;
+      reveal();
       drawSigninArrow();
       return;
     }
     el("formCard").hidden = false;
+    reveal();
     demo = !!user.demo;
     attachDemo();
     if (user.is_admin) return;

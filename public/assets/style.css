@@ -131,10 +131,12 @@ dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 8px 20px;
 dl.facts dt { color: var(--muted); font-weight: 500; }
 dl.facts dd { margin: 0; }
 /* How to use: 채점 방식 표의 글자를 아래 목록(li)과 같은 색으로, 굵은 글자만 진하게 */
+.howto-page dl.facts { row-gap: 12px; }   /* 채점 방식 표: 행 사이를 조금 더 띄운다(기본 8px) */
 .howto-page dl.facts dd { color: var(--ink-2); }
 .howto-page dl.facts dd strong { color: var(--ink); }
 .howto-page code { background: none; padding: 0; border-radius: 0; }   /* 코드 글자의 회색 상자 표시 없이 글꼴만 */
 .howto-page #rules h3 { margin-top: 28px; }   /* 채점 방식 박스 안 섹션 사이를 조금 더 띄운다 */
+.howto-page thead th { background: none; font-size: 13px; font-weight: 700; border-top-color: #e6e3db; border-bottom-color: #e6e3db; }   /* 표 머리 줄도 본문과 같은 카드 색(회색 배경은 버튼 호버 색과 같아 마우스를 올린 것처럼 보였다) */
 
 /* 대회 정보 카드 */
 .chip { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border: 1px solid var(--line); border-radius: 6px; font-size: 11.5px; font-weight: 600; color: var(--ink-2); }

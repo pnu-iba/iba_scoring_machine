@@ -71,7 +71,7 @@ public/              # 정적 사이트 (Vercel CDN이 그대로 서빙)
   *.html             #   홈, 채점, 리더보드, 사용법, 미니게임, 로그인, 관리자, About, Thanks
   assets/            #   페이지별 CSS, JS, 이미지
   games/             #   미니게임
-  data/              #   참가자 배포용 train/test/sample_submission/brand_model.csv와 dataset.zip
+  data/              #   참가자 배포용 CSV 네 개, baseline 노트북, 이 다섯 개를 묶은 dataset.zip
 scripts/             # schema.sql, load_answers.py(정답 적재), grant_admin.py(첫 관리자 지정)
 tests/               # pytest (API 레벨)
 scoring_machine/     # 참고 노트북 (베이스라인, 3조 코드)

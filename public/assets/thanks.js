@@ -18,6 +18,7 @@
     '08': ['LEE JEONG SEO', '10th member', 'Business'],
     '09': ['NO YEONG HUN', '10th member', 'Economics'],
     '10': ['HWANG HYEON SEOK', '10th member', 'Industrial Engineering'],
+    '11': ['PARK JI SEONG', '10th member', 'Industrial Engineering'],
   };
   const offsets = new Map();
   let plannedOffsets = new Map();

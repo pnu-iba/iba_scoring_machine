@@ -104,7 +104,7 @@
         <p class="foot-legal">
           © 2026 PNU IBA
           <span class="sep">·</span>
-          <a href="https://pnuiba.imweb.me/" target="_blank" rel="noopener">Webpage</a> |
+          <a href="https://pnuiba.github.io/" target="_blank" rel="noopener">Webpage</a> |
           <a href="https://www.instagram.com/pnu_iba/" target="_blank" rel="noopener">Instagram</a> |
           <a href="https://linktr.ee/pnuiba" target="_blank" rel="noopener">Linktree</a>
           <span class="sep">·</span>

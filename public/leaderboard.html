@@ -101,7 +101,7 @@
   // 대회 중 올라온 모든 제출을 public 점수 순으로. 팀별 최고 제출의 최종 RMSE는 마감 전까지 가림 막대로 가린다.
   const NOTES = {
     live: "대회 중 올라온 모든 제출의 public 점수 순위. 최종 순위는 Final RMSE를 기준으로, 팀별로 public 점수가 가장 좋았던 제출에만 매겨진다. 해당 순위는 최종 마감 후 공개된다.",
-    public: "대회 중 올라온 모든 제출의 public 점수 순위. 최종 순위는 Final RMSE를 기준으로, 팀별로 public 점수가 가장 좋았던 제출에만 매겨진다. 해당 순위는 최종 마감 후 공개된다.",
+    public: "대회 중 올라온 모든 제출의 public 점수 순위. 최종 순위는 Final RMSE를 기준으로, 팀별로 public 점수가 가장 좋았던 제출에만 매겼다.",
   };
   const REDACT = '<span class="redact" aria-hidden="true"></span><span class="sr-only">마감 뒤 공개</span>';
 
@@ -155,7 +155,13 @@
 
   // 서버에서 새로 받아 last를 바꾼다(그리지는 않는다).
   async function fetchBoard() {
-    const [r, user] = await Promise.all([window.IBA.api("/api/leaderboard"), window.IBA.me]);
+    let r, user;
+    try {
+      [r, user] = await Promise.all([window.IBA.api("/api/leaderboard"), window.IBA.me]);
+    } catch (_) {
+      document.getElementById("updated").textContent = "연결 오류";   // 네트워크가 끊겨도 종이와 버튼은 제자리로 돌린다
+      return false;
+    }
     if (!r.ok) { document.getElementById("updated").textContent = `HTTP ${r.status}`; return false; }
     // 로컬에서 주소 끝에 ?preview=live를 붙이면 마감 전 화면(최종 RMSE 가림)을 미리 본다.
     const previewLive = DEV_SAMPLE && new URLSearchParams(location.search).get("preview") === "live";

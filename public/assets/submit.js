@@ -237,7 +237,6 @@
     updateButton();
     if (fileEl.files[0]) announcement.textContent = `${fileEl.files[0].name} 선택됨. Submit 버튼을 눌러 채점을 시작하세요.`;
   });
-  const esc = (s) => window.IBA.esc(s);
   // 오류도 오른쪽 결과 영역에 한 글자씩 찍는다. 제목과 설명 사이는 한 줄 띄운다.
   function showError(title, detail) {
     showNotice(detail ? [title, "", detail] : [title], [title, detail].filter(Boolean).join(" "));
@@ -271,7 +270,7 @@
     result.hidden = true;
     result.textContent = "";
     fileEl.value = "";
-    const remaining = b.unlimited ? "로컬 테스트: 제출 횟수 제한 없음." : `오늘 ${b.remaining_today}회 남음.`;
+    const remaining = b.demo ? "구경용 계정이라 기록되지 않음." : b.unlimited ? "로컬 테스트: 제출 횟수 제한 없음." : `오늘 ${b.remaining_today}회 남음.`;
     announcement.textContent = `채점 완료. Public ${score}. 현재 팀 순위 ${b.rank ?? "-"}위. ${remaining}`;
 
   }

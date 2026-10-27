@@ -45,7 +45,7 @@ public 점수와 최종 점수를 나누는 것은 과적합을 막기 위해서
 
 사이트는 PC 브라우저에서 쓰는 것을 전제로 만들었고 모바일 화면과 터치 입력은 지원하지 않는다. 미니게임도 마우스와 키보드로만 조작한다.
 
-플랫폼을 고른 과정과 무료 티어 한도는 `docs/research/scoring-site-tech-stack.md`에 있다. 한도는 2026년 9월 조사 시점 기준이다.
+Vercel Hobby는 비상업 용도로만 쓸 수 있다. 광고나 유료 기능을 붙이면 요금제를 바꿔야 한다. 플랫폼을 고른 과정과 무료 티어 한도는 `docs/tech-stack-research.md`에 있다.
 
 ```mermaid
 flowchart LR
@@ -77,8 +77,7 @@ public/              # 정적 사이트 (Vercel CDN이 그대로 서빙)
                      #   구경용 계정이 쓰는 demo_submission.csv, 채점 화면이 읽는 lyrics-*.txt
 scripts/             # schema.sql, load_answers.py(정답 적재), grant_admin.py(첫 관리자 지정)
 tests/               # pytest (API 레벨)
-scoring_machine/     # 3조 참고 노트북. Colab 경로와 행 번호로 바꾸기 전 id를 써서 그대로는 돌아가지 않는다
-docs/                # 구현 스펙, 결정 기록, 기술 스택 조사
+docs/                # 개발 문서: 구현 스펙, 구현 전 결정 기록, 기술 스택 조사
 .github/workflows/   # push와 PR마다 pytest를 돌리는 GitHub Actions
 vercel.json          # 배포 지역(싱가포르)과 함수 번들에서 뺄 폴더
 ```
@@ -137,7 +136,7 @@ GitHub Actions도 `main`에 push하거나 PR을 올릴 때마다 `pytest`를 돌
 
 `main` 브랜치에 push하면 Vercel이 자동으로 배포한다. 다른 브랜치에 push하면 미리보기 주소가 따로 만들어진다. 미리보기가 같은 DB를 쓴다는 점은 작업 방식 절에 적었다.
 
-Vercel은 정적 파일을 `Cache-Control: max-age=0, must-revalidate`로 내려보내서 배포가 끝나면 CSS와 JS도 바로 반영된다. 그래도 옛 화면이 보이면 Ctrl+Shift+R로 강력 새로고침한다. 일부 HTML에 남아 있는 `?v=` 값은 바꾸지 않아도 된다.
+Vercel은 정적 파일을 `Cache-Control: max-age=0, must-revalidate`로 내려보내서 배포가 끝나면 CSS와 JS도 바로 반영된다. 그래도 옛 화면이 보이면 Ctrl+Shift+R로 강력 새로고침한다.
 
 ### 새로 배포하기
 
@@ -201,13 +200,14 @@ Vercel은 정적 파일을 `Cache-Control: max-age=0, must-revalidate`로 내려
 | 첫 접속이나 첫 제출이 몇 초 걸린다 | Neon 무료 DB는 한동안 요청이 없으면 멈췄다가 다시 켜진다. 고장이 아니다 |
 | 참가자가 비밀번호를 잊었다 | 관리자 페이지 사용자 탭에서 임시 비밀번호를 발급한다 |
 | 팀 번호를 잘못 적고 가입했다 | 관리자 페이지 사용자 탭에서 팀 번호를 바꾼다 |
+| 다른 팀 번호로 가입해 그 팀의 제출 횟수를 쓴 사람이 있다 | 가입할 때 팀을 확인하는 장치는 없다. 제출 탭에서 그 제출을 지우면 횟수가 돌아오고, 사용자 탭에서 계정의 팀을 옮긴다 |
 | 실수로 낸 제출을 지우고 싶다 | 관리자 페이지 제출 탭에서 삭제한다. 삭제한 제출은 복구할 수 있다 |
 | 모든 사용자가 갑자기 로그아웃됐다 | Vercel 환경변수 `SESSION_SECRET`이 바뀌었는지 확인한다 |
 | 사이트 전체가 오류를 낸다 | Vercel 대시보드의 Logs에서 오류를 보고, `DATABASE_URL`이 맞는지 확인한다 |
 
 ## 정답 파일과 비밀값
 
-이 저장소는 공개 저장소라서 answer.csv를 커밋하지 않는다. `.gitignore`와 `.vercelignore`가 막고 있고, 정답은 Neon DB의 `answers` 테이블에만 둔다. `DATABASE_URL`과 `SESSION_SECRET`도 Vercel 환경변수에만 두고 코드나 문서에 적지 않는다.
+이 저장소는 공개 저장소라서 answer.csv를 커밋하지 않는다. `.gitignore`와 `.vercelignore`가 막고 있고, 정답은 Neon DB의 `answers` 테이블에 둔다. 원본 answer.csv는 새로 배포할 때 다시 필요하므로 운영진끼리 따로 보관한다. `DATABASE_URL`과 `SESSION_SECRET`도 Vercel 환경변수에만 두고 코드나 문서에 적지 않는다.
 
 ## 라이선스
 
@@ -215,8 +215,6 @@ Vercel은 정적 파일을 `Cache-Control: max-age=0, must-revalidate`로 내려
 
 저장소는 공개로 둔다. Vercel Hobby는 GitHub 조직이 가진 비공개 저장소를 배포하지 않으므로 비공개로 바꾸면 자동 배포가 멈춘다.
 
-## 참고 문서
+## 개발 문서
 
-- `docs/specs/scoring-site.md`: 구현 스펙. 기능별 요구사항과 API 계약이 있다.
-- `docs/wayfinder/scoring-site/`: 제출 단위, 정답 관리, 평가 지표, 팀 식별 방식을 구현 전에 정한 결정 기록이다. 일부는 지금 동작과 다르며, 현재 동작은 README와 스펙을 따른다.
-- `docs/research/scoring-site-tech-stack.md`: 배포 플랫폼 비교와 무료 티어 한도 조사다.
+`docs/`에는 사이트를 만들면서 쓴 설계 문서가 있다. 기능이 왜 지금처럼 동작하는지 알아야 할 때 `docs/README.md`부터 본다. 운영과 수정에 필요한 내용은 이 README에 모두 있다.

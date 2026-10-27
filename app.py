@@ -1,6 +1,6 @@
 """채점 사이트 API. Vercel Python 런타임이 이 파일의 `app`을 찾아 실행한다.
 
-엔드포인트 (스펙 "API 계약"):
+엔드포인트:
 - POST   /api/signup                 가입(아이디·비밀번호·닉네임·팀 번호 1-4) → 세션 쿠키
 - POST   /api/login                  로그인 → 세션 쿠키
 - POST   /api/logout                 세션 쿠키 삭제
@@ -74,7 +74,7 @@ def get_now(request: Request) -> Callable[[], datetime]:
 
 
 def get_answers(request: Request, store: Store = Depends(get_store)) -> Answers:
-    # 함수 인스턴스 안에서 첫 요청 때 한 번 읽고 메모리에 둔다(스펙 "채점 규칙").
+    # 함수 인스턴스 안에서 첫 요청 때 한 번 읽고 메모리에 둔다.
     answers = getattr(request.app.state, "answers", None)
     if answers is None:
         answers = store.load_answers()
@@ -753,8 +753,7 @@ def admin_export(store: Store = Depends(get_store), settings: ContestSettings = 
     )
 
 
-def reset_phrase(settings: ContestSettings) -> str:
-    return "기수 초기화"
+RESET_PHRASE = "기수 초기화"
 
 
 class ResetBody(BaseModel):
@@ -764,10 +763,10 @@ class ResetBody(BaseModel):
 
 
 @admin.post("/reset")
-def admin_reset(body: ResetBody, store: Store = Depends(get_store), settings: ContestSettings = Depends(get_settings)):
-    """기수 초기화. 제출 기록은 항상, 미니게임 점수와 관리자가 아닌 계정은 고른 경우에 지운다."""
-    if body.confirm.strip() != reset_phrase(settings):
-        return _bad_request("bad_confirm", f"확인 문구가 다릅니다. '{reset_phrase(settings)}'를 입력하세요.")
+def admin_reset(body: ResetBody, store: Store = Depends(get_store)):
+    """기수 초기화. 제출 기록은 항상, 미니게임 점수와 관리자·구경용이 아닌 계정은 고른 경우에 지운다."""
+    if body.confirm.strip() != RESET_PHRASE:
+        return _bad_request("bad_confirm", f"확인 문구가 다릅니다. '{RESET_PHRASE}'를 입력하세요.")
     return {"deleted": store.reset_season(body.delete_games, body.delete_users)}
 
 

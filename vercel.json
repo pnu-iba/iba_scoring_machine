@@ -3,7 +3,7 @@
   "regions": ["sin1"],
   "functions": {
     "app.py": {
-      "excludeFiles": "{tests/**,scoring_machine/**,public/**,docs/**,scripts/**}"
+      "excludeFiles": "{tests/**,public/**,scripts/**}"
     }
   }
 }

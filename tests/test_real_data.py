@@ -1,4 +1,4 @@
-"""실제 정답 파일이 있을 때만 도는 기준값 테스트(스펙 "Validation Decisions").
+"""실제 정답 파일이 있을 때만 도는 기준값 테스트.
 
 ANSWER_CSV 환경변수에 answer.csv 경로를 넣고 실행한다:
     ANSWER_CSV=/path/to/answer.csv .venv/bin/pytest tests/test_real_data.py

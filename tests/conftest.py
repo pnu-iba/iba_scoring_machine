@@ -1,6 +1,6 @@
 """API 레벨 테스트용 픽스처. DB 대신 MemoryStore, 시계는 주입 가능한 함수로 바꿔 끼운다.
 
-고정 입력 두 개(스펙 "Validation Decisions"):
+고정 입력 두 개:
 - public/data/sample_submission.csv → RMSE ≈ 13,189.79, R² ≈ -0.79
 - 정답 자체를 제출 → RMSE 0, R² 1
 제출은 로그인이 필요하므로 submit()은 (팀, 닉네임)마다 계정을 하나 만들어 로그인한 뒤 제출한다.

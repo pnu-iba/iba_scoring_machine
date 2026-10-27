@@ -1,7 +1,7 @@
 # 채점 사이트 기술 스택 조사: Vercel vs Cloudflare vs Netlify (무료 티어)
 
 조사일: 2026-09-19
-대상 결정: [006 기술 스택 선택](../wayfinder/scoring-site/decisions/006-tech-stack.md)
+대상 결정: docs/decisions/006-tech-stack.md
 
 ## 질문
 

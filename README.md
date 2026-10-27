@@ -50,7 +50,7 @@ flowchart LR
   B[브라우저] -->|HTML, CSS, JS, 데이터셋| CDN[Vercel CDN<br/>public/]
   B -->|/api/*| F[Vercel Python 함수<br/>app.py]
   F --> S[scoring/<br/>CSV 검증, RMSE, R²]
-  F --> DB[(Neon Postgres<br/>정답, 계정, 제출, 설정)]
+  F --> DB[(Neon Postgres<br/>정답, 계정, 제출, 게임 점수, 설정)]
 ```
 
 페이지와 데이터셋은 Vercel CDN이 `public/`에서 그대로 내려보내고, `/api/`로 시작하는 요청만 Python 함수가 처리한다. 정답은 Neon DB에만 있어서 브라우저에서는 정답을 받을 수 없고, 채점할 때 함수만 정답을 읽는다.

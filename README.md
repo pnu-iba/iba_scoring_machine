@@ -11,7 +11,7 @@
 |---|---|
 | 대회에 참가하는 팀원 | 사이트의 사용법 페이지, 이 문서의 채점 규칙 |
 | 이번 기수 대회를 여는 운영진 | 기수 운영, 문제 해결 |
-| 사이트를 고치는 사람 | 기술 스택, 폴더 구조, 로컬 실행, 작업 방식, 자주 고치는 곳 |
+| 사이트를 고치는 사람 | 기술 스택, 폴더 구조, 로컬 실행, 테스트, 작업 방식, 자주 고치는 곳 |
 | 사이트를 처음부터 다시 세우는 사람 | 새로 배포하기 |
 
 ## 주요 기능
@@ -43,7 +43,9 @@ public 점수와 최종 점수를 나누는 것은 과적합을 막기 위해서
 | 배포 | Vercel Hobby | `main`에 push하면 자동 배포되고, Python 함수와 정적 파일을 한 저장소에서 같이 올린다 |
 | DB | Neon Postgres Free | 신용카드 없이 쓸 수 있는 무료 Postgres다 |
 
-플랫폼을 고른 과정과 무료 티어 한도는 `docs/research/scoring-site-tech-stack.md`에 있다.
+사이트는 PC 브라우저에서 쓰는 것을 전제로 만들었고 모바일 화면과 터치 입력은 지원하지 않는다. 미니게임도 마우스와 키보드로만 조작한다.
+
+플랫폼을 고른 과정과 무료 티어 한도는 `docs/research/scoring-site-tech-stack.md`에 있다. 한도는 2026년 9월 조사 시점 기준이다.
 
 ```mermaid
 flowchart LR
@@ -71,10 +73,11 @@ public/              # 정적 사이트 (Vercel CDN이 그대로 서빙)
   *.html             #   홈, 채점, 리더보드, 사용법, 미니게임, 로그인, 관리자, About, Thanks
   assets/            #   페이지별 CSS, JS, 이미지
   games/             #   미니게임
-  data/              #   참가자 배포용 CSV 네 개, baseline 노트북, 이 다섯 개를 묶은 dataset.zip
+  data/              #   참가자 배포용 CSV 네 개와 baseline 노트북, 이 다섯 개를 묶은 dataset.zip,
+                     #   구경용 계정이 쓰는 demo_submission.csv, 채점 화면이 읽는 lyrics-*.txt
 scripts/             # schema.sql, load_answers.py(정답 적재), grant_admin.py(첫 관리자 지정)
 tests/               # pytest (API 레벨)
-scoring_machine/     # 참고 노트북 (베이스라인, 3조 코드)
+scoring_machine/     # 3조 참고 노트북. Colab 경로와 행 번호로 바꾸기 전 id를 써서 그대로는 돌아가지 않는다
 docs/                # 구현 스펙, 결정 기록, 기술 스택 조사
 .github/workflows/   # push와 PR마다 pytest를 돌리는 GitHub Actions
 vercel.json          # 배포 지역(싱가포르)과 함수 번들에서 뺄 폴더
@@ -102,7 +105,7 @@ $env:DEV_ANSWER_CSV="answer.csv"; $env:SESSION_SECRET="dev"; uvicorn app:app --p
 
 브라우저에서 http://localhost:8765 를 연다. 이 모드에서는 아무 아이디와 비밀번호로나 로그인되고, 아이디 `admin`으로 로그인하면 관리자 계정이 된다. 실제 배포에서는 이 기능이 꺼져 있다.
 
-정답 파일 없이 화면만 보고 싶으면 `public/`을 8791 포트로 띄운다. 이 포트에서는 `public/assets/local-preview.js`가 API 응답을 흉내 내서 로그인과 리더보드 화면을 볼 수 있다.
+정답 파일 없이 화면만 보고 싶으면 `public/`을 8791 포트로 띄운다. 이 포트에서는 `public/assets/local-preview.js`가 API 응답을 흉내 내서 로그인한 화면을 볼 수 있다. 리더보드 기록은 흉내 내지 않으므로 리더보드는 8765 포트에서 확인한다.
 
 ```bash
 python -m http.server 8791 -d public
@@ -130,11 +133,11 @@ GitHub Actions도 `main`에 push하거나 PR을 올릴 때마다 `pytest`를 돌
 
 ## 배포
 
-Vercel 팀 pnu-iba와 Neon DB는 동아리 공용 구글 계정으로 관리하고, Vercel은 GitHub 조직의 동아리 계정 pnuiba와 연결되어 있다. 계정 정보는 운영진끼리 따로 전달한다.
+저장소는 GitHub 조직 pnu-iba의 https://github.com/pnu-iba/iba_scoring_machine 이다. Vercel 팀 pnu-iba와 Neon DB는 동아리 공용 구글 계정으로 관리하고, Vercel은 동아리 GitHub 계정 pnuiba와 연결되어 있다. 계정 정보는 운영진끼리 따로 전달한다.
 
-`main` 브랜치에 push하면 Vercel이 자동으로 배포한다. 다른 브랜치에 push하면 미리보기 주소가 따로 만들어지는데, 미리보기도 같은 DB를 쓰므로 거기서 낸 제출은 실제 기록에 남는다.
+`main` 브랜치에 push하면 Vercel이 자동으로 배포한다. 다른 브랜치에 push하면 미리보기 주소가 따로 만들어진다. 미리보기가 같은 DB를 쓴다는 점은 작업 방식 절에 적었다.
 
-CSS나 JS를 고쳤는데 브라우저에 반영되지 않으면 HTML에서 그 파일을 부르는 주소의 `?v=` 값을 바꾼다. 예를 들어 `about.js?v=cd-flip-2`를 `about.js?v=cd-flip-3`으로 바꾸면 된다.
+Vercel은 정적 파일을 `Cache-Control: max-age=0, must-revalidate`로 내려보내서 배포가 끝나면 CSS와 JS도 바로 반영된다. 그래도 옛 화면이 보이면 Ctrl+Shift+R로 강력 새로고침한다. 일부 HTML에 남아 있는 `?v=` 값은 바꾸지 않아도 된다.
 
 ### 새로 배포하기
 
@@ -146,8 +149,9 @@ CSS나 JS를 고쳤는데 브라우저에 반영되지 않으면 HTML에서 그 
 4. Neon 콘솔에서 연결 문자열을 받아 `psql "$DATABASE_URL" -f scripts/schema.sql`로 스키마를 만든다. 이미 만든 DB에 다시 실행해도 빠진 컬럼과 테이블만 추가한다.
 5. `DATABASE_URL=... python scripts/load_answers.py answer.csv`로 정답을 처음 한 번만 적재한다. 이때 public 구간이 무작위로 정해지므로, 다시 적재하면 구간이 바뀌어 기존 점수와 맞지 않는다.
 6. Vercel에서 최근 배포를 Redeploy해서 환경변수를 반영한다.
-7. 운영진 계정을 사이트에서 가입한 뒤 `DATABASE_URL=... python scripts/grant_admin.py <아이디>`로 첫 관리자를 지정한다. 가입할 때는 1-4 중 하나를 팀 번호로 적어야 하므로, 지정한 뒤 관리자 페이지 사용자 탭에서 팀 번호를 0으로 바꾼다.
-8. `/api/health`가 `{"ok": true}`를 돌려주는지, 브라우저에서 `/answer.csv`를 열었을 때 파일이 내려받아지지 않는지 확인한다.
+7. 운영진 계정을 사이트에서 가입한 뒤 `DATABASE_URL=... python scripts/grant_admin.py <아이디>`로 첫 관리자를 지정한다. 가입할 때 적은 팀 번호는 그대로 남지만, 관리자는 리더보드와 가입자 집계에서 빠진다.
+8. 구경용 계정 `iba_dev`를 사이트에서 가입해 둔다. 이 아이디로 로그인하면 구경용으로 동작하고, 미리 만들어 두어야 다른 사람이 이 아이디를 가져가지 못한다.
+9. `/api/health`가 `{"ok": true}`를 돌려주는지, 브라우저에서 `/answer.csv`를 열었을 때 파일이 내려받아지지 않는지 확인한다.
 
 ## 기수 운영
 
@@ -170,12 +174,13 @@ CSS나 JS를 고쳤는데 브라우저에 반영되지 않으면 HTML에서 그 
 
 다음 대회를 열 때는 새 운영진이 아래 순서로 준비한다.
 
-1. 채점 확인과 초기화 탭에서 기수 초기화를 실행한다. 확인 문구로 `기수 초기화`를 입력해야 실행된다.
-2. 새 운영진이 사이트에 가입하고, 기존 관리자가 사용자 탭에서 관리자로 지정한다. 초기화하면 관리자가 아닌 계정이 지워지므로 가입은 초기화한 뒤에 한다.
-3. 대회 설정 탭에서 시작일과 마지막 날을 정한다.
-4. 팀 수가 4개가 아니면 `scoring/teams.py`의 `TEAMS`를 고쳐 push한다.
+1. 채점 확인과 초기화 탭에서 결과 zip을 내려받는다. 이전 운영진이 이미 받아 두었더라도 같은 화면에서 한 번 내려받아야 확인 문구 입력칸이 켜진다.
+2. 같은 탭에서 기수 초기화를 실행한다. 확인 문구로 `기수 초기화`를 입력해야 실행된다.
+3. 새 운영진이 사이트에 가입하고, 기존 관리자가 사용자 탭에서 관리자로 지정한다. 초기화하면 관리자가 아닌 계정이 지워지므로 가입은 초기화한 뒤에 한다.
+4. 대회 설정 탭에서 시작일과 마지막 날을 정한다.
+5. 팀 수가 4개가 아니면 `scoring/teams.py`의 `TEAMS`를 고쳐 push한다.
 
-초기화하면 제출 기록, 관리자가 아닌 계정, 미니게임 점수가 지워지고 정답과 대회 설정은 남는다. 데이터셋과 정답은 기수가 바뀌어도 그대로 쓴다.
+초기화하면 제출 기록이 지워지고, 기본으로 체크된 두 항목에 따라 관리자가 아닌 계정과 미니게임 점수도 지워진다. 관리자 계정, 구경용 계정 `iba_dev`, 정답, 대회 설정은 남는다. 데이터셋과 정답은 기수가 바뀌어도 그대로 쓴다.
 
 ## 자주 고치는 곳
 
@@ -206,12 +211,12 @@ CSS나 JS를 고쳤는데 브라우저에 반영되지 않으면 HTML에서 그 
 
 ## 라이선스
 
-코드는 MIT 라이선스를 따른다. `public/data/`의 데이터는 Kaggle의 100,000 UK Used Car Data set(adityadesai13)에서 가져왔고 원본의 CC0 라이선스를 따른다. `public/assets/`의 사진은 MIT 라이선스에 포함되지 않으며 따로 허락 없이 쓸 수 없다.
+코드는 MIT 라이선스를 따른다. `public/data/`의 중고차 데이터는 Kaggle의 100,000 UK Used Car Data set(adityadesai13)에서 가져왔고 원본의 CC0 라이선스를 따른다. 같은 폴더의 `lyrics-*.txt`는 노래 가사라서 이 라이선스들에 포함되지 않는다. `public/assets/`의 사진은 MIT 라이선스에 포함되지 않으며 따로 허락 없이 쓸 수 없다.
 
 저장소는 공개로 둔다. Vercel Hobby는 GitHub 조직이 가진 비공개 저장소를 배포하지 않으므로 비공개로 바꾸면 자동 배포가 멈춘다.
 
 ## 참고 문서
 
 - `docs/specs/scoring-site.md`: 구현 스펙. 기능별 요구사항과 API 계약이 있다.
-- `docs/wayfinder/scoring-site/`: 제출 단위, 정답 관리, 평가 지표, 팀 식별 방식을 정한 결정 기록이다.
+- `docs/wayfinder/scoring-site/`: 제출 단위, 정답 관리, 평가 지표, 팀 식별 방식을 구현 전에 정한 결정 기록이다. 일부는 지금 동작과 다르며, 현재 동작은 README와 스펙을 따른다.
 - `docs/research/scoring-site-tech-stack.md`: 배포 플랫폼 비교와 무료 티어 한도 조사다.

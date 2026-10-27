@@ -122,11 +122,12 @@ GitHub Actions도 `main`에 push하거나 PR을 올릴 때마다 `pytest`를 돌
 
 ## 작업 방식
 
-1. `main`에서 `feat/`나 `fix/`로 시작하는 브랜치를 만든다. 예를 들면 `feat/minigame-screen`, `fix/menu-hover-size`다.
-2. 커밋 메시지는 무엇을 바꿨는지 영어 명령형 한 줄로 쓴다. 예를 들면 `Show today's remaining submissions on the submit page`다.
-3. push하기 전에 `pytest`를 돌리고, 채점 로직을 고쳤다면 실제 정답 테스트까지 돌린다.
-4. GitHub에 PR을 올린다. Vercel이 PR마다 미리보기 주소를 만들어 주므로 화면을 바꿨다면 그 주소에서 확인한다.
-5. Actions의 테스트가 통과하면 `main`에 병합한다. 병합하면 바로 실제 사이트에 배포된다.
+지금까지는 대부분의 수정을 `main`에 바로 push했고, 화면을 크게 바꾸는 작업 11건은 `feat/`나 `fix/` 브랜치에서 PR로 올려 병합했다. `main`에 push하면 바로 실제 사이트에 배포되므로, 앞으로는 아래처럼 PR로 올리기를 권한다.
+
+1. `main`에서 `feat/`나 `fix/`로 시작하는 브랜치를 만든다.
+2. push하기 전에 `pytest`를 돌리고, 채점 로직을 고쳤다면 실제 정답 테스트까지 돌린다.
+3. GitHub에 PR을 올리고, 화면을 바꿨다면 Vercel이 만든 미리보기 주소에서 확인한다.
+4. GitHub Actions의 테스트가 통과하면 `main`에 병합한다.
 
 미리보기 주소도 실제 사이트와 같은 DB를 쓴다. 미리보기에서 가입하거나 제출하면 실제 기록에 남으므로 화면 확인은 구경용 계정 `iba_dev`로 한다.
 

@@ -204,6 +204,12 @@ CSS나 JS를 고쳤는데 브라우저에 반영되지 않으면 HTML에서 그 
 
 이 저장소는 공개 저장소라서 answer.csv를 커밋하지 않는다. `.gitignore`와 `.vercelignore`가 막고 있고, 정답은 Neon DB의 `answers` 테이블에만 둔다. `DATABASE_URL`과 `SESSION_SECRET`도 Vercel 환경변수에만 두고 코드나 문서에 적지 않는다.
 
+## 라이선스
+
+코드는 MIT 라이선스를 따른다. `public/data/`의 데이터는 Kaggle의 100,000 UK Used Car Data set(adityadesai13)에서 가져왔고 원본의 CC0 라이선스를 따른다. `public/assets/`의 사진은 MIT 라이선스에 포함되지 않으며 따로 허락 없이 쓸 수 없다.
+
+저장소는 공개로 둔다. Vercel Hobby는 GitHub 조직이 가진 비공개 저장소를 배포하지 않으므로 비공개로 바꾸면 자동 배포가 멈춘다.
+
 ## 참고 문서
 
 - `docs/specs/scoring-site.md`: 구현 스펙. 기능별 요구사항과 API 계약이 있다.

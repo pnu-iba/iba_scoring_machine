@@ -289,3 +289,11 @@ def test_reset_can_keep_users_and_games(client, store):
     assert r.json()["deleted"] == {"submissions": 1, "game_scores": 0, "users": 0}
     assert len(store.list_users()) == 2
     assert len(store.list_game_scores()) == 1
+
+
+def test_self_demote_with_team_change_changes_nothing(client, store):
+    login_admin(client, store)
+    op = store.get_user_by_username("operator")
+    r = client.patch(f"/api/admin/users/{op.id}", json={"team": "2", "is_admin": False})
+    assert r.status_code == 400
+    assert store.get_user_by_username("operator").team_key == "0"

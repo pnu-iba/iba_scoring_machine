@@ -57,3 +57,11 @@ def test_demo_game_scores_not_recorded(client):
     assert r.status_code == 200
     assert r.json()["demo"] is True
     assert client.get("/api/games/apple/leaderboard").json() == []
+
+
+def test_reset_keeps_demo_account(client, store):
+    login_demo(client)
+    login_admin(client, store)
+    r = client.post("/api/admin/reset", json={"confirm": "기수 초기화"})
+    assert r.status_code == 200
+    assert sorted(u.username for u in store.list_users()) == ["iba_dev", "operator"]

@@ -107,6 +107,6 @@ def login_admin(client: TestClient, store) -> None:
     r = client.post("/api/login", json={"username": "operator", "password": PASSWORD})
     if r.status_code == 401:
         assert signup(client, "operator", team="1", nickname="운영진").status_code == 200
-        # 운영진은 가입 뒤 관리자 페이지에서 팀 0으로 옮긴다.
+        # 테스트에서는 관리자를 실제 팀과 섞이지 않게 팀 0에 둔다.
         op = store.get_user_by_username("operator")
         op.is_admin, op.team_key, op.team_display = True, "0", "0"

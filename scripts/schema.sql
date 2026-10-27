@@ -12,14 +12,14 @@ CREATE TABLE IF NOT EXISTS users (
     username         TEXT NOT NULL UNIQUE, -- 로그인 아이디 (소문자)
     password_hash    TEXT NOT NULL,        -- pbkdf2_sha256$반복$솔트$해시
     nickname         TEXT NOT NULL,
-    team_key         TEXT NOT NULL,        -- 정규화된 팀명
+    team_key         TEXT NOT NULL,        -- 정규화된 팀 번호
     team_display     TEXT NOT NULL,        -- 그 팀으로 처음 가입한 사람의 표기
     created_at       TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS submissions (
     id               BIGSERIAL PRIMARY KEY,
-    team_key         TEXT NOT NULL,       -- 정규화된 팀명 (하루 3회 판정·리더보드 그룹 기준)
+    team_key         TEXT NOT NULL,       -- 정규화된 팀 번호 (하루 제출 횟수·리더보드 그룹 기준)
     team_display     TEXT NOT NULL,       -- 제출자 팀의 표기 (users.team_display)
     nickname         TEXT NOT NULL,
     rmse             DOUBLE PRECISION NOT NULL, -- 전체 데이터 점수(최종 순위용)
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS submissions (
 
 CREATE TABLE IF NOT EXISTS game_scores (
     id               BIGSERIAL PRIMARY KEY,
-    game             TEXT NOT NULL,        -- apple, tetris, blocks
+    game             TEXT NOT NULL,        -- apple, tetris, blocks, shooter, snake
     team_key         TEXT NOT NULL,
     team_display     TEXT NOT NULL,
     nickname         TEXT NOT NULL,

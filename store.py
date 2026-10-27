@@ -5,9 +5,10 @@
 - 리더보드는 팀별로 public 점수가 가장 좋은 제출 1건을 고른다(public RMSE 오름차순, 같으면 public R²
   내림차순, 같으면 먼저 제출한 쪽). 대회 중에는 그 public 점수로, 마감 뒤에는 같은 제출의 전체 데이터
   점수로 같은 규칙에 따라 순위를 매긴다.
-- 미니게임 순위도 팀별 최고 점수 1건: 점수 내림차순, 같으면 먼저 기록한 쪽.
+- 미니게임 순위는 사람별 최고 점수 1건: 점수 내림차순, 같으면 먼저 기록한 쪽.
 - 아이디(username)는 중복될 수 없다. 팀 표기는 그 팀으로 처음 가입한 사람의 표기를 따른다.
 - 기수 초기화는 제출 기록을 지우고, 고른 경우 미니게임 점수와 관리자가 아닌 계정도 지운다.
+  구경용 계정(DEMO_USERNAME)은 남겨서 다른 사람이 그 아이디로 가입하지 못하게 한다.
   정답과 대회 설정은 남긴다.
 """
 
@@ -20,6 +21,9 @@ from typing import Protocol
 
 from scoring.clock import DEFAULT_SETTINGS, ContestSettings
 
+
+# 사이트 구경용 계정. 기수 초기화에서도 지우지 않는다.
+DEMO_USERNAME = "iba_dev"
 
 @dataclass(frozen=True)
 class Answers:
@@ -266,7 +270,7 @@ class MemoryStore:
             counts["game_scores"] = len(self._game_scores)
             self._game_scores = []
         if delete_users:
-            kept = [u for u in self._users if u.is_admin]
+            kept = [u for u in self._users if u.is_admin or u.username == DEMO_USERNAME]
             counts["users"] = len(self._users) - len(kept)
             self._users = kept
         return counts
@@ -452,7 +456,9 @@ class PostgresStore:
             if delete_games:
                 counts["game_scores"] = conn.execute("DELETE FROM game_scores").rowcount
             if delete_users:
-                counts["users"] = conn.execute("DELETE FROM users WHERE NOT is_admin").rowcount
+                counts["users"] = conn.execute(
+                    "DELETE FROM users WHERE NOT is_admin AND username <> %s", (DEMO_USERNAME,)
+                ).rowcount
             conn.commit()
         return counts
 

@@ -39,7 +39,7 @@ from scoring.clock import ContestSettings
 from scoring.metrics import score
 from scoring.parse import SubmissionError, parse_submission
 from scoring.teams import TEAMS, NameError_, clean_nickname, clean_team_display, normalize_team, signup_team
-from store import Answers, DuplicateUsername, GameScore, PostgresStore, Store, Submission, User
+from store import DEMO_USERNAME, Answers, DuplicateUsername, GameScore, PostgresStore, Store, Submission, User, _public_key
 
 app = FastAPI(title="IBA Scoring Machine", docs_url=None, redoc_url=None)
 
@@ -49,14 +49,13 @@ app = FastAPI(title="IBA Scoring Machine", docs_url=None, redoc_url=None)
 def get_store(request: Request) -> Store:
     store = getattr(request.app.state, "store", None)
     if store is None:
-        store = _memory_store_for_dev() if os.environ.get("DEV_ANSWER_CSV") else PostgresStore()
+        store = _memory_store_for_dev() if _dev_any_login() else PostgresStore()
         request.app.state.store = store
     return store
 
 
 def _memory_store_for_dev() -> Store:
     """로컬 개발용: DB 없이 DEV_ANSWER_CSV의 정답으로 메모리 저장소를 쓴다. 재시작하면 제출 기록은 사라진다."""
-    import csv
     import random
 
     from scoring.split import pick_public
@@ -90,7 +89,6 @@ def get_settings(store: Store = Depends(get_store)) -> ContestSettings:
 
 
 # 사이트 구경용 계정: 실제 팀 없이 "Team IBA"로 보이고, 리더보드는 목데이터로, 제출은 저장하지 않고 채점만 한다.
-DEMO_USERNAME = "iba_dev"
 DEMO_TEAM = "IBA"
 
 
@@ -193,7 +191,7 @@ def _public_entries(store: Store, final: bool) -> list[dict]:
     최종 점수(final_rmse)와 최종 순위(final_rank)는 마감 뒤, 그리고 팀 대표(best) 제출에만 넣는다. 대회 중에는 어떤 제출의 최종 점수도 내보내지 않는다.
     """
     active = [s for s in store.list_submissions() if s.deleted_at is None]
-    key = lambda s: (s.public_rmse, -s.public_r2, s.submitted_at)  # noqa: E731 — store._rank의 public 기준과 같다
+    key = _public_key
     best_ids = {}
     for s in active:
         cur = best_ids.get(s.team_key)
@@ -298,7 +296,10 @@ def signup(
 
 
 def _dev_any_login() -> bool:
-    """로컬 개발 서버(DB 없는 메모리 모드)에서만 켜진다. 배포(Vercel)와 테스트에서는 꺼져 있다."""
+    """로컬 개발 서버(DB 없는 메모리 모드)에서만 켜진다. 배포(Vercel)와 테스트에서는 꺼져 있다.
+
+    Vercel에 DEV_ANSWER_CSV가 잘못 들어가도 메모리 저장소로 바뀌지 않게 저장소 선택에도 쓴다.
+    """
     return bool(os.environ.get("DEV_ANSWER_CSV")) and not os.environ.get("VERCEL")
 
 
@@ -681,6 +682,9 @@ def admin_update_user(
     store: Store = Depends(get_store),
 ):
     u = _target_user(store, user_id)
+    # 자기 권한을 못 풀게 해 두면 관리자가 0명이 되는 일도 없다. 다른 필드를 바꾸기 전에 거른다.
+    if body.is_admin is False and u.id == me_.id:
+        return _bad_request("self_demote", "자기 자신의 관리자 권한은 해제할 수 없습니다.")
     if body.team is not None:
         try:
             team_key = signup_team(body.team)   # 가입과 같이 이번 기수 팀 번호로만 옮긴다
@@ -690,9 +694,6 @@ def admin_update_user(
         u.team_display = store.first_team_display(team_key) or clean_team_display(body.team)
         u.team_key = team_key
     if body.is_admin is not None:
-        # 자기 권한을 못 풀게 해 두면 관리자가 0명이 되는 일도 없다.
-        if u.id == me_.id and not body.is_admin:
-            return _bad_request("self_demote", "자기 자신의 관리자 권한은 해제할 수 없습니다.")
         u.is_admin = body.is_admin
     store.update_user(u)
     return _admin_user_row(u)

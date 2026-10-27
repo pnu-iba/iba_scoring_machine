@@ -1,4 +1,4 @@
-"""관리자 계정과 관리자 API: 권한, 대회 설정과 상태, 공지, 채점 확인, 제출·사용자 관리, 내보내기, 기수 초기화."""
+"""관리자 계정과 관리자 API: 권한, 대회 설정과 상태, 채점 확인, 제출·사용자 관리, 내보내기, 기수 초기화."""
 
 import io
 import zipfile
@@ -117,24 +117,6 @@ def test_daily_limit_comes_from_settings(client, store):
     r = submit(client, csv_bytes(perfect_rows()))
     assert r.status_code == 429
     assert "1회" in r.json()["message"]
-
-
-# --- 공지 ---------------------------------------------------------------------
-
-
-def test_notice_crud_and_order(client, store):
-    login_admin(client, store)
-    a = client.post("/api/admin/notices", json={"title": "  첫   공지 ", "date": "2026-09-22"}).json()
-    b = client.post("/api/admin/notices", json={"title": "마감 연장", "date": "2026-10-01"}).json()
-    assert a["title"] == "첫 공지"
-    assert [n["title"] for n in client.get("/api/contest").json()["notices"]] == ["마감 연장", "첫 공지"]
-
-    assert client.put(f"/api/admin/notices/{a['id']}", json={"title": "고친 공지", "date": "2026-10-02"}).status_code == 200
-    assert [n["title"] for n in client.get("/api/contest").json()["notices"]] == ["고친 공지", "마감 연장"]
-
-    assert client.delete(f"/api/admin/notices/{b['id']}").status_code == 200
-    assert client.delete(f"/api/admin/notices/{b['id']}").status_code == 404
-    assert client.post("/api/admin/notices", json={"title": "  ", "date": "2026-10-01"}).status_code == 400
 
 
 # --- 채점 확인 -------------------------------------------------------------------
@@ -281,7 +263,6 @@ def test_reset_season(client, store):
     submit(client, csv_bytes(perfect_rows()), team="1")
     client.post("/api/games/apple/score", json={"score": 50})
     login_admin(client, store)
-    client.post("/api/admin/notices", json={"title": "공지", "date": "2026-09-22"})
 
     r = client.post("/api/admin/reset", json={"confirm": "초기화"})
     assert r.status_code == 400
@@ -292,9 +273,8 @@ def test_reset_season(client, store):
     assert r.json()["deleted"] == {"submissions": 1, "game_scores": 1, "users": 1}
     assert [u.username for u in store.list_users()] == ["operator"]
     assert store.list_game_scores() == []
-    # 정답, 대회 설정, 공지는 남는다
+    # 정답과 대회 설정은 남는다
     assert store.get_settings() == SETTINGS
-    assert len(client.get("/api/contest").json()["notices"]) == 1
     assert client.get("/api/admin/overview").json()["answer_rows"] == len(ANSWER_ROWS)
 
 

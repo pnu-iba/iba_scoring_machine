@@ -5,13 +5,13 @@
 - POST   /api/login                  로그인 → 세션 쿠키
 - POST   /api/logout                 세션 쿠키 삭제
 - GET    /api/me                     로그인한 사용자 (로그인하지 않았으면 null)
-- GET    /api/contest                대회 기간·상태·하루 한도·공지
+- GET    /api/contest                대회 기간·상태·하루 한도
 - POST   /api/submit                 (로그인) CSV → public·전체 점수 채점·기록 (진행 중에만, 관리자는 거부)
 - GET    /api/leaderboard            팀별 기록. 대회 중에는 public 순위, 마감 뒤에는 최종 순위
 - GET    /api/quota                  (로그인) 우리 팀 오늘 남은 횟수
 - POST   /api/games/{game}/score     (로그인) 미니게임 점수 기록
 - GET    /api/games/{game}/leaderboard  미니게임 사람별 최고 점수
-- /api/admin/*                       (관리자 계정) 대회 현황·설정·공지, 채점 확인, 제출·사용자 관리,
+- /api/admin/*                       (관리자 계정) 대회 현황·설정, 채점 확인, 제출·사용자 관리,
                                      결과 내보내기, 기수 초기화
 
 정적 페이지는 Vercel에서는 public/이 CDN으로 서빙되고, 로컬에서는 이 앱이 public/을 마운트한다.
@@ -39,7 +39,7 @@ from scoring.clock import ContestSettings
 from scoring.metrics import score
 from scoring.parse import SubmissionError, parse_submission
 from scoring.teams import TEAMS, NameError_, clean_nickname, clean_team_display, normalize_team, signup_team
-from store import Answers, DuplicateUsername, GameScore, Notice, PostgresStore, Store, Submission, User
+from store import Answers, DuplicateUsername, GameScore, PostgresStore, Store, Submission, User
 
 app = FastAPI(title="IBA Scoring Machine", docs_url=None, redoc_url=None)
 
@@ -361,12 +361,7 @@ def contest(
         "status": clock.status(now_fn(), settings),
         "final_at": clock.final_at(settings).isoformat(),
         "daily_limit": settings.daily_limit,
-        "notices": [_notice_row(n) for n in store.list_notices()],
     }
-
-
-def _notice_row(n: Notice) -> dict:
-    return {"id": n.id, "title": n.title, "date": n.notice_date.isoformat()}
 
 
 @app.post("/api/submit")
@@ -602,40 +597,6 @@ def admin_save_contest(body: ContestBody, store: Store = Depends(get_store)):
         return _bad_request("bad_contest", "하루 제출 횟수는 1-100 사이여야 합니다.")
     store.save_settings(ContestSettings(body.start, body.end, body.daily_limit))
     return {"start": body.start.isoformat(), "end": body.end.isoformat(), "daily_limit": body.daily_limit}
-
-
-class NoticeBody(BaseModel):
-    title: str
-    date: date
-
-
-def _notice_from(body: NoticeBody, notice_id: int = 0) -> Notice:
-    title = " ".join(body.title.split())
-    if not 1 <= len(title) <= 200:
-        raise HTTPException(status_code=400, detail="공지 제목은 1-200자여야 합니다.")
-    return Notice(notice_id, title, body.date)
-
-
-@admin.post("/notices")
-def admin_add_notice(body: NoticeBody, store: Store = Depends(get_store)):
-    n = _notice_from(body)
-    store.add_notice(n)
-    return _notice_row(n)
-
-
-@admin.put("/notices/{notice_id}")
-def admin_update_notice(notice_id: int, body: NoticeBody, store: Store = Depends(get_store)):
-    n = _notice_from(body, notice_id)
-    if not store.update_notice(n):
-        raise HTTPException(status_code=404, detail="해당 공지가 없습니다.")
-    return _notice_row(n)
-
-
-@admin.delete("/notices/{notice_id}")
-def admin_delete_notice(notice_id: int, store: Store = Depends(get_store)):
-    if not store.delete_notice(notice_id):
-        raise HTTPException(status_code=404, detail="해당 공지가 없습니다.")
-    return {"deleted": notice_id}
 
 
 @admin.post("/score-check")

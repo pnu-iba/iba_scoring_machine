@@ -154,15 +154,6 @@ dl.facts dd { margin: 0; }
 .kv li .k { flex: 1; color: var(--ink-2); font-weight: 500; }
 .kv li .v { color: var(--ink); font-weight: 600; white-space: nowrap; }
 
-/* 공지사항 */
-.notices { list-style: none; padding: 0; margin: 0; }
-.notices li { display: flex; gap: 10px; padding: 11px 0; margin: 0; border-bottom: 1px solid var(--line-soft); }
-.notices li:last-child { border-bottom: 0; padding-bottom: 0; }
-.notices li::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--muted); flex: none; margin-top: 7px; }
-.notices li:first-child::before { background: var(--accent); }
-.notices .t { font-size: 12.5px; line-height: 19px; font-weight: 500; color: var(--ink); }
-.notices .d { font-size: 11.5px; color: var(--muted); }
-
 /* 표 */
 table { border-collapse: collapse; width: 100%; }
 th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }

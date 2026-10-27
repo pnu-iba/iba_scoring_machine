@@ -8,7 +8,7 @@
 - 미니게임 순위도 팀별 최고 점수 1건: 점수 내림차순, 같으면 먼저 기록한 쪽.
 - 아이디(username)는 중복될 수 없다. 팀 표기는 그 팀으로 처음 가입한 사람의 표기를 따른다.
 - 기수 초기화는 제출 기록을 지우고, 고른 경우 미니게임 점수와 관리자가 아닌 계정도 지운다.
-  정답, 대회 설정, 공지는 남긴다.
+  정답과 대회 설정은 남긴다.
 """
 
 from __future__ import annotations
@@ -42,13 +42,6 @@ class User:
     team_display: str
     created_at: datetime
     is_admin: bool = False
-
-
-@dataclass
-class Notice:
-    id: int
-    title: str
-    notice_date: date
 
 
 @dataclass
@@ -171,19 +164,11 @@ class Store(Protocol):
     def update_user(self, u: User) -> None: ...
     def get_settings(self) -> ContestSettings: ...
     def save_settings(self, s: ContestSettings) -> None: ...
-    def list_notices(self) -> list[Notice]: ...
-    def add_notice(self, n: Notice) -> int: ...
-    def update_notice(self, n: Notice) -> bool: ...
-    def delete_notice(self, notice_id: int) -> bool: ...
     def reset_season(self, delete_games: bool, delete_users: bool) -> dict[str, int]: ...
 
 
 def _newest_first(rows: list[Submission]) -> list[Submission]:
     return sorted(rows, key=lambda s: s.id, reverse=True)
-
-
-def _notice_order(rows: list[Notice]) -> list[Notice]:
-    return sorted(rows, key=lambda n: (n.notice_date, n.id), reverse=True)
 
 
 class MemoryStore:
@@ -193,8 +178,7 @@ class MemoryStore:
         self._users: list[User] = []
         self._game_scores: list[GameScore] = []
         self._settings = DEFAULT_SETTINGS
-        self._notices: list[Notice] = []
-        self._next_id = {"user": 1, "submission": 1, "game": 1, "notice": 1}
+        self._next_id = {"user": 1, "submission": 1, "game": 1}
 
     def _new_id(self, kind: str) -> int:
         n = self._next_id[kind]
@@ -274,26 +258,6 @@ class MemoryStore:
 
     def save_settings(self, s: ContestSettings) -> None:
         self._settings = s
-
-    def list_notices(self) -> list[Notice]:
-        return _notice_order(self._notices)
-
-    def add_notice(self, n: Notice) -> int:
-        n.id = self._new_id("notice")
-        self._notices.append(n)
-        return n.id
-
-    def update_notice(self, n: Notice) -> bool:
-        for i, cur in enumerate(self._notices):
-            if cur.id == n.id:
-                self._notices[i] = n
-                return True
-        return False
-
-    def delete_notice(self, notice_id: int) -> bool:
-        before = len(self._notices)
-        self._notices = [n for n in self._notices if n.id != notice_id]
-        return len(self._notices) < before
 
     def reset_season(self, delete_games: bool, delete_users: bool) -> dict[str, int]:
         counts = {"submissions": len(self._rows), "game_scores": 0, "users": 0}
@@ -480,34 +444,6 @@ class PostgresStore:
                 (s.start_date, s.end_date, s.daily_limit),
             )
             conn.commit()
-
-    def list_notices(self) -> list[Notice]:
-        with self._connect() as conn:
-            rows = conn.execute("SELECT id, title, notice_date FROM notices").fetchall()
-        return _notice_order([Notice(int(r[0]), r[1], r[2]) for r in rows])
-
-    def add_notice(self, n: Notice) -> int:
-        with self._connect() as conn:
-            row = conn.execute(
-                "INSERT INTO notices (title, notice_date) VALUES (%s, %s) RETURNING id", (n.title, n.notice_date)
-            ).fetchone()
-            conn.commit()
-        n.id = int(row[0])
-        return n.id
-
-    def update_notice(self, n: Notice) -> bool:
-        with self._connect() as conn:
-            cur = conn.execute(
-                "UPDATE notices SET title = %s, notice_date = %s WHERE id = %s", (n.title, n.notice_date, n.id)
-            )
-            conn.commit()
-            return cur.rowcount == 1
-
-    def delete_notice(self, notice_id: int) -> bool:
-        with self._connect() as conn:
-            cur = conn.execute("DELETE FROM notices WHERE id = %s", (notice_id,))
-            conn.commit()
-            return cur.rowcount == 1
 
     def reset_season(self, delete_games: bool, delete_users: bool) -> dict[str, int]:
         # 한 트랜잭션: 중간에 실패하면 아무것도 지우지 않는다.

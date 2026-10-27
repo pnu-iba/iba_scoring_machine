@@ -185,15 +185,6 @@ a { color: inherit; text-decoration: none; }
 
 .foot-inner { max-width: none; }   /* 가운데 정렬 없이 왼쪽 끝에 붙인다 */
 
-/* 줄글: 한 문단으로 흐르되 폭을 묶어 읽기 좋게 */
-.foot-lede {
-  max-width: 112ch;   /* 줄이 화면 끝까지 늘어지지 않게 묶어 둔다 */
-  margin: 0 0 10px;
-  font-size: 13px; line-height: 1.55;   /* 두 줄을 붙여 한 덩이로 읽히게 */
-  color: var(--ink-2);
-}
-.foot-lede strong { color: var(--ink); font-weight: 600; }
-
 .foot-bottom {
   padding-top: 0;
 }

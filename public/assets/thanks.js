@@ -7,18 +7,19 @@
   const nameLabel = document.getElementById('thanksName');
   const memberLabel = document.getElementById('thanksMember');
   const majorLabel = document.getElementById('thanksMajor');
+  const noteLabel = document.getElementById('thanksNote');
   const people = {
-    '01': ['JEON HYEONG JUN', '10th member', 'Business'],
-    '02': ['OH JEONG RIN', '10th member', 'Economics'],
-    '03': ['JEONG JAE YEONG', '10th member', 'Industrial Engineering'],
-    '04': ['SIM SEONG CHUL', '10th member', 'Industrial Engineering'],
-    '05': ['HAN GO EUN', '9th member', 'Business'],
-    '06': ['AHN HYEON JUN', '10th member', 'Statistics'],
-    '07': ['KIM JI WON', '10th member', 'Statistics'],
-    '08': ['LEE JEONG SEO', '10th member', 'Business'],
-    '09': ['NO YEONG HUN', '10th member', 'Economics'],
-    '10': ['HWANG HYEON SEOK', '10th member', 'Industrial Engineering'],
-    '11': ['PARK JI SEONG', '10th member', 'Industrial Engineering'],
+    '01': ['JEON HYEONG JUN', '10th member', 'Business', '20kg Dietor'],
+    '02': ['OH JEONG RIN', '10th member', 'Economics', 'NYANG NYANG'],
+    '03': ['JEONG JAE YEONG', '10th member', 'Industrial Engineering', 'God of Optimization'],
+    '04': ['SIM SEONG CHUL', '10th member', 'Industrial Engineering', 'Slim Muscle Man'],
+    '05': ['HAN GO EUN', '9th member', 'Business', 'The President'],
+    '06': ['AHN HYEON JUN', '10th member', 'Statistics', 'Handsome Prince'],
+    '07': ['KIM JI WON', '10th member', 'Statistics', 'Right Arm of SSUN'],
+    '08': ['LEE JEONG SEO', '10th member', 'Business', 'Queen of China'],
+    '09': ['NO YEONG HUN', '10th member', 'Economics', 'King of Abang'],
+    '10': ['HWANG HYEON SEOK', '10th member', 'Industrial Engineering', 'Sweet Butter Guy'],
+    '11': ['PARK JI SEONG', '10th member', 'Industrial Engineering', 'Top of IE'],
   };
   const offsets = new Map();
   let plannedOffsets = new Map();
@@ -250,10 +251,12 @@
   const select = slot => {
     selected = slot;
     if (slot) {
-      const [name, member, major] = people[slot.dataset.person];
+      const [name, member, major, note = ''] = people[slot.dataset.person];
       nameLabel.textContent = name;
       memberLabel.textContent = member;
       majorLabel.textContent = major;
+      noteLabel.textContent = note;
+      noteLabel.hidden = !note;
       info.hidden = false;
       nameLabel.style.fontSize = "";
       info.style.width = `${infoWidth()}px`;

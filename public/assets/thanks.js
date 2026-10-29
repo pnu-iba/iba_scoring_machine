@@ -78,6 +78,10 @@
   let hoverLast = null;
   let hoverTarget = null;
   let hoverFrozen = false;
+  // 커서가 캔버스를 벗어나도 바로 멈추지 않고, 마지막으로 움직이던 방향으로 조금 더 미끄러지며 멈춘다.
+  let hoverTau = 75;                       // 따라가는 속도(ms). 벗어난 뒤에는 더 천천히 가라앉는다
+  let hoverVelocity = { x: 0, y: 0, at: 0 };
+  const GLIDE_TAU = 260, GLIDE_GAIN = 6, GLIDE_FRESH = 120;
   let gesturePinch = null;
   let suppressClick = false;
   const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
@@ -197,6 +201,7 @@
     hoverFrame = 0;
     hoverTime = 0;
     hoverTarget = null;
+    hoverTau = 75;
   };
   const setCamera = view => {
     camera = { position:view.position, orientation:norm(view.orientation), center:view.center, radius:view.radius };
@@ -255,7 +260,7 @@
       nameLabel.textContent = name;
       memberLabel.textContent = member;
       majorLabel.textContent = major;
-      noteLabel.textContent = note;
+      noteLabel.textContent = note ? `"${note}"` : "";
       noteLabel.hidden = !note;
       info.hidden = false;
       nameLabel.style.fontSize = "";
@@ -310,7 +315,7 @@
   const hoverStep = now => {
     const elapsed = hoverTime ? Math.min(now-hoverTime, 50) : 16;
     hoverTime = now;
-    const blend = reducedMotion.matches ? 1 : 1-Math.exp(-elapsed/75);
+    const blend = reducedMotion.matches ? 1 : 1-Math.exp(-elapsed/hoverTau);
     const orientation = slerp(camera.orientation,hoverTarget,blend);
     const position = sub(camera.center,rotate(orientation,{ x:0, y:0, z:camera.radius }));
     setCamera({ position, orientation, center:camera.center, radius:camera.radius });
@@ -335,6 +340,8 @@
     if (hoverFrozen) { hoverFrozen = false; return; }
     const dx = p.x-previous.x, dy = p.y-previous.y;
     if (!dx && !dy) return;
+    hoverTau = 75;
+    hoverVelocity = { x: hoverVelocity.x*0.6+dx*0.4, y: hoverVelocity.y*0.6+dy*0.4, at: performance.now() };
     hoverTarget = turned(hoverTarget || camera.orientation,dx,dy);
     if (!hoverFrame) hoverFrame = requestAnimationFrame(hoverStep);
   };
@@ -397,7 +404,13 @@
     if (e.pointerType !== 'mouse') return;
     hoverLast = null;
     hoverFrozen = false;
-    stopHover();
+    // 방금까지 움직이던 중이면 그 방향으로 조금 더 돌며 부드럽게 멈춘다. 가만히 있다가 나가면 하던 만큼만 마저 따라간다.
+    const fresh = performance.now()-hoverVelocity.at < GLIDE_FRESH;
+    if (!hoverTarget || reducedMotion.matches || animation || selected) { stopHover(); return; }
+    if (fresh) hoverTarget = turned(hoverTarget, hoverVelocity.x*GLIDE_GAIN, hoverVelocity.y*GLIDE_GAIN);
+    hoverVelocity = { x: 0, y: 0, at: 0 };
+    hoverTau = GLIDE_TAU;
+    if (!hoverFrame) hoverFrame = requestAnimationFrame(hoverStep);
   });
   viewport.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;

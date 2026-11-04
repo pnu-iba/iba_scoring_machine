@@ -206,12 +206,14 @@
     overlay.insertBefore(note, overlay.querySelector("button"));
     const user = await me;
     if (!user) { note.textContent = "로그인하면 순위에 기록됩니다."; return; }
+    if (user.is_admin) { note.textContent = "관리자 계정의 점수는 기록되지 않습니다."; return; }
     if (score <= 0) return;
     if (user.demo) { note.textContent = "구경용 계정이라 점수는 기록되지 않습니다."; return; }
     const r = await api(`/api/games/${game}/score`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ score }),
     });
     if (!r.ok) { note.textContent = "점수를 기록하지 못했습니다."; return; }
+    if (r.body.admin) { note.textContent = "관리자 계정의 점수는 기록되지 않습니다."; return; }
     note.textContent = `${r.body.rank}위 · 내 최고 ${fmt.int(r.body.best)}점`;
     loadGameBoard(game);
   }

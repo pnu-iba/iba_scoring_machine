@@ -133,6 +133,40 @@
     return all;
   }
 
+  // Demo-only display records: never submitted to or read from the submissions table.
+  function demoEntries(final) {
+    const teams = Array.from({length: 15}, (_, i) => i % 4 + 1);
+    // Fixed shuffle: irregular team order, stable between refreshes and page changes.
+    let seed = 1459;
+    for (let i = teams.length - 1; i > 0; i--) {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      const j = seed % (i + 1);
+      [teams[i], teams[j]] = [teams[j], teams[i]];
+    }
+    const seen = new Set();
+    const revisions = new Map();
+    const fileBases = {1: "1조_1차제출", 2: "t2_pred", 3: "3조_pred", 4: "t4_final"};
+    return teams.map((team, i) => {
+      const best = !seen.has(team);
+      seen.add(team);
+      const finalRank = seen.size;
+      const version = (revisions.get(team) || 0) + 1;
+      revisions.set(team, version);
+      const shortName = `${fileBases[team]}${version > 1 ? `_v${version}` : ""}.csv`;
+      const filename = i === 4 ? `${team}조_회귀모델_최종예측결과_수정본.csv`
+        : i === 11 ? `team_${team}_final_predictions_revised.csv` : i === 2 ? "asdf.csv" : shortName;
+      return {
+        team: String(team),
+        rmse: Number((1800.25 + i * 12.37).toFixed(2)),
+        r2: Number((.97 - i * .0015).toFixed(4)),
+        best,
+        filename,
+        submitted_at: "2026-10-04T12:00:00+09:00",
+        ...(final && best ? {final_rmse: 1950.50 + (finalRank - 1) * 45.25, final_rank: finalRank} : {}),
+      };
+    });
+  }
+
   const PAGE_SIZE = 15;
   let currentPage = 1;
   const pages = document.getElementById("boardPages");
@@ -155,7 +189,7 @@
   function draw() {
     const { entries, final, user } = last;
     document.getElementById("status").textContent = final ? "Closed" : "Active";
-    document.getElementById("boardFoot").textContent = final ? NOTES.public : NOTES.live;
+    document.getElementById("boardFoot").textContent = (user && user.demo ? "미리보기용 임시 제출 기록입니다. " : "") + (final ? NOTES.public : NOTES.live);
     // 기록이 있는 것만 보인다. 하나도 없으면 표 너비 전체에 안내 한 줄을 타자기 글씨로 적는다.
     const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
     currentPage = Math.min(currentPage, pageCount);
@@ -184,7 +218,13 @@
   async function fetchBoard() {
     let r, user;
     try {
-      [r, user] = await Promise.all([window.IBA.api("/api/leaderboard"), window.IBA.me]);
+      user = await window.IBA.me;
+      if (user && user.demo) {
+        const contest = await window.IBA.api("/api/contest");
+        r = {ok: true, body: {final: contest.ok && contest.body.status === "FINAL", entries: []}};
+      } else {
+        r = await window.IBA.api("/api/leaderboard");
+      }
     } catch (_) {
       document.getElementById("updated").textContent = "연결 오류";   // 네트워크가 끊겨도 종이와 버튼은 제자리로 돌린다
       return false;
@@ -195,7 +235,7 @@
     const final = previewLive ? false : r.body.final;
     const served = (r.body.entries || []).map((e) => (previewLive ? { ...e, final_rmse: undefined, final_rank: undefined } : e));
     // 구경용 계정(iba_dev)은 실제 기록 대신 목데이터 리더보드를 본다.
-    const entries = user && user.demo ? withSampleEntries([], final) : DEV_SAMPLE ? withSampleEntries(served, final) : served;
+    const entries = user && user.demo ? demoEntries(final) : DEV_SAMPLE ? withSampleEntries(served, final) : served;
     last = { entries, final, user };
     const now = new Date().toISOString();
     document.getElementById("updated").textContent = `${f.time(now)} KST`;

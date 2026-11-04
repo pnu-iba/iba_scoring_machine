@@ -71,3 +71,14 @@ def test_shooter_score_recorded(client):
 def test_snake_score_recorded(client):
     assert record(client, "snake", 1230).json() == {"rank": 1, "best": 1230}
     assert record(client, "snake", 1_000_000).json()["error_code"] == "bad_score"
+
+
+def test_admin_game_scores_are_not_saved(client, store):
+    from tests.conftest import login_admin
+
+    login_admin(client, store)
+    for game in ['apple', 'tetris', 'blocks', 'shooter', 'snake']:
+        response = client.post(f'/api/games/{game}/score', json={'score': 10})
+        assert response.status_code == 200
+        assert response.json() == {'rank': None, 'best': None, 'admin': True}
+        assert store.game_leaderboard(game) == []

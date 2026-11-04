@@ -189,7 +189,7 @@
   function draw() {
     const { entries, final, user } = last;
     document.getElementById("status").textContent = final ? "Closed" : "Active";
-    document.getElementById("boardFoot").textContent = (user && user.demo ? "미리보기용 임시 제출 기록입니다. " : "") + (final ? NOTES.public : NOTES.live);
+    document.getElementById("boardFoot").textContent = (final ? NOTES.public : NOTES.live) + (user && user.demo ? " (미리보기용 임시 제출 기록)" : "");
     // 기록이 있는 것만 보인다. 하나도 없으면 표 너비 전체에 안내 한 줄을 타자기 글씨로 적는다.
     const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
     currentPage = Math.min(currentPage, pageCount);

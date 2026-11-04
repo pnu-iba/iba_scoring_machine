@@ -48,9 +48,9 @@ main.page.thanks-page {
   pointer-events: none;
   -webkit-user-drag: none;
 }
+.thanks-slot:hover { border-color: var(--accent); }
 .thanks-slot:hover,
 .thanks-slot.is-selected {
-  border-color: var(--accent);
   box-shadow: 0 7px 26px rgb(21 24 29 / 9%);
 }
 .thanks-slot:focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }

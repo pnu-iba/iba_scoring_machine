@@ -98,7 +98,7 @@ def _is_demo(u: User | None) -> bool:
 
 def _as_demo(u: User) -> User:
     """가입 때 적은 팀은 DB에 그대로 두고, 화면과 채점에서는 실제 팀과 섞이지 않는 IBA 팀으로 다룬다."""
-    return replace(u, team_key=f"demo:{DEMO_TEAM.lower()}", team_display=DEMO_TEAM) if _is_demo(u) else u
+    return replace(u, nickname="dev", team_key=f"demo:{DEMO_TEAM.lower()}", team_display=DEMO_TEAM) if _is_demo(u) else u
 
 
 def current_user(
@@ -203,6 +203,7 @@ def _public_entries(store: Store, final: bool) -> list[dict]:
     for s in sorted(active, key=key):
         e = {
             "team": s.team_display,
+            "filename": s.filename,
             "rmse": s.public_rmse,
             "r2": s.public_r2,
             "best": s.id in best,
@@ -429,6 +430,7 @@ async def submit(
         public_r2=public.r2,
         negative_clipped=full.negative_clipped,
         submitted_at=now,
+        filename=(file.filename or "").replace("\\", "/").rsplit("/", 1)[-1] or None,
     )
     store.insert_submission(record)
 

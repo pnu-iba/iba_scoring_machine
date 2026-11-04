@@ -53,26 +53,29 @@
   </svg>
 
   <header class="file-head">
-    <p class="file-label">Internal file — do not distribute</p>
+    <p class="file-label">Internal file<br><span class="file-label-line">— do not distribute</span></p>
     <h1 class="file-title" id="fileTitle">Leaderboard</h1>
     <p class="file-no">File no.<b>IBA-REG-01</b></p>
   </header>
 
   <div class="file-meta">
-    <span><span class="v">Used car price regression</span></span>
+    <span><span class="v">Used car price prediction</span></span>
     <span><span class="k">Status:</span><span class="v" id="status">—</span></span>
     <span><span class="k">Updated:</span><span class="v" id="updated">—</span><button type="button" class="file-reload" id="reload" aria-label="새로고침"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.2 6.2A5.4 5.4 0 1 0 13.4 9.6"/><path d="M13.6 2.6v3.8H9.8"/></svg></button></span>
   </div>
 
+  <div class="file-table-scroll">
   <table class="file-table" id="board">
     <thead>
-      <tr><th>Rank</th><th>Team</th><th class="num">RMSE</th><th class="num" aria-label="R squared">R<sup class="sq">2</sup></th><th class="num">Final RMSE (rank)</th><th class="num">Submitted</th></tr>
+      <tr><th>Rank</th><th>Team</th><th class="num">RMSE</th><th class="num" aria-label="R squared">R<sup class="sq">2</sup></th><th class="num">Final RMSE (rank)</th><th class="num">File name</th></tr>
     </thead>
     <tbody></tbody>
   </table>
+  </div>
   <p class="sr-only" id="meta" role="status" aria-live="polite"></p>
 
   <footer class="file-foot">
+    <nav class="file-pages" id="boardPages" aria-label="리더보드 페이지"></nav>
     <div class="sign">
       <p class="k">Approved by:</p>
       <span class="seal">PNU IBA</span>
@@ -130,28 +133,52 @@
     return all;
   }
 
+  const PAGE_SIZE = 15;
+  let currentPage = 1;
+  const pages = document.getElementById("boardPages");
   let last = null;  // 마지막 응답 {entries, final}과 사용자
   const two = (n) => String(n).padStart(2, "0");
   const teamCell = (team, myTeam) => `<td>Team ${esc(team)}${myTeam && team === myTeam ? '<span class="sr-only"> (우리 팀)</span>' : ""}</td>`;
 
   // Public: 제출 한 건이 한 줄. 최종 RMSE 칸은 팀 대표 제출에만(마감 전에는 가림 막대, 뒤에는 값), 나머지는 빈칸.
   function entryHtml(e, i, myTeam) {
-    const finalCell = !e.best ? "" : e.final_rmse != null ? `${f.rmse(e.final_rmse)} (${two(e.final_rank)})` : REDACT;
+    const finalCell = !e.best ? '<span class="final-dash">-</span>' : e.final_rmse != null ? `${f.rmse(e.final_rmse)} (${two(e.final_rank)})` : REDACT;
+    const filename = e.filename || "—";
+    const extension = /\.csv$/i.test(filename) ? filename.slice(-4) : "";
+    const stem = extension ? filename.slice(0, -4) : filename;
     return `<tr><td><span class="rank">${two(i + 1)}</span></td>${teamCell(e.team, myTeam)}
       <td class="num">${f.rmse(e.rmse)}</td>
       <td class="num">${f.r2(e.r2)}</td>
-      <td class="num soft">${finalCell}</td>
-      <td class="num soft">${f.time(e.submitted_at)}</td></tr>`;
+      <td class="num soft${!e.best ? ' final-empty' : ''}">${finalCell}</td>
+      <td class="num soft file-name" title="${esc(e.filename || "")}"><span class="file-name-text"><span class="file-name-stem">${esc(stem)}</span><span class="file-name-extension">${esc(extension)}</span></span></td></tr>`;
   }
   function draw() {
     const { entries, final, user } = last;
     document.getElementById("status").textContent = final ? "Closed" : "Active";
     document.getElementById("boardFoot").textContent = final ? NOTES.public : NOTES.live;
     // 기록이 있는 것만 보인다. 하나도 없으면 표 너비 전체에 안내 한 줄을 타자기 글씨로 적는다.
+    const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
+    currentPage = Math.min(currentPage, pageCount);
+    const start = (currentPage - 1) * PAGE_SIZE;
     tbody.innerHTML = entries.length
-      ? entries.map((e, i) => entryHtml(e, i, user && user.team)).join("")
+      ? entries.slice(start, start + PAGE_SIZE).map((e, i) => entryHtml(e, start + i, user && user.team)).join("")
       : `<tr class="empty-row"><td colspan="6">No submissions yet.</td></tr>`;
+    const groupStart = Math.floor((currentPage - 1) / 7) * 7 + 1;
+    const groupEnd = Math.min(groupStart + 6, pageCount);
+    const previous = groupStart > 1 ? `<button type="button" class="file-page-arrow file-page-previous" data-page="${groupStart - 7}" aria-label="이전 페이지 묶음">‹</button>` : "";
+    const next = groupEnd < pageCount ? `<button type="button" class="file-page-arrow file-page-next" data-page="${groupEnd + 1}" aria-label="다음 페이지 묶음">›</button>` : "";
+    pages.innerHTML = entries.length ? previous + '<div class="file-page-numbers">' + Array.from({length: groupEnd - groupStart + 1}, (_, i) => {
+      const page = groupStart + i;
+      return `<button type="button" data-page="${page}" aria-label="${page}페이지"${page === currentPage ? ' aria-current="page"' : ''}>${page}</button>`;
+    }).join("") + "</div>" + next : "";
+    pages.querySelectorAll("button").forEach(button => { button.disabled = busy; });
   }
+  pages.addEventListener("click", event => {
+    const button = event.target.closest("[data-page]");
+    if (!button || !last) return;
+    refresh(Number(button.dataset.page));
+  });
+
 
   // 서버에서 새로 받아 last를 바꾼다(그리지는 않는다).
   async function fetchBoard() {
@@ -254,25 +281,41 @@
   }
 
   // 새로고침 버튼·F5·Cmd/Ctrl+R: 빠졌다가 새 기록을 적은 채 올라온다
-  async function refresh() {
-    if (busy) return;
+  async function refresh(nextPage = null) {
+    const changingPage = Number.isInteger(nextPage);
+    if (busy || (changingPage && (!last || nextPage === currentPage))) return;
     busy = true;
     reload.disabled = true;
-    reload.classList.add("spinning");
-    const fetching = fetchBoard();
-    if (calm.matches) {
-      if (await fetching) { draw(); tbody.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 120 }); }
-    } else {
-      const d = dropDistance();
-      await dropOut(d);
-      if (await fetching) draw();
-      await riseIn(d);
+    pages.querySelectorAll("button").forEach(button => { button.disabled = true; });
+    if (!changingPage) reload.classList.add("spinning");
+    const fetching = changingPage ? Promise.resolve(true) : fetchBoard();
+    const update = async () => {
+      if (await fetching) {
+        if (changingPage) currentPage = nextPage;
+        draw();
+      }
+    };
+    try {
+      if (calm.matches) {
+        await update();
+      } else {
+        const d = dropDistance();
+        await dropOut(d);
+        await update();
+        await riseIn(d);
+      }
+    } finally {
+      reload.classList.remove("spinning");
+      reload.disabled = false;
+      busy = false;
+      pages.querySelectorAll("button").forEach(button => { button.disabled = false; });
     }
-    reload.classList.remove("spinning");
-    reload.disabled = false;
-    busy = false;
+    if (changingPage) {
+      pages.querySelector(`[data-page="${currentPage}"]`)?.focus({preventScroll: true});
+      document.getElementById("meta").textContent = `${currentPage}페이지, 전체 ${last.entries.length}건`;
+    }
   }
-  reload.addEventListener("click", refresh);
+  reload.addEventListener("click", () => refresh());
 
   // 키보드 새로고침(F5, Cmd/Ctrl+R)은 페이지를 다시 열지 않고 같은 애니메이션으로 새로 받는다.
   // Shift를 함께 누른 강력 새로고침은 브라우저에 맡긴다.
@@ -311,6 +354,7 @@
       }
       reload.disabled = false;
       busy = false;
+      pages.querySelectorAll("button").forEach(button => { button.disabled = false; });
     }
   });
 
@@ -327,6 +371,7 @@
     await riseIn(dropDistance());
     reload.disabled = false;
     busy = false;
+    pages.querySelectorAll("button").forEach(button => { button.disabled = false; });
   });
 })();
 </script>

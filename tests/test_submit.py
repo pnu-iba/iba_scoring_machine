@@ -128,3 +128,14 @@ def test_empty_answers_returns_503_and_is_not_cached(client, store):
     r = submit(client, csv_bytes(perfect_rows()))
     assert r.status_code == 200, r.text
     assert r.json()["rmse"] == 0
+
+
+def test_submission_filename_is_saved_and_exposed_on_leaderboard(client, store):
+    from tests.conftest import login_as
+
+    login_as(client)
+    name = 'team3_final_<review>.csv'
+    response = client.post('/api/submit', files={'file': (name, csv_bytes(perfect_rows()), 'text/csv')})
+    assert response.status_code == 200, response.text
+    assert store.list_submissions()[0].filename == name
+    assert client.get('/api/leaderboard').json()['entries'][0]['filename'] == name

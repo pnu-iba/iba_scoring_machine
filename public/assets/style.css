@@ -528,12 +528,18 @@ kbd {
 .apple-layout .game-stats > .stat-action button { width: auto; }
 body.embed main:has(.apple-layout) { padding: 16px; }
 .side-board h3 { margin: 0 0 8px; font-size: 13px; }
+.side-board { min-width: 0; }
+.side-board #gameBoard { table-layout: fixed; width: 100%; }
+.side-board #gameBoard th:first-child { width: 48px; }
+.side-board #gameBoard th:nth-child(3) { width: 76px; }
+.side-board #gameBoard th:nth-child(2), .side-board #gameBoard td:nth-child(2) { white-space: normal; overflow-wrap: anywhere; }
+.side-board .team > div { flex: 1; min-width: 0; }
 .side-board .table-wrap { max-height: 204px; overflow-y: auto; margin: 0 !important; }   /* 카드 안 표를 양옆으로 늘리는 규칙을 끈다 */
 .side-board th, .side-board td { padding: 7px 6px; }
-.side-board th:first-child, .side-board td:first-child { padding-left: 0; }
+.side-board #gameBoard th:first-child, .side-board #gameBoard td:first-child { padding-left: 8px; }
 .side-board th:last-child, .side-board td:last-child { padding-right: 0; }
 .side-board th:nth-child(4), .side-board td:nth-child(4) { display: none; }
-.side-board th:nth-child(3), .side-board td:nth-child(3) { padding-right: 0; }
+.side-board #gameBoard th:nth-child(3), .side-board #gameBoard td:nth-child(3) { padding-right: 8px; }
 .side-board .team .avatar { display: none; }
 .side-board .empty { padding: 10px 0; }
 .side-board .small { margin: 8px 0 0; line-height: 1.55; }

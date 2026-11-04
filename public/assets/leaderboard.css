@@ -50,9 +50,28 @@ main.page.board-page { padding-top: 88px; padding-bottom: 40px; overflow: clip; 
 .file-table td { height: 44px; padding: 0 10px; border-bottom: 1px dashed rgba(31, 30, 27, 0.3); background: none; }
 .file-table tbody tr:last-child td { border-bottom: 0; }
 .file-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.file-table td.final-empty { text-align: center; }
+.final-dash { display: inline-block; transform: translateX(10px); }
 .file-table th:first-child, .file-table td:first-child { padding-left: 0; width: 72px; }
 .file-table th:last-child, .file-table td:last-child { padding-right: 0; }
 .file-table .soft { color: var(--ink-soft); }
+.file-label-line { white-space: nowrap; }
+.file-table-scroll { width: 100%; min-width: 0; overflow-x: auto; }
+#board .file-name { min-width: 140px; max-width: 180px; }
+.file-name-text { display: flex; justify-content: flex-end; width: 160px; margin-left: auto; white-space: nowrap; }
+.file-name-stem { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.file-name-extension { flex-shrink: 0; }
+.file-pages { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 6px; margin: 0; }
+.file-page-numbers { grid-column: 2; grid-row: 1; display: flex; gap: inherit; }
+.file-page-previous { grid-column: 1; grid-row: 1; justify-self: end; }
+.file-page-next { grid-column: 3; grid-row: 1; justify-self: start; }
+.file-pages:empty { display: none; }
+.file-pages button { font-family: "Special Elite", "Courier Prime", monospace; font-size: 12.5px; font-weight: 500; letter-spacing: .1em; text-underline-offset: 4px; color: var(--ink-soft); background: none; border: 0; border-radius: 0; padding: 6px 8px; min-width: 30px; }
+.file-pages button:hover { background: none; color: var(--ink-dark); text-decoration: underline; text-decoration-color: rgba(31, 30, 27, .25); }
+.file-pages [aria-current="page"] { color: var(--ink-dark); text-decoration: underline; text-underline-offset: 4px; }
+.file-pages button:focus-visible { outline: 1px solid var(--ink-dark); outline-offset: 2px; }
+.file-pages button:disabled { opacity: .6; cursor: progress; }
+.file-pages .file-page-arrow { font-size: 27px; line-height: .6; letter-spacing: 0; align-self: center; }
 /* R²: 타자기 글꼴에는 위첨자 ²가 작고 흐리게 나와, 2를 직접 올려 쓴다 */
 .file-table .sq { font-size: 0.8em; line-height: 0; vertical-align: 0.45em; margin-left: 1px; }
 .file-table tr { position: relative; }
@@ -150,8 +169,13 @@ main.page.board-page { padding-top: 88px; padding-bottom: 40px; overflow: clip; 
 }
 /* 더 좁으면 표를 종이 안에서 가로로 밀어 보고, 서명란과 사진은 위아래로 놓는다 */
 @media (max-width: 600px) {
+  .file-pages { gap: 2px; }
+  .file-pages button { min-width: 22px; padding-left: 4px; padding-right: 4px; }
+  main.page.board-page { padding-left: 16px; padding-right: 16px; }
   .file-head { grid-template-columns: minmax(0, 1fr) auto; }
-  .file-title { grid-column: 1 / -1; grid-row: 2; margin-top: 4px; }
-  .file-table { display: block; overflow-x: auto; }
+  .file-label { grid-column: 1 / -1; grid-row: 1; }
+  .file-no { grid-column: 1 / -1; grid-row: 2; }
+  .file-title { grid-column: 1 / -1; grid-row: 3; margin-top: 4px; font-size: clamp(18px, 5vw, 26px); letter-spacing: .2em; margin-right: -.2em; }
+  .file-table { min-width: 720px; }
   .file-foot { grid-template-columns: minmax(0, 1fr); }
 }

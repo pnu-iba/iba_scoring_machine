@@ -538,6 +538,60 @@
     line.hidden = false;
   }
 
+  // 우리 팀 제출 목록. 마감 전에는 최종 순위에 쓸 제출을 고르거나 public 최고 제출로 되돌릴 수 있다.
+  async function loadTeamSubs() {
+    const r = await window.IBA.api("/api/team/submissions");
+    if (r.ok) drawTeamSubs(r.body);
+  }
+  function drawTeamSubs(b) {
+    const section = el("teamSubs");
+    section.hidden = !b.submissions.length;
+    if (section.hidden) return;
+    const f = window.IBA.fmt, esc = window.IBA.esc;
+    const pick = b.submissions.find((s) => s.pick);
+    let line = `final submission: #${pick.no}`;
+    line += b.chosen_by ? `, chosen by ${b.chosen_by} at ${f.time(b.chosen_at)}` : " (best public score, picked automatically)";
+    if (b.locked) line += ", locked after the deadline";
+    el("teamFinal").innerHTML = esc(line) +
+      (b.chosen_by && !b.locked ? ' <button type="button" class="team-subs-use" data-id="">use best public instead</button>' : "");
+    el("teamSubsBody").innerHTML = b.submissions.map((s) => `<tr${s.pick ? ' class="is-pick"' : ""}>
+      <td>#${s.no}${s.auto ? '<span class="team-subs-tag">best public</span>' : ""}</td>
+      <td>${esc(s.nickname)}</td>
+      <td>${f.time(s.submitted_at)}</td>
+      <td class="num">${f.rmse(s.public_rmse)}</td>
+      <td class="num">${f.r2(s.public_r2)}</td>
+      <td class="team-subs-action">${s.pick ? "final" : b.locked ? "" : `<button type="button" class="team-subs-use" data-id="${s.id}" aria-label="#${s.no} 최종 제출로 쓰기">use as final</button>`}</td>
+    </tr>`).join("");
+  }
+  el("teamSubs").addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-id]");
+    if (!button || button.disabled) return;
+    const buttons = el("teamSubs").querySelectorAll("button");
+    buttons.forEach((b) => { b.disabled = true; });
+    const id = button.dataset.id ? Number(button.dataset.id) : null;
+    const error = el("teamSubsError");
+    error.hidden = true;
+    try {
+      const r = await window.IBA.api("/api/team/final-choice", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ submission_id: id }),
+      });
+      if (r.ok) {
+        drawTeamSubs(r.body);
+        const pick = r.body.submissions.find((s) => s.pick);
+        announcement.textContent = `최종 제출이 #${pick.no}번으로 정해졌습니다.`;
+        return;
+      }
+      error.textContent = (r.body && r.body.message) || `최종 제출을 바꾸지 못했습니다. (HTTP ${r.status})`;
+      error.hidden = false;
+      await loadTeamSubs();
+    } catch {
+      error.textContent = "네트워크 오류로 최종 제출을 바꾸지 못했습니다.";
+      error.hidden = false;
+    } finally {
+      buttons.forEach((b) => { b.disabled = false; });
+    }
+  });
+
   // 로그인 여부가 정해진 뒤에 본문을 보여 준다(submit.css의 is-pending)
   const reveal = () => document.querySelector("main.submit-page")?.classList.remove("is-pending");
   async function init() {
@@ -554,6 +608,7 @@
     demo = !!user.demo;
     attachDemo();
     if (user.is_admin) return;
+    if (!demo) loadTeamSubs();
     const q = await window.IBA.api("/api/quota");
     if (!q.ok) return;
     dailyLimit = q.body.limit;
@@ -588,6 +643,7 @@
         if (token !== serial) return;
         showScore(r.body);
         showQuota(r.body.remaining_today, r.body.unlimited, r.body.resets_at);
+        if (!r.body.demo) loadTeamSubs();
       } else if (r.status === 401) {
         showError("로그인이 풀렸습니다.", "다시 로그인한 뒤 제출하세요.");
       } else if (r.status === 503 && r.body && r.body.message) {

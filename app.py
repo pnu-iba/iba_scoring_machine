@@ -7,8 +7,10 @@
 - GET    /api/me                     로그인한 사용자 (로그인하지 않았으면 null)
 - GET    /api/contest                대회 기간·상태·하루 한도
 - POST   /api/submit                 (로그인) CSV → public·전체 점수 채점·기록 (진행 중에만, 관리자는 거부)
-- GET    /api/leaderboard            팀별 기록. 대회 중에는 public 순위, 마감 뒤에는 최종 순위
+- GET    /api/leaderboard            팀별 한 줄. 대회 중에는 public 순위, 마감 뒤에는 최종 순위
 - GET    /api/quota                  (로그인) 우리 팀 오늘 남은 횟수
+- GET    /api/team/submissions       (로그인) 우리 팀 제출 목록과 최종 제출
+- POST   /api/team/final-choice      (로그인) 최종 순위에 쓸 제출 고르기·자동으로 되돌리기 (마감 전까지)
 - POST   /api/games/{game}/score     (로그인) 미니게임 점수 기록
 - GET    /api/games/{game}/leaderboard  미니게임 사람별 최고 점수
 - /api/admin/*                       (관리자 계정) 대회 현황·설정, 채점 확인, 제출·사용자 관리,
@@ -39,7 +41,10 @@ from scoring.clock import ContestSettings
 from scoring.metrics import score
 from scoring.parse import SubmissionError, parse_submission
 from scoring.teams import TEAMS, NameError_, clean_nickname, clean_team_display, normalize_team, signup_team
-from store import DEMO_USERNAME, Answers, DuplicateUsername, GameScore, PostgresStore, Store, Submission, User, _public_key
+from store import (
+    DEMO_USERNAME, Answers, DuplicateUsername, FinalChoice, GameScore, PostgresStore, Store, Submission, User,
+    final_picks,
+)
 
 app = FastAPI(title="IBA Scoring Machine", docs_url=None, redoc_url=None)
 
@@ -185,35 +190,14 @@ def _leaderboard_row(row, final: bool) -> dict:
     return body
 
 
-def _public_entries(store: Store, final: bool) -> list[dict]:
-    """Public 리더보드용 전체 제출 목록(public 점수 순). 팀별 public 최고 제출에는 best를 표시한다.
-
-    최종 점수(final_rmse)와 최종 순위(final_rank)는 마감 뒤, 그리고 팀 대표(best) 제출에만 넣는다. 대회 중에는 어떤 제출의 최종 점수도 내보내지 않는다.
-    """
-    active = [s for s in store.list_submissions() if s.deleted_at is None]
-    key = _public_key
-    best_ids = {}
-    for s in active:
-        cur = best_ids.get(s.team_key)
-        if cur is None or key(s) < key(cur):
-            best_ids[s.team_key] = s
-    best = {s.id for s in best_ids.values()}
-    final_rank = {r.team_key: r.rank for r in store.leaderboard(True)} if final else {}
-    entries = []
-    for s in sorted(active, key=key):
-        e = {
-            "team": s.team_display,
-            "filename": s.filename,
-            "rmse": s.public_rmse,
-            "r2": s.public_r2,
-            "best": s.id in best,
-            "submitted_at": s.submitted_at.astimezone(clock.KST).isoformat(),
-        }
-        if final and s.id in best:
-            e["final_rmse"] = s.rmse
-            e["final_rank"] = final_rank.get(s.team_key)
-        entries.append(e)
-    return entries
+def _submission_numbers(subs: list[Submission]) -> dict[int, int]:
+    """팀 안에서 몇 번째 제출인지. 삭제된 제출도 세어서, 관리자가 지워도 다른 제출의 번호가 바뀌지 않는다."""
+    count: dict[str, int] = {}
+    numbers = {}
+    for s in sorted(subs, key=lambda s: s.id):
+        count[s.team_key] = count.get(s.team_key, 0) + 1
+        numbers[s.id] = count[s.team_key]
+    return numbers
 
 
 def _kst(dt: datetime) -> str:
@@ -430,7 +414,6 @@ async def submit(
         public_r2=public.r2,
         negative_clipped=full.negative_clipped,
         submitted_at=now,
-        filename=(file.filename or "").replace("\\", "/").rsplit("/", 1)[-1] or None,
     )
     store.insert_submission(record)
 
@@ -444,6 +427,7 @@ async def submit(
         "resets_at": quota["resets_at"],
         "rank": _team_rank(store, team_key),
         "team": user.team_display,
+        "no": len(store.list_submissions(team_key)),
     }
 
 
@@ -486,7 +470,6 @@ def leaderboard(
         "final_at": clock.final_at(settings).isoformat(),
         "teams": list(TEAMS),
         "rows": [_leaderboard_row(r, final) for r in store.leaderboard(final)],
-        "entries": _public_entries(store, final),
     }
 
 
@@ -502,6 +485,83 @@ def quota(
     if _is_demo(user):
         body.update(used_today=0, remaining_today=None, unlimited=True)
     return body
+
+
+def _team_submissions_body(store: Store, user: User, locked: bool) -> dict:
+    """우리 팀 제출(삭제된 것 제외, 최근 순). pick은 최종 순위에 쓸 제출, auto는 public 최고 제출이다."""
+    body = {"locked": locked, "chosen_by": None, "chosen_at": None, "submissions": []}
+    if user.is_admin or _is_demo(user):
+        return body
+    everything = store.list_submissions(user.team_key)
+    no = _submission_numbers(everything)
+    choice = store.final_choices().get(user.team_key)
+    pick = final_picks(everything, {user.team_key: choice} if choice else {}).get(user.team_key)
+    auto = final_picks(everything, {}).get(user.team_key)
+    if choice and pick and pick.id == choice.submission_id:
+        body.update(chosen_by=choice.chosen_by, chosen_at=_kst(choice.chosen_at))
+    body["submissions"] = [
+        {
+            "id": s.id,
+            "no": no[s.id],
+            "nickname": s.nickname,
+            "public_rmse": s.public_rmse,
+            "public_r2": s.public_r2,
+            "submitted_at": _kst(s.submitted_at),
+            "pick": pick is not None and s.id == pick.id,
+            "auto": auto is not None and s.id == auto.id,
+        }
+        for s in everything
+        if s.deleted_at is None
+    ]
+    return body
+
+
+@app.get("/api/team/submissions")
+def team_submissions(
+    user: User = Depends(require_user),
+    store: Store = Depends(get_store),
+    now_fn: Callable[[], datetime] = Depends(get_now),
+    settings: ContestSettings = Depends(get_settings),
+):
+    return _team_submissions_body(store, user, clock.is_final(now_fn(), settings) and not _dev_any_login())
+
+
+class FinalChoiceBody(BaseModel):
+    submission_id: int | None = None   # 비우면 고른 것을 지우고 public 최고 제출로 되돌린다
+
+
+@app.post("/api/team/final-choice")
+def choose_final(
+    body: FinalChoiceBody,
+    user: User = Depends(require_user),
+    store: Store = Depends(get_store),
+    now_fn: Callable[[], datetime] = Depends(get_now),
+    settings: ContestSettings = Depends(get_settings),
+):
+    if user.is_admin or _is_demo(user):
+        return JSONResponse(
+            status_code=403,
+            content={"error_code": "cannot_choose", "message": "관리자와 구경용 계정은 최종 제출을 고를 수 없습니다."},
+        )
+    now = now_fn()
+    # 로컬 CSV·메모리 모드에서는 제출과 같이 마감 뒤에도 고르기를 시험할 수 있다.
+    locked = clock.is_final(now, settings) and not _dev_any_login()
+    if locked:
+        return JSONResponse(
+            status_code=403,
+            content={"error_code": "contest_closed", "message": "대회가 마감되어 최종 제출을 바꿀 수 없습니다."},
+        )
+    if body.submission_id is None:
+        store.set_final_choice(user.team_key, None)
+    else:
+        mine = next(
+            (s for s in store.list_submissions(user.team_key) if s.id == body.submission_id and s.deleted_at is None),
+            None,
+        )
+        if mine is None:
+            return _bad_request("bad_submission", "우리 팀 제출이 아니거나 삭제된 제출입니다.")
+        store.set_final_choice(user.team_key, FinalChoice(mine.id, user.nickname, now))
+    return _team_submissions_body(store, user, locked)
 
 
 def _game_row(row, user: User | None) -> dict:

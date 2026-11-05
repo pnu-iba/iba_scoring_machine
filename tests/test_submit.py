@@ -130,12 +130,16 @@ def test_empty_answers_returns_503_and_is_not_cached(client, store):
     assert r.json()["rmse"] == 0
 
 
-def test_submission_filename_is_saved_and_exposed_on_leaderboard(client, store):
+def test_submissions_are_numbered_per_team_and_keep_numbers_after_delete(client, store):
     from tests.conftest import login_as
 
+    rows = csv_bytes(perfect_rows())
+    assert submit(client, rows).json()["no"] == 1
+    assert submit(client, rows).json()["no"] == 2
+    login_as(client, team="1", nickname="다른팀")
+    assert client.post("/api/submit", files={"file": ("a.csv", rows, "text/csv")}).json()["no"] == 1
+
+    first = min(s.id for s in store.list_submissions("3"))
+    store.soft_delete(first, store.list_submissions()[0].submitted_at)
     login_as(client)
-    name = 'team3_final_<review>.csv'
-    response = client.post('/api/submit', files={'file': (name, csv_bytes(perfect_rows()), 'text/csv')})
-    assert response.status_code == 200, response.text
-    assert store.list_submissions()[0].filename == name
-    assert client.get('/api/leaderboard').json()['entries'][0]['filename'] == name
+    assert [s["no"] for s in client.get("/api/team/submissions").json()["submissions"]] == [2]

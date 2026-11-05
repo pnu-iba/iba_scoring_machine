@@ -2,12 +2,13 @@
 
 두 구현은 같은 규칙을 지킨다:
 - 삭제된 제출(deleted_at IS NOT NULL)은 리더보드·오늘 횟수·순위 계산에서 제외한다.
-- 리더보드는 팀별로 public 점수가 가장 좋은 제출 1건을 고른다(public RMSE 오름차순, 같으면 public R²
-  내림차순, 같으면 먼저 제출한 쪽). 대회 중에는 그 public 점수로, 마감 뒤에는 같은 제출의 전체 데이터
-  점수로 같은 규칙에 따라 순위를 매긴다.
+- 대회 중 리더보드는 팀별로 public 점수가 가장 좋은 제출 1건으로 순위를 매긴다(public RMSE 오름차순,
+  같으면 public R² 내림차순, 같으면 먼저 제출한 쪽).
+- 마감 뒤 최종 순위에는 팀이 고른 최종 제출을 쓴다. 고르지 않았거나 고른 제출이 삭제됐으면 public
+  최고 제출을 쓴다. 이 제출들의 전체 데이터 점수로 같은 규칙에 따라 순위를 매긴다.
 - 미니게임 순위는 사람별 최고 점수 1건: 점수 내림차순, 같으면 먼저 기록한 쪽.
 - 아이디(username)는 중복될 수 없다. 팀 표기는 그 팀으로 처음 가입한 사람의 표기를 따른다.
-- 기수 초기화는 제출 기록을 지우고, 고른 경우 미니게임 점수와 관리자가 아닌 계정도 지운다.
+- 기수 초기화는 제출 기록과 최종 제출 선택을 지우고, 고른 경우 미니게임 점수와 관리자가 아닌 계정도 지운다.
   구경용 계정(DEMO_USERNAME)은 남겨서 다른 사람이 그 아이디로 가입하지 못하게 한다.
   정답과 대회 설정은 남긴다.
 """
@@ -61,7 +62,14 @@ class Submission:
     negative_clipped: int
     submitted_at: datetime
     deleted_at: datetime | None = None
-    filename: str | None = None
+
+
+@dataclass(frozen=True)
+class FinalChoice:
+    """팀이 최종 순위에 쓰겠다고 고른 제출."""
+    submission_id: int
+    chosen_by: str   # 고른 사람의 닉네임
+    chosen_at: datetime
 
 
 @dataclass(frozen=True)
@@ -122,7 +130,7 @@ def _final_key(s: Submission):
     return (s.rmse, -s.r2, s.submitted_at)
 
 
-def _rank(rows: list[Submission], final: bool) -> list[LeaderboardRow]:
+def _public_best(rows: list[Submission]) -> dict[str, Submission]:
     best: dict[str, Submission] = {}
     for s in rows:
         if s.deleted_at is not None:
@@ -130,9 +138,25 @@ def _rank(rows: list[Submission], final: bool) -> list[LeaderboardRow]:
         cur = best.get(s.team_key)
         if cur is None or _public_key(s) < _public_key(cur):
             best[s.team_key] = s
+    return best
+
+
+def final_picks(rows: list[Submission], choices: dict[str, FinalChoice]) -> dict[str, Submission]:
+    """팀별로 최종 순위에 쓸 제출. 팀이 고른 제출이 남아 있으면 그것, 아니면 public 최고 제출."""
+    picks = _public_best(rows)
+    alive = {s.id: s for s in rows if s.deleted_at is None}
+    for team_key, c in choices.items():
+        s = alive.get(c.submission_id)
+        if s is not None and s.team_key == team_key:
+            picks[team_key] = s
+    return picks
+
+
+def _rank(rows: list[Submission], final: bool, choices: dict[str, FinalChoice]) -> list[LeaderboardRow]:
+    best = _public_best(rows)
     public_order = sorted(best.values(), key=_public_key)
     public_rank = {s.team_key: i + 1 for i, s in enumerate(public_order)}
-    ordered = sorted(best.values(), key=_final_key) if final else public_order
+    ordered = sorted(final_picks(rows, choices).values(), key=_final_key) if final else public_order
     return [
         LeaderboardRow(
             rank=i + 1,
@@ -140,8 +164,8 @@ def _rank(rows: list[Submission], final: bool) -> list[LeaderboardRow]:
             nickname=s.nickname,
             rmse=s.rmse if final else s.public_rmse,
             r2=s.r2 if final else s.public_r2,
-            public_rmse=s.public_rmse,
-            public_r2=s.public_r2,
+            public_rmse=best[s.team_key].public_rmse,   # 팀의 public 최고 기록(최종 제출과 다를 수 있다)
+            public_r2=best[s.team_key].public_r2,
             public_rank=public_rank[s.team_key],
             submitted_at=s.submitted_at,
             team_key=s.team_key,
@@ -162,6 +186,8 @@ class Store(Protocol):
     def list_submissions(self, team_key: str | None = None) -> list[Submission]: ...
     def soft_delete(self, submission_id: int, now: datetime) -> bool: ...
     def restore(self, submission_id: int) -> bool: ...
+    def final_choices(self) -> dict[str, FinalChoice]: ...
+    def set_final_choice(self, team_key: str, choice: FinalChoice | None) -> None: ...
     def insert_game_score(self, s: GameScore) -> int: ...
     def game_leaderboard(self, game: str) -> list[GameRow]: ...
     def list_game_scores(self) -> list[GameScore]: ...
@@ -182,6 +208,7 @@ class MemoryStore:
         self._rows: list[Submission] = []
         self._users: list[User] = []
         self._game_scores: list[GameScore] = []
+        self._choices: dict[str, FinalChoice] = {}
         self._settings = DEFAULT_SETTINGS
         self._next_id = {"user": 1, "submission": 1, "game": 1}
 
@@ -222,7 +249,7 @@ class MemoryStore:
         return s.id
 
     def leaderboard(self, final: bool = False) -> list[LeaderboardRow]:
-        return _rank(self._rows, final)
+        return _rank(self._rows, final, self._choices)
 
     def list_submissions(self, team_key: str | None = None) -> list[Submission]:
         return _newest_first([s for s in self._rows if team_key is None or s.team_key == team_key])
@@ -240,6 +267,15 @@ class MemoryStore:
                 s.deleted_at = None
                 return True
         return False
+
+    def final_choices(self) -> dict[str, FinalChoice]:
+        return dict(self._choices)
+
+    def set_final_choice(self, team_key: str, choice: FinalChoice | None) -> None:
+        if choice is None:
+            self._choices.pop(team_key, None)
+        else:
+            self._choices[team_key] = choice
 
     def insert_game_score(self, s: GameScore) -> int:
         s.id = self._new_id("game")
@@ -267,6 +303,7 @@ class MemoryStore:
     def reset_season(self, delete_games: bool, delete_users: bool) -> dict[str, int]:
         counts = {"submissions": len(self._rows), "game_scores": 0, "users": 0}
         self._rows = []
+        self._choices = {}
         if delete_games:
             counts["game_scores"] = len(self._game_scores)
             self._game_scores = []
@@ -343,11 +380,11 @@ class PostgresStore:
         with self._connect() as conn:
             row = conn.execute(
                 "INSERT INTO submissions "
-                "(team_key, team_display, nickname, rmse, r2, public_rmse, public_r2, negative_clipped, submitted_at, filename) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id",
+                "(team_key, team_display, nickname, rmse, r2, public_rmse, public_r2, negative_clipped, submitted_at) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id",
                 (
                     s.team_key, s.team_display, s.nickname, s.rmse, s.r2,
-                    s.public_rmse, s.public_r2, s.negative_clipped, s.submitted_at, s.filename,
+                    s.public_rmse, s.public_r2, s.negative_clipped, s.submitted_at,
                 ),
             ).fetchone()
             conn.commit()
@@ -358,19 +395,19 @@ class PostgresStore:
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT id, team_key, team_display, nickname, rmse, r2, public_rmse, public_r2, negative_clipped, "
-                "submitted_at, deleted_at, filename "
+                "submitted_at, deleted_at "
                 "FROM submissions WHERE deleted_at IS NULL"
             ).fetchall()
         return [_row_to_submission(r) for r in rows]
 
     def leaderboard(self, final: bool = False) -> list[LeaderboardRow]:
-        return _rank(self._all_active(), final)
+        return _rank(self._all_active(), final, self.final_choices() if final else {})
 
     def list_submissions(self, team_key: str | None = None) -> list[Submission]:
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT id, team_key, team_display, nickname, rmse, r2, public_rmse, public_r2, negative_clipped, "
-                "submitted_at, deleted_at, filename "
+                "submitted_at, deleted_at "
                 "FROM submissions WHERE %s::text IS NULL OR team_key = %s ORDER BY id DESC",
                 (team_key, team_key),
             ).fetchall()
@@ -392,6 +429,27 @@ class PostgresStore:
             )
             conn.commit()
             return cur.rowcount == 1
+
+    def final_choices(self) -> dict[str, FinalChoice]:
+        with self._connect() as conn:
+            rows = conn.execute("SELECT team_key, submission_id, chosen_by, chosen_at FROM final_choices").fetchall()
+        return {
+            r[0]: FinalChoice(int(r[1]), r[2], r[3] if r[3].tzinfo else r[3].replace(tzinfo=timezone.utc))
+            for r in rows
+        }
+
+    def set_final_choice(self, team_key: str, choice: FinalChoice | None) -> None:
+        with self._connect() as conn:
+            if choice is None:
+                conn.execute("DELETE FROM final_choices WHERE team_key = %s", (team_key,))
+            else:
+                conn.execute(
+                    "INSERT INTO final_choices (team_key, submission_id, chosen_by, chosen_at) VALUES (%s, %s, %s, %s) "
+                    "ON CONFLICT (team_key) DO UPDATE SET submission_id = EXCLUDED.submission_id, "
+                    "chosen_by = EXCLUDED.chosen_by, chosen_at = EXCLUDED.chosen_at",
+                    (team_key, choice.submission_id, choice.chosen_by, choice.chosen_at),
+                )
+            conn.commit()
 
     def insert_game_score(self, s: GameScore) -> int:
         with self._connect() as conn:
@@ -453,6 +511,7 @@ class PostgresStore:
     def reset_season(self, delete_games: bool, delete_users: bool) -> dict[str, int]:
         # 한 트랜잭션: 중간에 실패하면 아무것도 지우지 않는다.
         with self._connect() as conn:
+            conn.execute("DELETE FROM final_choices")
             counts = {"submissions": conn.execute("DELETE FROM submissions").rowcount, "game_scores": 0, "users": 0}
             if delete_games:
                 counts["game_scores"] = conn.execute("DELETE FROM game_scores").rowcount
@@ -488,5 +547,4 @@ def _row_to_submission(r) -> Submission:
         negative_clipped=int(r[8]),
         submitted_at=submitted,
         deleted_at=deleted,
-        filename=r[11],
     )

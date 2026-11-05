@@ -71,22 +71,14 @@ def test_contest_end_boundary_is_kst_midnight(client, clock):
     assert client.get("/api/leaderboard").json()["final"] is False
 
 
-def test_public_entries_list_every_submission_and_hide_final_until_deadline(client, clock):
-    # 3팀이 두 번 낸다: 나중 제출의 public 점수가 더 좋아 팀 대표(best)가 된다.
+def test_leaderboard_shows_one_row_per_team_and_no_submission_list(client, clock):
+    # 3팀이 두 번 낸다. 다른 팀에게는 팀별 최고 기록 한 줄만 보이고 제출 목록은 내보내지 않는다.
     submit(client, csv_bytes([(i, p + 300) for i, p in ANSWER_ROWS]), team="3")
     clock.advance(minutes=1)
     submit(client, csv_bytes(private_only_error(9000)), team="3")
     clock.advance(minutes=1)
     submit(client, csv_bytes([(i, p + 100) for i, p in ANSWER_ROWS]), team="2")
 
-    entries = client.get("/api/leaderboard").json()["entries"]
-    assert [e["team"] for e in entries] == ["3", "2", "3"]          # public 점수 순, 팀 대표가 아닌 제출도 모두
-    assert [e["best"] for e in entries] == [True, True, False]
-    assert all("final_rmse" not in e and "final_rank" not in e for e in entries)  # 대회 중에는 최종 점수·순위를 내보내지 않는다
-
-    to_final(clock)
-    entries = client.get("/api/leaderboard").json()["entries"]
-    assert math.isclose(entries[0]["final_rmse"], math.sqrt(9000**2 * 3 / 5))
-    assert math.isclose(entries[1]["final_rmse"], 100.0)
-    assert [entries[0]["final_rank"], entries[1]["final_rank"]] == [2, 1]   # 최종 순위는 최종 RMSE 순(2팀 100 < 3팀)
-    assert "final_rmse" not in entries[2]                            # 대표가 아닌 제출은 마감 뒤에도 없다
+    board = client.get("/api/leaderboard").json()
+    assert "entries" not in board
+    assert [r["team"] for r in board["rows"]] == ["3", "2"]

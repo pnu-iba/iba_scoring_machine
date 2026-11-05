@@ -270,8 +270,10 @@
     result.hidden = true;
     result.textContent = "";
     fileEl.value = "";
+    // 리더보드의 Submission 칸과 같은 번호. 어느 파일이 몇 점이었는지 팀이 맞춰 볼 수 있게 한다.
+    el("sequenceLabel").textContent = b.no ? `submission #${b.no}, public score (30% of test data)` : "public score (30% of test data)";
     const remaining = b.demo ? "구경용 계정이라 기록되지 않음." : b.unlimited ? "로컬 테스트: 제출 횟수 제한 없음." : `오늘 ${b.remaining_today}회 남음.`;
-    announcement.textContent = `채점 완료. Public ${score}. 현재 팀 순위 ${b.rank ?? "-"}위. ${remaining}`;
+    announcement.textContent = `채점 완료.${b.no ? ` 팀의 ${b.no}번째 제출.` : ""} Public ${score}. 현재 팀 순위 ${b.rank ?? "-"}위. ${remaining}`;
 
   }
 
@@ -536,6 +538,81 @@
     line.hidden = false;
   }
 
+  // 우리 팀 제출 목록. 마감 전에는 최종 순위에 쓸 제출을 고르거나 public 최고 제출로 되돌릴 수 있다.
+  async function loadTeamSubs() {
+    const r = await window.IBA.api("/api/team/submissions");
+    if (r.ok) drawTeamSubs(r.body);
+  }
+  // 구경용 계정은 서버에 기록이 없으니 목데이터로 보여 주고, 고르기도 화면에서만 바뀐다.
+  const DEMO_SUBS = [
+    { id: 4, no: 4, nickname: "dev", public_rmse: 1932.18, public_r2: 0.9618, submitted_at: "2026-10-04T21:14:00+09:00" },
+    { id: 3, no: 3, nickname: "dev", public_rmse: 1888.10, public_r2: 0.9632, submitted_at: "2026-10-03T16:40:00+09:00" },
+    { id: 2, no: 2, nickname: "dev", public_rmse: 2015.82, public_r2: 0.9583, submitted_at: "2026-10-02T09:02:00+09:00" },
+    { id: 1, no: 1, nickname: "dev", public_rmse: 2290.05, public_r2: 0.9462, submitted_at: "2026-09-29T11:47:00+09:00" },
+  ];
+  function demoTeamSubs(chosenId) {
+    const auto = 3, pick = chosenId ?? auto;
+    return {
+      locked: false,
+      chosen_by: chosenId ? "dev" : null,
+      chosen_at: chosenId ? new Date().toISOString() : null,
+      submissions: DEMO_SUBS.map((s) => ({ ...s, auto: s.id === auto, pick: s.id === pick })),
+    };
+  }
+  function drawTeamSubs(b) {
+    const section = el("teamSubs");
+    section.hidden = !b.submissions.length;
+    if (section.hidden) return;
+    const f = window.IBA.fmt, esc = window.IBA.esc;
+    const pick = b.submissions.find((s) => s.pick);
+    let line = `final submission: #${pick.no}`;
+    line += b.chosen_by ? `, chosen by ${b.chosen_by} at ${f.time(b.chosen_at)}` : " (best public score, picked automatically)";
+    if (b.locked) line += ", locked after the deadline";
+    el("teamFinal").innerHTML = esc(line) +
+      (b.chosen_by && !b.locked ? ' <button type="button" class="team-subs-use" data-id="">use best public instead</button>' : "");
+    el("teamSubsBody").innerHTML = b.submissions.map((s) => `<tr${s.pick ? ' class="is-pick"' : ""}>
+      <td>#${s.no}${s.auto ? '<span class="team-subs-tag">best public</span>' : ""}</td>
+      <td>${esc(s.nickname)}</td>
+      <td>${f.time(s.submitted_at)}</td>
+      <td class="num">${f.rmse(s.public_rmse)}</td>
+      <td class="num">${f.r2(s.public_r2)}</td>
+      <td class="team-subs-action">${s.pick ? "final" : b.locked ? "" : `<button type="button" class="team-subs-use" data-id="${s.id}" aria-label="#${s.no} 최종 제출로 쓰기">use as final</button>`}</td>
+    </tr>`).join("");
+  }
+  el("teamSubs").addEventListener("click", async (event) => {
+    const button = event.target.closest("button[data-id]");
+    if (!button || button.disabled) return;
+    const buttons = el("teamSubs").querySelectorAll("button");
+    buttons.forEach((b) => { b.disabled = true; });
+    const id = button.dataset.id ? Number(button.dataset.id) : null;
+    if (demo) {
+      drawTeamSubs(demoTeamSubs(id));
+      announcement.textContent = `최종 제출이 #${id ?? 3}번으로 정해졌습니다.`;
+      return;
+    }
+    const error = el("teamSubsError");
+    error.hidden = true;
+    try {
+      const r = await window.IBA.api("/api/team/final-choice", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ submission_id: id }),
+      });
+      if (r.ok) {
+        drawTeamSubs(r.body);
+        const pick = r.body.submissions.find((s) => s.pick);
+        announcement.textContent = `최종 제출이 #${pick.no}번으로 정해졌습니다.`;
+        return;
+      }
+      error.textContent = (r.body && r.body.message) || `최종 제출을 바꾸지 못했습니다. (HTTP ${r.status})`;
+      error.hidden = false;
+      await loadTeamSubs();
+    } catch {
+      error.textContent = "네트워크 오류로 최종 제출을 바꾸지 못했습니다.";
+      error.hidden = false;
+    } finally {
+      buttons.forEach((b) => { b.disabled = false; });
+    }
+  });
+
   // 로그인 여부가 정해진 뒤에 본문을 보여 준다(submit.css의 is-pending)
   const reveal = () => document.querySelector("main.submit-page")?.classList.remove("is-pending");
   async function init() {
@@ -552,6 +629,8 @@
     demo = !!user.demo;
     attachDemo();
     if (user.is_admin) return;
+    if (demo) drawTeamSubs(demoTeamSubs(null));
+    else loadTeamSubs();
     const q = await window.IBA.api("/api/quota");
     if (!q.ok) return;
     dailyLimit = q.body.limit;
@@ -586,6 +665,7 @@
         if (token !== serial) return;
         showScore(r.body);
         showQuota(r.body.remaining_today, r.body.unlimited, r.body.resets_at);
+        if (!r.body.demo) loadTeamSubs();
       } else if (r.status === 401) {
         showError("로그인이 풀렸습니다.", "다시 로그인한 뒤 제출하세요.");
       } else if (r.status === 503 && r.body && r.body.message) {

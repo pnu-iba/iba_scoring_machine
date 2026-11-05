@@ -77,5 +77,11 @@ BEGIN
     END IF;
 END $$;
 
--- Original upload basename; older submissions have no filename.
-ALTER TABLE submissions ADD COLUMN IF NOT EXISTS filename TEXT;
+-- 팀이 최종 순위에 쓰겠다고 고른 제출. 팀마다 한 행이고, 고르지 않은 팀은 행이 없다.
+-- 여러 번 실행해도 된다.
+CREATE TABLE IF NOT EXISTS final_choices (
+    team_key      TEXT PRIMARY KEY,
+    submission_id BIGINT NOT NULL REFERENCES submissions (id) ON DELETE CASCADE,
+    chosen_by     TEXT NOT NULL,       -- 고른 사람의 닉네임
+    chosen_at     TIMESTAMPTZ NOT NULL
+);

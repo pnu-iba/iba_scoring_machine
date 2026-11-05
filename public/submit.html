@@ -60,7 +60,7 @@
   <div id="sequenceContent" hidden>
     <div class="sequence-viewport" id="sequenceViewport" aria-hidden="true"><pre id="sequenceText"><span class="sequence-caret" id="typingCaret" hidden>_</span></pre></div>
     <div class="sequence-outcome" id="sequenceOutcome" hidden>
-      <p class="sequence-label">public score (30% of test data)</p>
+      <p class="sequence-label" id="sequenceLabel">public score (30% of test data)</p>
       <div class="sequence-result-row">
         <p class="sequence-score" id="sequenceScore"></p>
         <a class="leaderboard-link" href="/leaderboard.html">check the leaderboard!<svg class="leaderboard-arrow" viewBox="0 0 14 10" fill="none" aria-hidden="true"><path d="M1 5h11M8.5 1.5 12 5l-3.5 3.5"/></svg></a>
@@ -69,6 +69,20 @@
   </div>
 </section>
 </div>
+<!-- 우리 팀 제출 목록. 최종 순위에 쓸 제출을 마감 전까지 고를 수 있다(submit.js) -->
+<section class="team-subs" id="teamSubs" aria-labelledby="teamSubsTitle" hidden>
+  <div class="team-subs-head">
+    <h2 class="team-subs-title" id="teamSubsTitle">team submissions</h2>
+    <p class="team-subs-final" id="teamFinal"></p>
+  </div>
+  <p class="team-subs-error" id="teamSubsError" role="alert" hidden></p>
+  <div class="table-wrap">
+    <table class="team-subs-table">
+      <thead><tr><th>No.</th><th>By</th><th>Submitted</th><th class="num">Public RMSE</th><th class="num">R²</th><th class="team-subs-action">Final</th></tr></thead>
+      <tbody id="teamSubsBody"></tbody>
+    </table>
+  </div>
+</section>
 <p class="submit-announcement" id="submitAnnouncement" role="status" aria-live="polite" aria-atomic="true"></p>
 </main>
 

@@ -44,12 +44,10 @@ def test_chosen_submission_is_used_for_final_rank(client, clock):
     assert picked[1]["pick"] and not picked[1]["auto"]
     assert picked[2]["auto"] and not picked[2]["pick"]
 
-    entries = client.get("/api/leaderboard").json()["entries"]
-    assert [e["no"] for e in entries if e["best"]] == [1]
-
     to_final(clock)
     row = client.get("/api/leaderboard").json()["rows"][0]
-    assert math.isclose(row["rmse"], 300.0)
+    assert math.isclose(row["rmse"], 300.0)        # 고른 1번 제출의 전체 점수
+    assert row["public_rmse"] == 0                 # public 점수는 팀의 public 최고 기록(2번)
 
 
 def test_clearing_choice_returns_to_public_best(client, clock):

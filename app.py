@@ -7,7 +7,7 @@
 - GET    /api/me                     로그인한 사용자 (로그인하지 않았으면 null)
 - GET    /api/contest                대회 기간·상태·하루 한도
 - POST   /api/submit                 (로그인) CSV → public·전체 점수 채점·기록 (진행 중에만, 관리자는 거부)
-- GET    /api/leaderboard            팀별 기록. 대회 중에는 public 순위, 마감 뒤에는 최종 순위
+- GET    /api/leaderboard            팀별 한 줄. 대회 중에는 public 순위, 마감 뒤에는 최종 순위
 - GET    /api/quota                  (로그인) 우리 팀 오늘 남은 횟수
 - GET    /api/team/submissions       (로그인) 우리 팀 제출 목록과 최종 제출
 - POST   /api/team/final-choice      (로그인) 최종 순위에 쓸 제출 고르기·자동으로 되돌리기 (마감 전까지)
@@ -43,7 +43,7 @@ from scoring.parse import SubmissionError, parse_submission
 from scoring.teams import TEAMS, NameError_, clean_nickname, clean_team_display, normalize_team, signup_team
 from store import (
     DEMO_USERNAME, Answers, DuplicateUsername, FinalChoice, GameScore, PostgresStore, Store, Submission, User,
-    _public_key, final_picks,
+    final_picks,
 )
 
 app = FastAPI(title="IBA Scoring Machine", docs_url=None, redoc_url=None)
@@ -188,35 +188,6 @@ def _leaderboard_row(row, final: bool) -> dict:
     if final:
         body.update(public_rmse=row.public_rmse, public_r2=row.public_r2, public_rank=row.public_rank)
     return body
-
-
-def _public_entries(store: Store, final: bool) -> list[dict]:
-    """Public 리더보드용 전체 제출 목록(public 점수 순). 팀별 최종 제출에는 best를 표시한다.
-
-    최종 제출은 팀이 고른 제출, 고르지 않았으면 public 최고 제출이다.
-    최종 점수(final_rmse)와 최종 순위(final_rank)는 마감 뒤, 그리고 팀 대표(best) 제출에만 넣는다. 대회 중에는 어떤 제출의 최종 점수도 내보내지 않는다.
-    """
-    everything = store.list_submissions()
-    no = _submission_numbers(everything)
-    active = [s for s in everything if s.deleted_at is None]
-    key = _public_key
-    best = {s.id for s in final_picks(everything, store.final_choices()).values()}
-    final_rank = {r.team_key: r.rank for r in store.leaderboard(True)} if final else {}
-    entries = []
-    for s in sorted(active, key=key):
-        e = {
-            "team": s.team_display,
-            "no": no[s.id],
-            "rmse": s.public_rmse,
-            "r2": s.public_r2,
-            "best": s.id in best,
-            "submitted_at": s.submitted_at.astimezone(clock.KST).isoformat(),
-        }
-        if final and s.id in best:
-            e["final_rmse"] = s.rmse
-            e["final_rank"] = final_rank.get(s.team_key)
-        entries.append(e)
-    return entries
 
 
 def _submission_numbers(subs: list[Submission]) -> dict[int, int]:
@@ -499,7 +470,6 @@ def leaderboard(
         "final_at": clock.final_at(settings).isoformat(),
         "teams": list(TEAMS),
         "rows": [_leaderboard_row(r, final) for r in store.leaderboard(final)],
-        "entries": _public_entries(store, final),
     }
 
 

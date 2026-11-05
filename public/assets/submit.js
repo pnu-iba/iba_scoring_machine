@@ -543,6 +543,22 @@
     const r = await window.IBA.api("/api/team/submissions");
     if (r.ok) drawTeamSubs(r.body);
   }
+  // 구경용 계정은 서버에 기록이 없으니 목데이터로 보여 주고, 고르기도 화면에서만 바뀐다.
+  const DEMO_SUBS = [
+    { id: 4, no: 4, nickname: "dev", public_rmse: 1932.18, public_r2: 0.9618, submitted_at: "2026-10-04T21:14:00+09:00" },
+    { id: 3, no: 3, nickname: "dev", public_rmse: 1888.10, public_r2: 0.9632, submitted_at: "2026-10-03T16:40:00+09:00" },
+    { id: 2, no: 2, nickname: "dev", public_rmse: 2015.82, public_r2: 0.9583, submitted_at: "2026-10-02T09:02:00+09:00" },
+    { id: 1, no: 1, nickname: "dev", public_rmse: 2290.05, public_r2: 0.9462, submitted_at: "2026-09-29T11:47:00+09:00" },
+  ];
+  function demoTeamSubs(chosenId) {
+    const auto = 3, pick = chosenId ?? auto;
+    return {
+      locked: false,
+      chosen_by: chosenId ? "dev" : null,
+      chosen_at: chosenId ? new Date().toISOString() : null,
+      submissions: DEMO_SUBS.map((s) => ({ ...s, auto: s.id === auto, pick: s.id === pick })),
+    };
+  }
   function drawTeamSubs(b) {
     const section = el("teamSubs");
     section.hidden = !b.submissions.length;
@@ -569,6 +585,11 @@
     const buttons = el("teamSubs").querySelectorAll("button");
     buttons.forEach((b) => { b.disabled = true; });
     const id = button.dataset.id ? Number(button.dataset.id) : null;
+    if (demo) {
+      drawTeamSubs(demoTeamSubs(id));
+      announcement.textContent = `최종 제출이 #${id ?? 3}번으로 정해졌습니다.`;
+      return;
+    }
     const error = el("teamSubsError");
     error.hidden = true;
     try {
@@ -608,7 +629,8 @@
     demo = !!user.demo;
     attachDemo();
     if (user.is_admin) return;
-    if (!demo) loadTeamSubs();
+    if (demo) drawTeamSubs(demoTeamSubs(null));
+    else loadTeamSubs();
     const q = await window.IBA.api("/api/quota");
     if (!q.ok) return;
     dailyLimit = q.body.limit;

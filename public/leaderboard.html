@@ -67,7 +67,7 @@
   <div class="file-table-scroll">
   <table class="file-table" id="board">
     <thead>
-      <tr><th>Rank</th><th>Team</th><th class="num">RMSE</th><th class="num" aria-label="R squared">R<sup class="sq">2</sup></th><th class="num">Final RMSE (rank)</th><th class="num">Submission</th></tr>
+      <tr><th>Rank</th><th>Team</th><th class="num">RMSE</th><th class="num" aria-label="R squared">R<sup class="sq">2</sup></th><th class="num">Final RMSE (rank)</th></tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -75,7 +75,6 @@
   <p class="sr-only" id="meta" role="status" aria-live="polite"></p>
 
   <footer class="file-foot">
-    <nav class="file-pages" id="boardPages" aria-label="리더보드 페이지"></nav>
     <div class="sign">
       <p class="k">Approved by:</p>
       <span class="seal">PNU IBA</span>
@@ -101,116 +100,63 @@
   const esc = (s) => window.IBA.esc(s);
   const f = new Proxy({}, { get: (_, k) => window.IBA.fmt[k] });
 
-  // 대회 중 올라온 모든 제출을 public 점수 순으로. 팀별 최고 제출의 최종 RMSE는 마감 전까지 가림 막대로 가린다.
+  // 팀마다 한 줄, public 최고 점수 순. 최종 RMSE는 마감 전까지 가림 막대로 가린다.
   const NOTES = {
-    live: "대회 중 올라온 모든 제출의 public 점수 순위. 최종 순위는 Final RMSE를 기준으로, 팀별로 public 점수가 가장 좋았던 제출에만 매겨진다. 해당 순위는 최종 마감 후 공개된다.",
-    public: "대회 중 올라온 모든 제출의 public 점수 순위. 최종 순위는 Final RMSE를 기준으로, 팀별로 public 점수가 가장 좋았던 제출에만 매겼다.",
+    live: "팀별 public 최고 점수 순위. Final RMSE는 팀이 고른 최종 제출의 점수이고, 고르지 않은 팀은 public 최고 제출의 점수다. 최종 순위는 Final RMSE로 매기며 마감 후 공개된다.",
+    public: "팀별 public 최고 점수 순위. Final RMSE는 팀이 고른 최종 제출의 점수이고, 고르지 않은 팀은 public 최고 제출의 점수다. 최종 순위는 Final RMSE로 매겼다.",
   };
   const REDACT = '<span class="redact" aria-hidden="true"></span><span class="sr-only">마감 뒤 공개</span>';
 
   // 로컬 개발 서버에서만 표 모양을 볼 수 있게 임시 기록 몇 줄을 섞는다(배포 사이트에서는 쓰지 않는다).
   const DEV_SAMPLE = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
   const SAMPLE_ROWS = [
-    { team: "2", rmse: 1942.37, r2: 0.9611, public_rmse: 1888.10, public_r2: 0.9632, submitted_at: "2026-10-04T21:14:00+09:00" },
-    { team: "1", rmse: 2015.82, r2: 0.9583, public_rmse: 1951.46, public_r2: 0.9607, submitted_at: "2026-10-05T09:02:00+09:00" },
-    { team: "4", rmse: 2290.05, r2: 0.9462, public_rmse: 2203.77, public_r2: 0.9499, submitted_at: "2026-10-03T16:40:00+09:00" },
-    { team: "3", rmse: 2511.60, r2: 0.9353, public_rmse: 2589.31, public_r2: 0.9310, submitted_at: "2026-10-02T23:51:00+09:00" },
+    { team: "2", rmse: 1942.37, r2: 0.9611, public_rmse: 1888.10, public_r2: 0.9632 },
+    { team: "1", rmse: 2015.82, r2: 0.9583, public_rmse: 1951.46, public_r2: 0.9607 },
+    { team: "4", rmse: 2290.05, r2: 0.9462, public_rmse: 2203.77, public_r2: 0.9499 },
+    { team: "3", rmse: 2511.60, r2: 0.9353, public_rmse: 2589.31, public_r2: 0.9310 },
   ];
-  // 팀 대표가 아닌, 점수가 덜 좋은 예전 제출들
-  const SAMPLE_EXTRA = [
-    { team: "2", rmse: 2104.52, r2: 0.9547, submitted_at: "2026-10-02T14:20:00+09:00" },
-    { team: "1", rmse: 2240.83, r2: 0.9489, submitted_at: "2026-10-01T19:05:00+09:00" },
-    { team: "4", rmse: 2467.19, r2: 0.9378, submitted_at: "2026-09-29T11:47:00+09:00" },
-  ];
-  function withSampleEntries(entries, final) {
-    const add = SAMPLE_ROWS.filter((s) => !entries.some((e) => e.team === s.team)).flatMap((s) => {
-      const older = SAMPLE_EXTRA.filter((x) => x.team === s.team).map((x, i) => ({ ...x, best: false, no: i + 1 }));
-      return [
-        { team: s.team, rmse: s.public_rmse, r2: s.public_r2, best: true, no: older.length + 1, submitted_at: s.submitted_at, ...(final ? { final_rmse: s.rmse } : {}) },
-        ...older,
-      ];
-    });
-    const all = [...entries, ...add].sort((a, b) => a.rmse - b.rmse);
-    // 임시 기록이 섞였으니 최종 순위를 다시 매긴다(팀 대표 제출끼리 최종 RMSE 순).
-    all.filter((e) => e.final_rmse != null).sort((a, b) => a.final_rmse - b.final_rmse).forEach((e, i) => { e.final_rank = i + 1; });
-    return all;
+  // 표 한 줄: { team, rmse·r2(public 최고), rank(public 순위), final_rmse·final_rank(마감 뒤) }
+  function rank(items) {
+    items.sort((a, b) => a.rmse - b.rmse).forEach((e, i) => { e.rank = i + 1; });
+    items.filter((e) => e.final_rmse != null).sort((a, b) => a.final_rmse - b.final_rmse).forEach((e, i) => { e.final_rank = i + 1; });
+    return items;
   }
-
-  // Demo-only display records: never submitted to or read from the submissions table.
-  function demoEntries(final) {
-    const teams = Array.from({length: 15}, (_, i) => i % 4 + 1);
-    // Fixed shuffle: irregular team order, stable between refreshes and page changes.
-    let seed = 1459;
-    for (let i = teams.length - 1; i > 0; i--) {
-      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-      const j = seed % (i + 1);
-      [teams[i], teams[j]] = [teams[j], teams[i]];
-    }
-    const seen = new Set();
-    const counts = new Map();
-    teams.forEach(team => counts.set(team, (counts.get(team) || 0) + 1));
-    return teams.map((team, i) => {
-      const best = !seen.has(team);
-      seen.add(team);
-      const finalRank = seen.size;
-      // 점수가 좋은 제출일수록 뒤에 낸 것으로 보이게, 팀 안에서 번호를 거꾸로 매긴다
-      const no = counts.get(team);
-      counts.set(team, no - 1);
-      return {
-        team: String(team),
-        rmse: Number((1800.25 + i * 12.37).toFixed(2)),
-        r2: Number((.97 - i * .0015).toFixed(4)),
-        best,
-        no,
-        submitted_at: "2026-10-04T12:00:00+09:00",
-        ...(final && best ? {final_rmse: 1950.50 + (finalRank - 1) * 45.25, final_rank: finalRank} : {}),
-      };
-    });
+  function withSampleRows(items, final) {
+    const add = SAMPLE_ROWS.filter((s) => !items.some((e) => e.team === s.team))
+      .map((s) => ({ team: s.team, rmse: s.public_rmse, r2: s.public_r2, ...(final ? { final_rmse: s.rmse } : {}) }));
+    return rank([...items, ...add]);
   }
+  // 구경용 계정에게만 보여 주는 기록. 제출 기록에 쓰거나 거기서 읽지 않는다.
+  function demoRows(final) {
+    return rank(SAMPLE_ROWS.map((s) => ({ team: s.team, rmse: s.public_rmse, r2: s.public_r2, ...(final ? { final_rmse: s.rmse } : {}) })));
+  }
+  // 서버의 rows를 표 한 줄로. 마감 뒤 rows는 최종 순위 순이고 public 점수와 순위는 따로 온다.
+  const toItems = (rows, final) => rows
+    .map((r) => final
+      ? { team: r.team, rmse: r.public_rmse, r2: r.public_r2, rank: r.public_rank, final_rmse: r.rmse, final_rank: r.rank }
+      : { team: r.team, rmse: r.rmse, r2: r.r2, rank: r.rank })
+    .sort((a, b) => a.rank - b.rank);
 
-  const PAGE_SIZE = 15;
-  let currentPage = 1;
-  const pages = document.getElementById("boardPages");
-  let last = null;  // 마지막 응답 {entries, final}과 사용자
+  let last = null;  // 마지막 응답 {items, final}과 사용자
   const two = (n) => String(n).padStart(2, "0");
   const teamCell = (team, myTeam) => `<td>Team ${esc(team)}${myTeam && team === myTeam ? '<span class="sr-only"> (우리 팀)</span>' : ""}</td>`;
 
-  // Public: 제출 한 건이 한 줄. 최종 RMSE 칸은 팀 대표 제출에만(마감 전에는 가림 막대, 뒤에는 값), 나머지는 빈칸.
-  function entryHtml(e, i, myTeam) {
-    const finalCell = !e.best ? '<span class="final-dash">-</span>' : e.final_rmse != null ? `${f.rmse(e.final_rmse)} (${two(e.final_rank)})` : REDACT;
-    return `<tr><td><span class="rank">${two(i + 1)}</span></td>${teamCell(e.team, myTeam)}
+  function rowHtml(e, myTeam) {
+    const finalCell = e.final_rmse != null ? `${f.rmse(e.final_rmse)} (${two(e.final_rank)})` : REDACT;
+    return `<tr><td><span class="rank">${two(e.rank)}</span></td>${teamCell(e.team, myTeam)}
       <td class="num">${f.rmse(e.rmse)}</td>
       <td class="num">${f.r2(e.r2)}</td>
-      <td class="num soft${!e.best ? ' final-empty' : ''}">${finalCell}</td>
-      <td class="num soft">${e.no != null ? `#${e.no}` : "—"}</td></tr>`;
+      <td class="num soft">${finalCell}</td></tr>`;
   }
   function draw() {
-    const { entries, final, user } = last;
+    const { items, final, user } = last;
     document.getElementById("status").textContent = final ? "Closed" : "Active";
-    document.getElementById("boardFoot").textContent = (final ? NOTES.public : NOTES.live) + (user && user.demo ? " (미리보기용 임시 제출 기록)" : "");
-    // 기록이 있는 것만 보인다. 하나도 없으면 표 너비 전체에 안내 한 줄을 타자기 글씨로 적는다.
-    const pageCount = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
-    currentPage = Math.min(currentPage, pageCount);
-    const start = (currentPage - 1) * PAGE_SIZE;
-    tbody.innerHTML = entries.length
-      ? entries.slice(start, start + PAGE_SIZE).map((e, i) => entryHtml(e, start + i, user && user.team)).join("")
-      : `<tr class="empty-row"><td colspan="6">No submissions yet.</td></tr>`;
-    const groupStart = Math.floor((currentPage - 1) / 7) * 7 + 1;
-    const groupEnd = Math.min(groupStart + 6, pageCount);
-    const previous = groupStart > 1 ? `<button type="button" class="file-page-arrow file-page-previous" data-page="${groupStart - 7}" aria-label="이전 페이지 묶음">‹</button>` : "";
-    const next = groupEnd < pageCount ? `<button type="button" class="file-page-arrow file-page-next" data-page="${groupEnd + 1}" aria-label="다음 페이지 묶음">›</button>` : "";
-    pages.innerHTML = entries.length ? previous + '<div class="file-page-numbers">' + Array.from({length: groupEnd - groupStart + 1}, (_, i) => {
-      const page = groupStart + i;
-      return `<button type="button" data-page="${page}" aria-label="${page}페이지"${page === currentPage ? ' aria-current="page"' : ''}>${page}</button>`;
-    }).join("") + "</div>" + next : "";
-    pages.querySelectorAll("button").forEach(button => { button.disabled = busy; });
+    document.getElementById("boardFoot").textContent = (final ? NOTES.public : NOTES.live) + (user && user.demo ? " (미리보기용 임시 기록)" : "");
+    // 기록이 있는 팀만 보인다. 하나도 없으면 표 너비 전체에 안내 한 줄을 타자기 글씨로 적는다.
+    tbody.innerHTML = items.length
+      ? items.map((e) => rowHtml(e, user && user.team)).join("")
+      : `<tr class="empty-row"><td colspan="5">No submissions yet.</td></tr>`;
   }
-  pages.addEventListener("click", event => {
-    const button = event.target.closest("[data-page]");
-    if (!button || !last) return;
-    refresh(Number(button.dataset.page));
-  });
-
 
   // 서버에서 새로 받아 last를 바꾼다(그리지는 않는다).
   async function fetchBoard() {
@@ -219,7 +165,7 @@
       user = await window.IBA.me;
       if (user && user.demo) {
         const contest = await window.IBA.api("/api/contest");
-        r = {ok: true, body: {final: contest.ok && contest.body.status === "FINAL", entries: []}};
+        r = {ok: true, body: {final: contest.ok && contest.body.status === "FINAL", rows: []}};
       } else {
         r = await window.IBA.api("/api/leaderboard");
       }
@@ -231,13 +177,13 @@
     // 로컬에서 주소 끝에 ?preview=live를 붙이면 마감 전 화면(최종 RMSE 가림)을 미리 본다.
     const previewLive = DEV_SAMPLE && new URLSearchParams(location.search).get("preview") === "live";
     const final = previewLive ? false : r.body.final;
-    const served = (r.body.entries || []).map((e) => (previewLive ? { ...e, final_rmse: undefined, final_rank: undefined } : e));
+    const served = toItems(r.body.rows || [], r.body.final).map((e) => (previewLive ? { ...e, final_rmse: undefined, final_rank: undefined } : e));
     // 구경용 계정(iba_dev)은 실제 기록 대신 목데이터 리더보드를 본다.
-    const entries = user && user.demo ? demoEntries(final) : DEV_SAMPLE ? withSampleEntries(served, final) : served;
-    last = { entries, final, user };
+    const items = user && user.demo ? demoRows(final) : DEV_SAMPLE ? withSampleRows(served, final) : served;
+    last = { items, final, user };
     const now = new Date().toISOString();
     document.getElementById("updated").textContent = `${f.time(now)} KST`;
-    document.getElementById("meta").textContent = `갱신됨 · 제출 ${entries.length}건 · ${f.time(now)} 기준`;
+    document.getElementById("meta").textContent = `갱신됨 · 팀 ${items.length}개 · ${f.time(now)} 기준`;
     return true;
   }
   // 처음 열 때 받아 그린다. 다시 받을 때는 새로고침 버튼을 쓴다.
@@ -319,38 +265,25 @@
   }
 
   // 새로고침 버튼·F5·Cmd/Ctrl+R: 빠졌다가 새 기록을 적은 채 올라온다
-  async function refresh(nextPage = null) {
-    const changingPage = Number.isInteger(nextPage);
-    if (busy || (changingPage && (!last || nextPage === currentPage))) return;
+  async function refresh() {
+    if (busy) return;
     busy = true;
     reload.disabled = true;
-    pages.querySelectorAll("button").forEach(button => { button.disabled = true; });
-    if (!changingPage) reload.classList.add("spinning");
-    const fetching = changingPage ? Promise.resolve(true) : fetchBoard();
-    const update = async () => {
-      if (await fetching) {
-        if (changingPage) currentPage = nextPage;
-        draw();
-      }
-    };
+    reload.classList.add("spinning");
+    const fetching = fetchBoard();
     try {
       if (calm.matches) {
-        await update();
+        if (await fetching) draw();
       } else {
         const d = dropDistance();
         await dropOut(d);
-        await update();
+        if (await fetching) draw();
         await riseIn(d);
       }
     } finally {
       reload.classList.remove("spinning");
       reload.disabled = false;
       busy = false;
-      pages.querySelectorAll("button").forEach(button => { button.disabled = false; });
-    }
-    if (changingPage) {
-      pages.querySelector(`[data-page="${currentPage}"]`)?.focus({preventScroll: true});
-      document.getElementById("meta").textContent = `${currentPage}페이지, 전체 ${last.entries.length}건`;
     }
   }
   reload.addEventListener("click", () => refresh());
@@ -392,7 +325,6 @@
       }
       reload.disabled = false;
       busy = false;
-      pages.querySelectorAll("button").forEach(button => { button.disabled = false; });
     }
   });
 
@@ -409,7 +341,6 @@
     await riseIn(dropDistance());
     reload.disabled = false;
     busy = false;
-    pages.querySelectorAll("button").forEach(button => { button.disabled = false; });
   });
 })();
 </script>

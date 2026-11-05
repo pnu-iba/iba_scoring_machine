@@ -141,5 +141,5 @@ def test_submissions_are_numbered_per_team_and_keep_numbers_after_delete(client,
 
     first = min(s.id for s in store.list_submissions("3"))
     store.soft_delete(first, store.list_submissions()[0].submitted_at)
-    entries = client.get("/api/leaderboard").json()["entries"]
-    assert sorted((e["team"], e["no"]) for e in entries) == [("1", 1), ("3", 2)]
+    login_as(client)
+    assert [s["no"] for s in client.get("/api/team/submissions").json()["submissions"]] == [2]

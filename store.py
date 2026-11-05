@@ -164,8 +164,8 @@ def _rank(rows: list[Submission], final: bool, choices: dict[str, FinalChoice]) 
             nickname=s.nickname,
             rmse=s.rmse if final else s.public_rmse,
             r2=s.r2 if final else s.public_r2,
-            public_rmse=s.public_rmse,
-            public_r2=s.public_r2,
+            public_rmse=best[s.team_key].public_rmse,   # 팀의 public 최고 기록(최종 제출과 다를 수 있다)
+            public_r2=best[s.team_key].public_r2,
             public_rank=public_rank[s.team_key],
             submitted_at=s.submitted_at,
             team_key=s.team_key,

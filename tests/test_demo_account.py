@@ -23,7 +23,7 @@ def test_demo_submit_scores_without_recording(client, store):
         assert r.json()["rmse"] == 0
         assert r.json()["demo"] is True
     assert store.list_submissions() == []
-    assert client.get("/api/leaderboard").json()["entries"] == []
+    assert client.get("/api/leaderboard").json()["rows"] == []
     assert client.get("/api/quota").json()["unlimited"] is True
 
 

@@ -61,7 +61,6 @@ class Submission:
     negative_clipped: int
     submitted_at: datetime
     deleted_at: datetime | None = None
-    filename: str | None = None
 
 
 @dataclass(frozen=True)
@@ -343,11 +342,11 @@ class PostgresStore:
         with self._connect() as conn:
             row = conn.execute(
                 "INSERT INTO submissions "
-                "(team_key, team_display, nickname, rmse, r2, public_rmse, public_r2, negative_clipped, submitted_at, filename) "
-                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id",
+                "(team_key, team_display, nickname, rmse, r2, public_rmse, public_r2, negative_clipped, submitted_at) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) RETURNING id",
                 (
                     s.team_key, s.team_display, s.nickname, s.rmse, s.r2,
-                    s.public_rmse, s.public_r2, s.negative_clipped, s.submitted_at, s.filename,
+                    s.public_rmse, s.public_r2, s.negative_clipped, s.submitted_at,
                 ),
             ).fetchone()
             conn.commit()
@@ -358,7 +357,7 @@ class PostgresStore:
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT id, team_key, team_display, nickname, rmse, r2, public_rmse, public_r2, negative_clipped, "
-                "submitted_at, deleted_at, filename "
+                "submitted_at, deleted_at "
                 "FROM submissions WHERE deleted_at IS NULL"
             ).fetchall()
         return [_row_to_submission(r) for r in rows]
@@ -370,7 +369,7 @@ class PostgresStore:
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT id, team_key, team_display, nickname, rmse, r2, public_rmse, public_r2, negative_clipped, "
-                "submitted_at, deleted_at, filename "
+                "submitted_at, deleted_at "
                 "FROM submissions WHERE %s::text IS NULL OR team_key = %s ORDER BY id DESC",
                 (team_key, team_key),
             ).fetchall()
@@ -488,5 +487,4 @@ def _row_to_submission(r) -> Submission:
         negative_clipped=int(r[8]),
         submitted_at=submitted,
         deleted_at=deleted,
-        filename=r[11],
     )

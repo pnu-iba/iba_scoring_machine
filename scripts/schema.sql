@@ -76,6 +76,3 @@ BEGIN
         VALUES (1, DATE '2026-09-22', DATE '2026-10-05', 3);
     END IF;
 END $$;
-
--- Original upload basename; older submissions have no filename.
-ALTER TABLE submissions ADD COLUMN IF NOT EXISTS filename TEXT;

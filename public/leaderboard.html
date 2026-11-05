@@ -67,7 +67,7 @@
   <div class="file-table-scroll">
   <table class="file-table" id="board">
     <thead>
-      <tr><th>Rank</th><th>Team</th><th class="num">RMSE</th><th class="num" aria-label="R squared">R<sup class="sq">2</sup></th><th class="num">Final RMSE (rank)</th><th class="num">File name</th></tr>
+      <tr><th>Rank</th><th>Team</th><th class="num">RMSE</th><th class="num" aria-label="R squared">R<sup class="sq">2</sup></th><th class="num">Final RMSE (rank)</th><th class="num">Submission</th></tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -123,10 +123,13 @@
     { team: "4", rmse: 2467.19, r2: 0.9378, submitted_at: "2026-09-29T11:47:00+09:00" },
   ];
   function withSampleEntries(entries, final) {
-    const add = SAMPLE_ROWS.filter((s) => !entries.some((e) => e.team === s.team)).flatMap((s) => [
-      { team: s.team, rmse: s.public_rmse, r2: s.public_r2, best: true, submitted_at: s.submitted_at, ...(final ? { final_rmse: s.rmse } : {}) },
-      ...SAMPLE_EXTRA.filter((x) => x.team === s.team).map((x) => ({ ...x, best: false })),
-    ]);
+    const add = SAMPLE_ROWS.filter((s) => !entries.some((e) => e.team === s.team)).flatMap((s) => {
+      const older = SAMPLE_EXTRA.filter((x) => x.team === s.team).map((x, i) => ({ ...x, best: false, no: i + 1 }));
+      return [
+        { team: s.team, rmse: s.public_rmse, r2: s.public_r2, best: true, no: older.length + 1, submitted_at: s.submitted_at, ...(final ? { final_rmse: s.rmse } : {}) },
+        ...older,
+      ];
+    });
     const all = [...entries, ...add].sort((a, b) => a.rmse - b.rmse);
     // 임시 기록이 섞였으니 최종 순위를 다시 매긴다(팀 대표 제출끼리 최종 RMSE 순).
     all.filter((e) => e.final_rmse != null).sort((a, b) => a.final_rmse - b.final_rmse).forEach((e, i) => { e.final_rank = i + 1; });
@@ -144,23 +147,21 @@
       [teams[i], teams[j]] = [teams[j], teams[i]];
     }
     const seen = new Set();
-    const revisions = new Map();
-    const fileBases = {1: "1조_1차제출", 2: "t2_pred", 3: "3조_pred", 4: "t4_final"};
+    const counts = new Map();
+    teams.forEach(team => counts.set(team, (counts.get(team) || 0) + 1));
     return teams.map((team, i) => {
       const best = !seen.has(team);
       seen.add(team);
       const finalRank = seen.size;
-      const version = (revisions.get(team) || 0) + 1;
-      revisions.set(team, version);
-      const shortName = `${fileBases[team]}${version > 1 ? `_v${version}` : ""}.csv`;
-      const filename = i === 4 ? `${team}조_회귀모델_최종예측결과_수정본.csv`
-        : i === 11 ? `team_${team}_final_predictions_revised.csv` : i === 2 ? "asdf.csv" : shortName;
+      // 점수가 좋은 제출일수록 뒤에 낸 것으로 보이게, 팀 안에서 번호를 거꾸로 매긴다
+      const no = counts.get(team);
+      counts.set(team, no - 1);
       return {
         team: String(team),
         rmse: Number((1800.25 + i * 12.37).toFixed(2)),
         r2: Number((.97 - i * .0015).toFixed(4)),
         best,
-        filename,
+        no,
         submitted_at: "2026-10-04T12:00:00+09:00",
         ...(final && best ? {final_rmse: 1950.50 + (finalRank - 1) * 45.25, final_rank: finalRank} : {}),
       };
@@ -177,14 +178,11 @@
   // Public: 제출 한 건이 한 줄. 최종 RMSE 칸은 팀 대표 제출에만(마감 전에는 가림 막대, 뒤에는 값), 나머지는 빈칸.
   function entryHtml(e, i, myTeam) {
     const finalCell = !e.best ? '<span class="final-dash">-</span>' : e.final_rmse != null ? `${f.rmse(e.final_rmse)} (${two(e.final_rank)})` : REDACT;
-    const filename = e.filename || "—";
-    const extension = /\.csv$/i.test(filename) ? filename.slice(-4) : "";
-    const stem = extension ? filename.slice(0, -4) : filename;
     return `<tr><td><span class="rank">${two(i + 1)}</span></td>${teamCell(e.team, myTeam)}
       <td class="num">${f.rmse(e.rmse)}</td>
       <td class="num">${f.r2(e.r2)}</td>
       <td class="num soft${!e.best ? ' final-empty' : ''}">${finalCell}</td>
-      <td class="num soft file-name" title="${esc(e.filename || "")}"><span class="file-name-text"><span class="file-name-stem">${esc(stem)}</span><span class="file-name-extension">${esc(extension)}</span></span></td></tr>`;
+      <td class="num soft">${e.no != null ? `#${e.no}` : "—"}</td></tr>`;
   }
   function draw() {
     const { entries, final, user } = last;

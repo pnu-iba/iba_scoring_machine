@@ -270,8 +270,10 @@
     result.hidden = true;
     result.textContent = "";
     fileEl.value = "";
+    // 리더보드의 Submission 칸과 같은 번호. 어느 파일이 몇 점이었는지 팀이 맞춰 볼 수 있게 한다.
+    el("sequenceLabel").textContent = b.no ? `submission #${b.no}, public score (30% of test data)` : "public score (30% of test data)";
     const remaining = b.demo ? "구경용 계정이라 기록되지 않음." : b.unlimited ? "로컬 테스트: 제출 횟수 제한 없음." : `오늘 ${b.remaining_today}회 남음.`;
-    announcement.textContent = `채점 완료. Public ${score}. 현재 팀 순위 ${b.rank ?? "-"}위. ${remaining}`;
+    announcement.textContent = `채점 완료.${b.no ? ` 팀의 ${b.no}번째 제출.` : ""} Public ${score}. 현재 팀 순위 ${b.rank ?? "-"}위. ${remaining}`;
 
   }
 

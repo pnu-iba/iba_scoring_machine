@@ -190,7 +190,9 @@ def _public_entries(store: Store, final: bool) -> list[dict]:
 
     최종 점수(final_rmse)와 최종 순위(final_rank)는 마감 뒤, 그리고 팀 대표(best) 제출에만 넣는다. 대회 중에는 어떤 제출의 최종 점수도 내보내지 않는다.
     """
-    active = [s for s in store.list_submissions() if s.deleted_at is None]
+    everything = store.list_submissions()
+    no = _submission_numbers(everything)
+    active = [s for s in everything if s.deleted_at is None]
     key = _public_key
     best_ids = {}
     for s in active:
@@ -203,7 +205,7 @@ def _public_entries(store: Store, final: bool) -> list[dict]:
     for s in sorted(active, key=key):
         e = {
             "team": s.team_display,
-            "filename": s.filename,
+            "no": no[s.id],
             "rmse": s.public_rmse,
             "r2": s.public_r2,
             "best": s.id in best,
@@ -214,6 +216,16 @@ def _public_entries(store: Store, final: bool) -> list[dict]:
             e["final_rank"] = final_rank.get(s.team_key)
         entries.append(e)
     return entries
+
+
+def _submission_numbers(subs: list[Submission]) -> dict[int, int]:
+    """팀 안에서 몇 번째 제출인지. 삭제된 제출도 세어서, 관리자가 지워도 다른 제출의 번호가 바뀌지 않는다."""
+    count: dict[str, int] = {}
+    numbers = {}
+    for s in sorted(subs, key=lambda s: s.id):
+        count[s.team_key] = count.get(s.team_key, 0) + 1
+        numbers[s.id] = count[s.team_key]
+    return numbers
 
 
 def _kst(dt: datetime) -> str:
@@ -430,7 +442,6 @@ async def submit(
         public_r2=public.r2,
         negative_clipped=full.negative_clipped,
         submitted_at=now,
-        filename=(file.filename or "").replace("\\", "/").rsplit("/", 1)[-1] or None,
     )
     store.insert_submission(record)
 
@@ -444,6 +455,7 @@ async def submit(
         "resets_at": quota["resets_at"],
         "rank": _team_rank(store, team_key),
         "team": user.team_display,
+        "no": len(store.list_submissions(team_key)),
     }
 
 

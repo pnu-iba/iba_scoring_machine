@@ -21,12 +21,12 @@
 4. 후배 팀원으로서, 오늘 우리 팀이 몇 회 제출했고 몇 회 남았는지 제출 전에 보고 싶다.
 5. 후배 팀원으로서, 하루 3회를 다 쓴 상태로 제출하면 채점되지 않고 "오늘 제출 횟수를 모두 사용했다"는 안내와 초기화 시각을 보고 싶다.
 6. 후배 팀원으로서, 제출 형식 안내(헤더, 행 수 39,085, test.csv와 같은 순서, 행 순서를 바꾸지 말 것)와 `sample_submission.csv` 다운로드 링크를 사용법 페이지에서 보고 싶다.
-7. 후배 팀원으로서, 제출 페이지에서 우리 팀이 낸 제출을 번호, 낸 사람, 시각, public 점수와 함께 보고, 그중 최종 순위에 쓸 제출 하나를 마감 전까지 고르고 싶다. 팀원 누구나 바꿀 수 있고 마지막으로 고른 것이 남는다. 고르지 않았거나, 고른 제출을 관리자가 삭제하면 public 최고 기록이 쓰인다.
+7. 후배 팀원으로서, 제출 페이지에서 우리 팀이 낸 제출을 번호, 낸 사람, 시각, public 점수와 함께 보고, 그중 최종 순위에 쓸 제출 하나를 마감 전까지 고르고 싶다. 팀원 누구나 바꿀 수 있고 마지막으로 고른 것이 남는다. 고르지 않았거나, 고른 제출을 관리자가 삭제하면 public 최고 기록이 쓰인다. 제출 직후 결과 화면에도 목록과 같은 #1, #2 번호가 나와서 어느 파일이 몇 점이었는지 맞춰 볼 수 있다.
 
 ### 리더보드
 
-8. 동아리원으로서, 팀별로 팀 번호·RMSE·R²가 RMSE 오름차순으로 정렬된 리더보드를 로그인 없이 보고 싶다. 대회 중에는 public 구간 점수로, 마감 뒤에는 전체 데이터 점수로 정렬된다. 마감 뒤에는 최종 순위가 기본으로 보이고, 대회 중 public 순위로 바꿔 볼 수 있다. 이번 기수 팀(1-4팀)은 제출하지 않았어도 표에 항상 보인다.
-9. 동아리원으로서, 리더보드에서 모든 제출을 한 줄씩 보고, 각 줄에 팀 안에서 몇 번째 제출인지 #1, #2 같은 번호로 함께 보이길 원한다. 제출 직후 결과 화면에도 같은 번호가 나와서 어느 파일이 몇 점이었는지 맞춰 볼 수 있다. 최종 순위에는 팀이 고른 제출 한 건이 쓰이고, 고르지 않은 팀은 public 최고 기록(public RMSE 최소)이 쓰인다.
+8. 동아리원으로서, 로그인 없이 리더보드를 보고 싶다. 리더보드는 기록이 있는 팀마다 한 줄이고, 팀의 public 최고 기록(public RMSE 최소)으로 순위를 매긴다. 다른 팀이 몇 번 제출했는지는 보이지 않는다.
+9. 동아리원으로서, 마감 뒤에는 같은 표에서 팀별 최종 RMSE와 최종 순위를 보고 싶다. 최종 RMSE는 팀이 고른 최종 제출의 전체 데이터 점수이고, 고르지 않은 팀은 public 최고 기록의 점수다. 마감 전에는 이 칸을 가려 둔다.
 10. 동아리원으로서, RMSE가 같은 팀은 R²가 높은 쪽, 그것도 같으면 먼저 제출한 쪽이 위에 오길 원한다.
 
 ### 홈 화면·미니게임
@@ -93,11 +93,11 @@
 - `GET /api/me` — 로그인한 사용자 `{ username, nickname, team, is_admin }`, 로그인하지 않았으면 `null`.
 - `GET /api/contest` — `{ start, end, status, final_at, daily_limit }`. `status`는 `ready`·`open`·`final`.
 - `POST /api/submit` (로그인 필요) — multipart: `file`. 로그인하지 않았으면 401. 성공 200: `{ rmse, r2, negative_clipped, remaining_today, rank, no }`(점수와 순위는 public 기준, `no`는 팀 안에서 몇 번째 제출인지). 검증 실패 400: `{ error_code, message, row? }`. 한도 초과 429: `{ message, resets_at }`. 시작 전 403 `contest_not_started`, 마감 뒤 403 `contest_closed`, 관리자 계정 403 `admin_cannot_submit`.
-- `GET /api/team/submissions` (로그인 필요) — `{ locked, chosen_by, chosen_at, submissions }`. `submissions`는 우리 팀의 삭제되지 않은 제출을 최근 순으로 담은 `[{ id, no, nickname, public_rmse, public_r2, submitted_at, pick, auto }]`다. `pick`은 최종 순위에 쓸 제출, `auto`는 public 최고 제출이다. `chosen_by`와 `chosen_at`은 팀이 직접 골랐을 때만 들어가고, `locked`는 마감 뒤 참이다. 관리자와 구경용 계정은 빈 목록을 받는다.
+- `GET /api/team/submissions` (로그인 필요) — `{ locked, chosen_by, chosen_at, submissions }`. `submissions`는 우리 팀의 삭제되지 않은 제출을 최근 순으로 담은 `[{ id, no, nickname, public_rmse, public_r2, submitted_at, pick, auto }]`다. `no`는 팀 안의 제출 순번으로, 삭제된 제출도 순번을 차지해서 관리자가 제출을 지워도 다른 번호는 바뀌지 않는다. `pick`은 최종 순위에 쓸 제출, `auto`는 public 최고 제출이다. `chosen_by`와 `chosen_at`은 팀이 직접 골랐을 때만 들어가고, `locked`는 마감 뒤 참이다. 관리자와 구경용 계정은 빈 목록을 받는다.
 - `POST /api/team/final-choice` (로그인 필요) — JSON `{ submission_id }`. 그 제출을 최종 제출로 정하고, `null`이면 고른 것을 지워 public 최고 제출로 되돌린다. 성공하면 `GET /api/team/submissions`와 같은 본문을 돌려준다. 우리 팀 제출이 아니거나 삭제된 제출이면 400 `bad_submission`, 마감 뒤 403 `contest_closed`, 관리자와 구경용 계정 403 `cannot_choose`.
 - `POST /api/games/{game}/score` (로그인 필요) — JSON `{ score }`. `game`은 `apple`(상한 170), `tetris`, `blocks`, `shooter`, `snake`. 성공 200: `{ rank, best }`(내 순위와 내 최고 점수). 없는 게임 404, 범위 밖 점수 400.
 - `GET /api/games/{game}/leaderboard` — 사람별 최고 점수: `[{ rank, team, nickname, score, played_at, mine }]`. 점수 내림차순, 동점이면 먼저 기록한 쪽. `mine`은 로그인한 사람의 기록인지 여부다.
-- `GET /api/leaderboard` — `{ final, final_at, teams, rows, entries }`. `teams`는 이번 기수 팀 번호 목록으로, 제출이 없는 팀도 표에 넣을 수 있게 준다. `rows`는 팀별 public 최고 기록 `[{ rank, team, nickname, rmse, r2, submitted_at }]`. 대회 중에는 public 점수로, `final`이 참이면 전체 데이터 점수로 정렬하고 각 행에 `public_rmse`, `public_r2`, `public_rank`를 더한다. RMSE 오름차순, 동점 시 R² 내림차순, 그다음 `submitted_at` 오름차순. `entries`는 삭제되지 않은 모든 제출을 public 점수 순으로 담고, 팀별 최종 제출에 `best`를 표시한다. 각 제출의 `no`는 팀 안의 제출 순번이다. 삭제된 제출도 순번을 차지해서 관리자가 제출을 지워도 다른 제출의 번호는 바뀌지 않는다. 최종 점수와 최종 순위는 마감 뒤 `best` 제출에만 넣는다.
+- `GET /api/leaderboard` — `{ final, final_at, teams, rows }`. `teams`는 이번 기수 팀 번호 목록으로, 제출이 없는 팀도 표에 넣을 수 있게 준다. `rows`는 팀별 public 최고 기록 `[{ rank, team, nickname, rmse, r2, submitted_at }]`. 대회 중에는 public 점수로 정렬한다. `final`이 참이면 팀별 최종 제출을 전체 데이터 점수로 정렬하고, 각 행에 팀의 public 최고 기록 `public_rmse`, `public_r2`와 `public_rank`를 더한다. RMSE 오름차순, 동점 시 R² 내림차순, 그다음 `submitted_at` 오름차순. 팀별 제출 목록은 내보내지 않는다.
 - `GET /api/quota` (로그인 필요) — 우리 팀의 `{ used_today, remaining_today, resets_at, limit }`.
 - `/api/admin/*` — 관리자 계정으로 로그인해야 한다. 비로그인 401, 일반 사용자 403. 권한은 요청마다 DB에서 읽은 계정으로 확인한다.
   - `GET /overview` — 대회 상태, 시작·마감 시각, 정답 행 수, 제출 수, 가입자 수.
@@ -113,7 +113,7 @@
 - 홈: 사이트 이름과 사용법·로그인 바로가기만 있는 첫 화면.
 - 사용법: 과제 설명, 데이터 및 코드 다운로드, 채점 방식과 제출 규칙. train/test/sample_submission/brand_model.csv와 baseline 노트북을 하나씩 받거나 다섯 개를 묶은 dataset.zip으로 한 번에 받는다. 모두 정적 파일로 제공하고, answer는 절대 포함하지 않는다.
 - 채점: 로그인하지 않았으면 로그인·회원가입 안내. 로그인했으면 파일 선택, 남은 횟수 표시, 제출 결과(점수·현재 순위·음수 처리 안내) 또는 오류 메시지 표시. 그 아래에 우리 팀 제출 목록을 두고, 마감 전에는 줄마다 최종 제출로 고르는 버튼과 자동으로 되돌리는 버튼을 보여 준다.
-- 리더보드: 표 하나. 이번 기수 팀은 제출이 없어도 "제출 없음" 행으로 보이고, 행에는 팀 번호만 쓰고 닉네임은 쓰지 않는다. 마감 뒤에는 최종 순위가 기본이고 대회 중 public 순위로 전환할 수 있다. 페이지 로드 시 조회, 새로고침 버튼. 캐시 없이 매번 조회(요청량이 작다).
+- 리더보드: 표 하나. 기록이 있는 팀마다 한 줄이고, 팀 번호만 쓰고 닉네임은 쓰지 않는다. public 최고 점수 순으로 놓고, Final RMSE 칸은 마감 전에는 가리고 마감 뒤에는 최종 RMSE와 최종 순위를 보여 준다. 페이지 로드 시 조회, 새로고침 버튼. 캐시 없이 매번 조회(요청량이 작다).
 - 미니게임: 게임 목록 페이지와 사과게임·테트리스·블록깨기·슈팅게임·스네이크 페이지. 게임은 브라우저에서만 돌고, 조작은 키보드·마우스만 지원한다. 개인 최고 기록은 브라우저(localStorage)에 저장한다. 게임 페이지마다 사람별 순위 표가 있고, 로그인한 상태로 게임을 마치면 점수를 서버에 기록한다. 점수는 브라우저가 계산해 보내므로 게임별 상한을 넘는 값만 거절하고, 그 이상의 조작 방지는 하지 않는다.
 - 로그인·회원가입: 가입 후 원래 보던 페이지로 돌아간다.
 - 관리자: 관리자 계정에만 사이드바 메뉴가 보인다. 현황, 대회 설정, 제출, 사용자, 채점 확인과 초기화 다섯 탭. 기수 초기화는 결과 zip을 내려받고 확인 문구를 입력해야 실행된다.

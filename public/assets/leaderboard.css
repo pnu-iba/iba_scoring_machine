@@ -68,7 +68,7 @@ main.page.board-page { padding-top: 88px; padding-bottom: 40px; overflow: clip; 
 
 
 /* 꼬리 */
-.file-foot { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 16px 24px; margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--ink-dark); }
+.file-foot { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 16px 24px; margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--ink-dark); }
 .sign { align-self: start; }   /* 사진이 하단 칸을 높여도 서명란은 구분선 바로 아래에 둔다 */
 .sign .k { margin: 0; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); }
 /* 서명 대신 빨간 인장: 테두리 상자 + 잉크가 군데군데 빠진 질감, 살짝 기울여 찍은 느낌 */

@@ -32,6 +32,7 @@ main.page.about-page { max-width: 1440px; padding: 140px 48px 72px; display: gri
 }
 .cd-motion { position: absolute; inset: 0; transform-origin: var(--hinge, 50% 90%); transition: transform 280ms var(--ease); }
 .cd-image { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none; user-select: none; }
+.cd-repaired .cd-image { overflow: hidden; filter: brightness(.94); }
 .cd-layer.is-active, .cd-layer.is-turning { z-index: 5; }
 .cd-toggle {
   position: absolute; inset: 0; width: 100%; height: 100%; padding: 0;
@@ -78,7 +79,7 @@ main.page.about-page { max-width: 1440px; padding: 140px 48px 72px; display: gri
 @media (max-width: 700px) {
   main.page.about-page { padding: 130px 16px 48px; }
   .cd-scene { display: grid; width: min(100%, 320px); aspect-ratio: auto; gap: 36px; }
-  .cd-ground, .cd-decor { display: none; }
+  .cd-ground, .cd-decor, .cd-seam-underlay { display: none; }
   .cd-person { position: relative; left: auto; top: auto; width: 100%; height: auto; aspect-ratio: 480 / 420; }
   .cd-anchor { width: var(--case-width, 100%); height: var(--case-height, 100%); }
 }

@@ -562,11 +562,12 @@
   function drawTeamSubs(b) {
     const section = el("teamSubs");
     section.hidden = !b.submissions.length;
+    el("teamSubsCue").hidden = section.hidden;
     if (section.hidden) return;
     const f = window.IBA.fmt, esc = window.IBA.esc;
     const pick = b.submissions.find((s) => s.pick);
     let line = `final submission: #${pick.no}`;
-    line += b.chosen_by ? `, chosen by ${b.chosen_by} at ${f.time(b.chosen_at)}` : " (best public score, picked automatically)";
+    line += b.chosen_by ? `, chosen by ${b.chosen_by} at ${f.time(b.chosen_at)}` : "";
     if (b.locked) line += ", locked after the deadline";
     el("teamFinal").innerHTML = esc(line) +
       (b.chosen_by && !b.locked ? ' <button type="button" class="team-subs-use" data-id="">use best public instead</button>' : "");

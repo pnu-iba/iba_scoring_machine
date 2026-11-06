@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400..700&family=Playfair+Display:wght@700;900&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
   <link rel="stylesheet" href="/assets/chrome.css">
   <link rel="stylesheet" href="/assets/style.css">
-  <link rel="stylesheet" href="/assets/about.css">
+  <link rel="stylesheet" href="/assets/about.css?v=cd-tone-4">
   <!-- CD 그림 두 장을 HTML을 읽자마자 받기 시작한다(SVG 안의 image는 늦게 발견된다) -->
   <link rel="preload" as="image" href="/assets/about-cd/cd-row.jpg" fetchpriority="high">
   <link rel="preload" as="image" href="/assets/about-cd/personalized-faces.jpg" fetchpriority="high">
@@ -28,6 +28,9 @@
 <svg class="cd-ground" viewBox="0 0 1220 400" aria-hidden="true" focusable="false">
  <defs><!-- 케이스 자리 + 그 아래 8px(바닥과 맞닿은 회색 경계)을 지워, 케이스가 떠올라도 바닥에 아무것도 남지 않게 한다 -->
  <mask id="cd-ground-mask" maskUnits="userSpaceOnUse" x="0" y="0" width="1220" height="400"><rect width="1220" height="400" fill="white"/>
+  <!-- The two replacement cases have their own complete silhouettes. Remove their old, static photograph beneath them. -->
+  <rect x="230" y="12" width="220" height="384" fill="black"/>
+  <rect x="760" y="12" width="230" height="384" fill="black"/>
   <polygon points="27,345 137,345 137,378 44,392 27,385" fill="black"/>
   <polygon points="130,345 236,345 236,378 145,391 130,384" fill="black"/>
   <polygon points="230,345 336,345 336,378 245,392 230,385" fill="black"/>
@@ -41,6 +44,8 @@
  <linearGradient id="cd-floor" x1="0" y1="0" x2="0" y2="400" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f5f4f0"/><stop offset=".86" stop-color="#f6f5f1"/><stop offset=".95" stop-color="#f7f6f2"/><stop offset="1" stop-color="#f5f4f0"/></linearGradient>
  <rect width="1220" height="400" fill="url(#cd-floor)"/>
  <image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" mask="url(#cd-ground-mask)"/>
+ <rect x="230" y="12" width="220" height="384" fill="var(--bg)"/>
+ <rect x="760" y="12" width="230" height="384" fill="var(--bg)"/>
  <!-- 지운 자리는 사이트 바탕색으로 채운다. 장식 CD 6장은 바닥 띠만 지워서, 들릴 때 위쪽·옆 틈에는 원래 사진이 그대로 보인다 -->
  <filter id="cd-soft-edge" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation="1.6"/></filter>
  <polygon points="324,29 344,14 605,35 607,369 346,395 324,386" fill="#faf9f6" filter="url(#cd-soft-edge)"/>
@@ -67,11 +72,9 @@
   <svg class="cd-image" viewBox="132 24 103 346" aria-hidden="true" focusable="false"><defs><clipPath id="cd-outline-02"><polygon points="132,33 144,24 234,28 235,358 145,370 132,364"/></clipPath></defs><image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" clip-path="url(#cd-outline-02)"/></svg>
  </div>
 </div>
-<div class="cd-layer cd-decor" aria-hidden="true" data-side="left" style="--depth:3; --x:19.01639%; --y:5.75000%; --w:8.44262%; --h:87.00000%; --ratio:103/348; --turn:-1deg; --outline:polygon(0.0000% 2.2989%, 11.6505% 0.0000%, 99.0291% 0.5747%, 100.0000% 96.2644%, 12.6214% 100.0000%, 0.0000% 98.2759%)">
- <div class="cd-hover-zone" aria-hidden="true"></div>
- <div class="cd-motion">
-  <svg class="cd-image" viewBox="232 23 103 348" aria-hidden="true" focusable="false"><defs><clipPath id="cd-outline-03"><polygon points="232,31 244,23 334,25 335,358 245,371 232,365"/></clipPath></defs><image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" clip-path="url(#cd-outline-03)"/></svg>
- </div>
+<div class="cd-layer cd-decor cd-repaired" data-repair="03" aria-hidden="true" data-side="left" style="--depth:3; --x:19.01639%; --y:5.75000%; --w:17.45902%; --h:87.00000%; --ratio:213/348; --turn:-1deg; --outline:polygon(0.0000% 2.2989%, 5.6338% 0.0000%, 100.0000% 2.5862%, 100.0000% 93.3908%, 6.1033% 100.0000%, 0.0000% 98.2759%)">
+ <!-- Full generated case silhouette, framed to match the photographed row; no clipped photograph overlay. -->
+ <div class="cd-hover-zone" aria-hidden="true"></div><div class="cd-motion"><svg class="cd-image" viewBox="0 0 671 851" preserveAspectRatio="none" aria-hidden="true" focusable="false"><image href="/assets/about-cd/decor-left-complete.webp" width="671" height="851"/></svg></div>
 </div>
 <article class="cd-layer cd-person" data-cd="minsoeklee" aria-label="minsoeklee CD" data-side="left" style="--rest-yaw:48deg; --depth:4; --x:27.04918%; --y:4.50000%; --w:22.04918%; --h:89.00000%; --ratio:269/356; --turn:-1deg; --outline:polygon(0.0000% 3.3708%, 5.5762% 0.0000%, 100.0000% 5.6180%, 100.0000% 92.9775%, 5.9480% 100.0000%, 0.0000% 97.1910%)">
  <div class="cd-motion">
@@ -111,12 +114,14 @@
   </div>
  </div>
 </article>
-<div class="cd-layer cd-decor" aria-hidden="true" data-side="right" style="--depth:3; --x:71.88525%; --y:6.25000%; --w:8.85246%; --h:86.25000%; --ratio:108/345; --turn:1deg; --outline:polygon(0.0000% 4.9275%, 68.5185% 0.5797%, 82.4074% 0.0000%, 95.3704% 1.1594%, 100.0000% 2.6087%, 100.0000% 98.2609%, 93.5185% 100.0000%, 78.7037% 99.7101%, 16.6667% 99.4203%, 0.0000% 97.6812%)">
- <div class="cd-hover-zone" aria-hidden="true"></div>
- <div class="cd-motion">
-  <svg class="cd-image" viewBox="877 25 108 345" aria-hidden="true" focusable="false"><defs><clipPath id="cd-outline-06"><polygon points="877,42 951,27 966,25 980,29 985,34 985,364 978,370 962,369 895,368 877,362"/></clipPath></defs><image href="/assets/about-cd/cd-row.jpg" width="1220" height="400" clip-path="url(#cd-outline-06)"/></svg>
- </div>
+<div class="cd-layer cd-decor cd-repaired" data-repair="06" aria-hidden="true" data-side="right" style="--depth:3; --x:62.70492%; --y:6.25000%; --w:18.03279%; --h:86.25000%; --ratio:220/345; --turn:1deg; --outline:polygon(0.0000% 5.2174%, 84.5455% 0.5797%, 91.3636% 0.0000%, 97.7273% 1.1594%, 100.0000% 2.6087%, 100.0000% 98.2609%, 96.8182% 100.0000%, 89.5455% 99.7101%, 0.0000% 93.6232%)">
+ <!-- Full generated case silhouette, framed to match the photographed row; no clipped photograph overlay. -->
+ <div class="cd-hover-zone" aria-hidden="true"></div><div class="cd-motion"><svg class="cd-image" viewBox="0 0 674 860" preserveAspectRatio="none" aria-hidden="true" focusable="false"><image href="/assets/about-cd/decor-right-no-disc.webp" width="674" height="860"/></svg></div>
 </div>
+<!-- A narrow fixed overlap behind case 07 reveals the neighbouring case edge during hover. -->
+<svg class="cd-seam-underlay" viewBox="978 34 14 329" aria-hidden="true" focusable="false" style="position:absolute;left:80.16393%;top:8.5%;width:1.14754%;height:82.25%;overflow:hidden;pointer-events:none;z-index:1">
+ <image href="/assets/about-cd/cd-row.jpg" width="1220" height="400"/>
+</svg>
 <div class="cd-layer cd-decor" aria-hidden="true" data-side="right" style="--depth:2; --x:80.73770%; --y:5.75000%; --w:8.19672%; --h:86.75000%; --ratio:100/347; --turn:1deg; --outline:polygon(0.0000% 3.1700%, 73.0000% 0.5764%, 81.0000% 0.0000%, 95.0000% 1.4409%, 100.0000% 3.1700%, 100.0000% 97.9827%, 93.0000% 100.0000%, 81.0000% 100.0000%, 0.0000% 97.9827%)">
  <div class="cd-hover-zone" aria-hidden="true"></div>
  <div class="cd-motion">

@@ -14,7 +14,7 @@
     '03': ['JEONG JAE YEONG', '10th member', 'Industrial Engineering', 'God of Optimization'],
     '04': ['SIM SEONG CHUL', '10th member', 'Industrial Engineering', 'Slim Muscle Man'],
     '05': ['HAN GO EUN', '9th member', 'Business Administration', 'The President'],
-    '06': ['AHN HYEON JUN', '10th member', 'Statistics', 'Handsome Prince'],
+    '06': ['AHN HYUN JOON', '10th member', 'Statistics', 'Handsome Prince'],
     '07': ['KIM JI WON', '10th member', 'Statistics', 'Right Arm of SSUN'],
     '08': ['LEE JEONG SEO', '10th member', 'Business Administration', 'Queen of China'],
     '09': ['NO YEONG HUN', '10th member', 'Economics', 'King of Abang'],

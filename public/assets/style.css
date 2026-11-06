@@ -257,8 +257,8 @@ body:has(.auth-main) .corner-links { display: none; }
   transition: opacity 0.45s ease 0.12s, transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) 0.12s, background 160ms ease-out;
 }
 .auth-main .signup-field.input-open .sf-input-inner input { opacity: 1; transform: none; }
-/* 입력 칸 밑 안내(팀 번호 0). 칸과 같이 열린다 */
-.auth-main .sf-hint { display: block; margin-top: 6px; font-size: 16px; color: var(--muted); }
+/* 이름표 밑 안내(팀 번호 0). 입력 칸과 같이 열린다 */
+.auth-main .sf-hint { display: block; margin-top: 2px; font-size: 16px; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) {
   .auth-main .signup-field, .auth-main .sf-input, .auth-main .sf-input-inner input { transition: none; }
 }

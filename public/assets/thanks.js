@@ -9,14 +9,14 @@
   const majorLabel = document.getElementById('thanksMajor');
   const noteLabel = document.getElementById('thanksNote');
   const people = {
-    '01': ['JEON HYEONG JUN', '10th member', 'Business', '20kg Dietor'],
+    '01': ['JEON HYEONG JUN', '10th member', 'Business Administration', '20kg Dietor'],
     '02': ['OH JEONG RIN', '10th member', 'Economics', 'NYANG NYANG'],
     '03': ['JEONG JAE YEONG', '10th member', 'Industrial Engineering', 'God of Optimization'],
     '04': ['SIM SEONG CHUL', '10th member', 'Industrial Engineering', 'Slim Muscle Man'],
-    '05': ['HAN GO EUN', '9th member', 'Business', 'The President'],
+    '05': ['HAN GO EUN', '9th member', 'Business Administration', 'The President'],
     '06': ['AHN HYEON JUN', '10th member', 'Statistics', 'Handsome Prince'],
     '07': ['KIM JI WON', '10th member', 'Statistics', 'Right Arm of SSUN'],
-    '08': ['LEE JEONG SEO', '10th member', 'Business', 'Queen of China'],
+    '08': ['LEE JEONG SEO', '10th member', 'Business Administration', 'Queen of China'],
     '09': ['NO YEONG HUN', '10th member', 'Economics', 'King of Abang'],
     '10': ['HWANG HYEON SEOK', '10th member', 'Industrial Engineering', 'Sweet Butter Guy'],
     '11': ['PARK JI SEONG', '10th member', 'Industrial Engineering', 'Top of IE'],

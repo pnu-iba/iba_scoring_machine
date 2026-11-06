@@ -1,7 +1,7 @@
 """채점 사이트 API. Vercel Python 런타임이 이 파일의 `app`을 찾아 실행한다.
 
 엔드포인트:
-- POST   /api/signup                 가입(아이디·비밀번호·닉네임·팀 번호 1-4) → 세션 쿠키
+- POST   /api/signup                 가입(아이디·비밀번호·닉네임·팀 번호 1-4, 미니게임만 하면 0) → 세션 쿠키
 - POST   /api/login                  로그인 → 세션 쿠키
 - POST   /api/logout                 세션 쿠키 삭제
 - GET    /api/me                     로그인한 사용자 (로그인하지 않았으면 null)
@@ -40,7 +40,7 @@ from scoring import clock
 from scoring.clock import ContestSettings
 from scoring.metrics import score
 from scoring.parse import SubmissionError, parse_submission
-from scoring.teams import TEAMS, NameError_, clean_nickname, clean_team_display, normalize_team, signup_team
+from scoring.teams import GUEST_TEAM, TEAMS, NameError_, clean_nickname, clean_team_display, normalize_team, signup_team
 from store import (
     DEMO_USERNAME, Answers, DuplicateUsername, FinalChoice, GameScore, PostgresStore, Store, Submission, User,
     final_picks,
@@ -152,6 +152,18 @@ def _set_session(response: Response, u: User) -> None:
 
 def _bad_request(code: str, message: str) -> JSONResponse:
     return JSONResponse(status_code=400, content={"error_code": code, "message": message})
+
+
+def _is_guest(u: User) -> bool:
+    """미니게임만 하는 0번 팀. 관리자도 team_key가 0이지만 관리자 검사를 따로 한다."""
+    return u.team_key == GUEST_TEAM and not u.is_admin
+
+
+def _guest_forbidden() -> JSONResponse:
+    return JSONResponse(
+        status_code=403,
+        content={"error_code": "guest_cannot_submit", "message": "0번 팀 계정은 미니게임만 할 수 있습니다. 제출하려면 운영진에게 팀 이동을 부탁하세요."},
+    )
 
 
 def _quota_body(store: Store, team_key: str, now: datetime, limit: int) -> dict:
@@ -290,13 +302,13 @@ def _dev_any_login() -> bool:
 
 def _dev_user_for(store: Store, raw: str, password: str, now: datetime) -> User:
     """개발용: 아무 아이디·비밀번호로 로그인한다. 처음 보는 아이디면 그 이름으로 계정을 바로 만든다.
-    아이디가 admin 또는 iba_admin이면 관리자 계정으로 만든다."""
+    아이디가 admin 또는 iba_admin이면 관리자 계정으로 만든다. 0번은 제출할 수 없으므로 새 계정은 1팀으로 둔다."""
     username = raw.strip().lower() or "guest"
     user = store.get_user_by_username(username)
     if user is None:
         user = User(
             id=0, username=username, password_hash=auth.hash_password(password or "dev"),
-            nickname=(raw.strip() or "guest")[:40], team_key="0", team_display="0", created_at=now,
+            nickname=(raw.strip() or "guest")[:40], team_key="1", team_display="1", created_at=now,
             is_admin=username in {"admin", "iba_admin"},
         )
         store.create_user(user)
@@ -372,6 +384,8 @@ async def submit(
         )
     if _is_demo(user):
         return _demo_submit(await file.read(), answers)
+    if _is_guest(user):
+        return _guest_forbidden()
     team_key = user.team_key
     now = now_fn()
     state = clock.status(now, settings)
@@ -480,6 +494,8 @@ def quota(
     now_fn: Callable[[], datetime] = Depends(get_now),
     settings: ContestSettings = Depends(get_settings),
 ):
+    if _is_guest(user):
+        return _guest_forbidden()
     body = _quota_body(store, user.team_key, now_fn(), settings.daily_limit)
     body["limit"] = settings.daily_limit
     if _is_demo(user):
@@ -490,7 +506,7 @@ def quota(
 def _team_submissions_body(store: Store, user: User, locked: bool) -> dict:
     """우리 팀 제출(삭제된 것 제외, 최근 순). pick은 최종 순위에 쓸 제출, auto는 public 최고 제출이다."""
     body = {"locked": locked, "chosen_by": None, "chosen_at": None, "submissions": []}
-    if user.is_admin or _is_demo(user):
+    if user.is_admin or _is_demo(user) or _is_guest(user):
         return body
     everything = store.list_submissions(user.team_key)
     no = _submission_numbers(everything)
@@ -543,6 +559,8 @@ def choose_final(
             status_code=403,
             content={"error_code": "cannot_choose", "message": "관리자와 구경용 계정은 최종 제출을 고를 수 없습니다."},
         )
+    if _is_guest(user):
+        return _guest_forbidden()
     now = now_fn()
     # 로컬 CSV·메모리 모드에서는 제출과 같이 마감 뒤에도 고르기를 시험할 수 있다.
     locked = clock.is_final(now, settings) and not _dev_any_login()
@@ -644,7 +662,7 @@ def admin_overview(
         "submissions_today": sum(1 for s in active if day_start <= s.submitted_at < day_end),
         "submitting_teams": len({s.team_key for s in active}),
         "users": len(users),
-        "teams": len({u.team_key for u in users}),
+        "teams": len({u.team_key for u in users if u.team_key != GUEST_TEAM}),
     }
 
 
@@ -751,7 +769,7 @@ def admin_update_user(
         return _bad_request("self_demote", "자기 자신의 관리자 권한은 해제할 수 없습니다.")
     if body.team is not None:
         try:
-            team_key = signup_team(body.team)   # 가입과 같이 이번 기수 팀 번호로만 옮긴다
+            team_key = signup_team(body.team)   # 가입과 같이 이번 기수 팀 번호나 0번으로만 옮긴다
         except NameError_ as e:
             return _bad_request("bad_name", str(e))
         # 이미 낸 제출은 원래 팀에 남는다. 표기는 옮겨 가는 팀의 첫 표기를 따른다.

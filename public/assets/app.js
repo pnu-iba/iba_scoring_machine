@@ -117,6 +117,9 @@
   }
 
   // 본문 페이지의 우측 상단: 비로그인 시 가입 진입, 로그인 시 계정·로그아웃 두 줄.
+  // 0번 팀은 미니게임만 하는 동아리원이라 팀 번호 대신 Guest로 보여 준다.
+  const teamLabel = (team) => (team === "0" ? "Guest" : `Team ${team}`);
+
   function renderAuth(user) {
     const corner = document.getElementById("cornerLinks");
     if (!user) {
@@ -126,7 +129,7 @@
     if (user.is_admin) {
       document.querySelector("#sidebar .side-nav").insertAdjacentHTML("beforeend", `<li>${link(ADMIN_PAGE)}</li>`);
     }
-    corner.insertAdjacentHTML("beforeend", `<span class="who">${user.is_admin ? esc(user.nickname) : `[Team ${esc(user.team)}] ${esc(user.nickname)}`}</span><button type="button" id="logoutBtn">Sign out</button>`);
+    corner.insertAdjacentHTML("beforeend", `<span class="who">${user.is_admin ? esc(user.nickname) : `[${esc(teamLabel(user.team))}] ${esc(user.nickname)}`}</span><button type="button" id="logoutBtn">Sign out</button>`);
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await api("/api/logout", { method: "POST" });
       location.assign("/");   // 어느 페이지에서 로그아웃하든 메인 페이지로
@@ -188,7 +191,7 @@
     table.querySelector("tbody").innerHTML = rows.map((row) => `
       <tr${row.mine ? ' class="mine"' : ""}>
         <td><span class="rank-badge${row.rank === 1 ? " first" : ""}">${row.rank}</span></td>
-        <td><div class="team"><span class="avatar">${userIcon}</span><div><div class="name">${esc(row.nickname)}${row.mine ? ' <span class="tag">나</span>' : ""}</div><div class="sub">Team ${esc(row.team)}</div></div></div></td>
+        <td><div class="team"><span class="avatar">${userIcon}</span><div><div class="name">${esc(row.nickname)}${row.mine ? ' <span class="tag">나</span>' : ""}</div><div class="sub">${esc(teamLabel(row.team))}</div></div></div></td>
         <td class="num score-main">${fmt.int(row.score)}</td>
         <td class="num faint" title="${fmt.time(row.played_at)}">${fmt.ago(row.played_at)}</td>
       </tr>`).join("");

@@ -624,6 +624,13 @@
       drawSigninArrow();
       return;
     }
+    // 0번 팀(게스트)은 제출할 수 없어 폼 대신 안내만 보여 준다
+    if (user.team === "0" && !user.is_admin) {
+      el("signinPromptText").textContent = "Guest accounts can only play minigames.";
+      el("needLogin").hidden = false;
+      reveal();
+      return;
+    }
     el("formCard").hidden = false;
     reveal();
     demo = !!user.demo;

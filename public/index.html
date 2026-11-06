@@ -87,7 +87,7 @@
   }
   const who = document.createElement("span");
   who.className = "who";
-  who.textContent = user.is_admin ? user.nickname : `[Team ${user.team}] ${user.nickname}`;   // 관리자는 팀 없이 이름(Admin)만
+  who.textContent = user.is_admin ? user.nickname : `[${user.team === "0" ? "Guest" : `Team ${user.team}`}] ${user.nickname}`;   // 관리자는 팀 없이 이름(Admin)만, 0번 팀은 Guest
   const out = document.createElement("button");
   out.type = "button";
   out.textContent = "Sign out";

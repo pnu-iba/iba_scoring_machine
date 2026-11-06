@@ -2,7 +2,7 @@
 
 팀은 가입할 때 적은 팀 번호로 식별한다. 숫자만 받으며, 앞뒤 공백을 지우고 전각 숫자를
 반각으로 바꾼(NFKC) 뒤 앞자리 0을 떼어 같은 팀으로 본다("03"과 "3"은 같은 팀).
-가입과 관리자 페이지의 팀 번호 변경은 TEAMS에 있는 번호만 받고, 관리자 페이지의 필터는 숫자이기만 하면 된다.
+가입과 관리자 페이지의 팀 번호 변경은 TEAMS에 있는 번호와 GUEST_TEAM만 받고, 관리자 페이지의 필터는 숫자이기만 하면 된다.
 """
 
 from __future__ import annotations
@@ -14,6 +14,8 @@ MAX_TEAM_LEN = 40
 MAX_NICKNAME_LEN = 40
 # 이번 기수 팀 번호. 가입은 이 번호로만 받고, 리더보드는 제출이 없어도 이 팀들을 보여준다.
 TEAMS = ("1", "2", "3", "4")
+# 프로젝트에 참가하지 않고 미니게임만 하는 동아리원. 제출할 수 없고 리더보드에 나오지 않는다.
+GUEST_TEAM = "0"
 
 _WS = re.compile(r"\s+")
 
@@ -47,8 +49,8 @@ def normalize_team(raw: str) -> str:
 
 def signup_team(raw: str) -> str:
     team = normalize_team(raw)
-    if team not in TEAMS:
-        raise NameError_(f"팀 번호는 {', '.join(TEAMS)} 중 하나여야 합니다.")
+    if team not in TEAMS and team != GUEST_TEAM:
+        raise NameError_(f"팀 번호는 {', '.join(TEAMS)} 중 하나여야 합니다. 미니게임만 할 거면 {GUEST_TEAM}을 입력하세요.")
     return team
 
 

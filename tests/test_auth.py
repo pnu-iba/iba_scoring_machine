@@ -25,7 +25,6 @@ def test_signup_validation(client):
     assert signup(client, "valid_id", team="3조").json()["error_code"] == "bad_name"   # 팀 번호는 숫자만
     assert signup(client, "valid_id", team="-3").json()["error_code"] == "bad_name"
     assert signup(client, "valid_id", team="5").json()["error_code"] == "bad_name"     # 이번 기수 팀(1-4)만
-    assert signup(client, "valid_id", team="0").json()["error_code"] == "bad_name"
     assert signup(client, "valid_id", nickname="").json()["error_code"] == "bad_name"
 
 

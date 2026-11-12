@@ -38,7 +38,7 @@ label.check { display: flex; align-items: center; gap: 8px; font-weight: 500; }
 .admin-table tr.deleted td { color: var(--muted); text-decoration: line-through; }
 .admin-table tr.deleted td:last-child { text-decoration: none; }
 .admin-table td.wrap { white-space: normal; }
-
+.admin-table .sub-no { margin-right: 8px; color: var(--ink-2); }
 .check-result { margin-top: 12px; }
 
 /* 기수 초기화: 따뜻한 바탕과 어울리게 채도를 낮춘 벽돌색으로 구분한다 */

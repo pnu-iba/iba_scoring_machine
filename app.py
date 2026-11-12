@@ -705,7 +705,38 @@ async def admin_score_check(file: UploadFile = File(...), answers: Answers = Dep
 @admin.get("/submissions")
 def admin_submissions(team: str | None = None, include_deleted: bool = True, store: Store = Depends(get_store)):
     rows = store.list_submissions(_team_filter(team))
-    return [_submission_row(s) for s in rows if include_deleted or s.deleted_at is None]
+    no = _submission_numbers(rows)
+    return [{**_submission_row(s), "no": no[s.id]} for s in rows if include_deleted or s.deleted_at is None]
+
+
+@admin.get("/teams")
+def admin_teams(store: Store = Depends(get_store)):
+    """팀별 요약. 지금 마감한다고 쳤을 때의 최종 순위 순서로, public 최고·전체 최고·최종 제출을 팀 안 순번과 함께 준다."""
+    everything = store.list_submissions()
+    no = _submission_numbers(everything)
+    active = [s for s in everything if s.deleted_at is None]
+    choices = store.final_choices()
+    picks = final_picks(active, choices)
+    public_best = final_picks(active, {})
+
+    def brief(s: Submission) -> dict:
+        return {"id": s.id, "no": no[s.id], "rmse": s.rmse, "r2": s.r2, "public_rmse": s.public_rmse, "public_r2": s.public_r2}
+
+    rows = []
+    for r in store.leaderboard(final=True):
+        team = [s for s in active if s.team_key == r.team_key]
+        pick = picks[r.team_key]
+        choice = choices.get(r.team_key)
+        rows.append({
+            "rank": r.rank,
+            "public_rank": r.public_rank,
+            "team": r.team,
+            "submissions": len(team),
+            "public_best": brief(public_best[r.team_key]),
+            "full_best": brief(min(team, key=lambda s: (s.rmse, -s.r2, s.submitted_at))),
+            "final": {**brief(pick), "chosen_by": choice.chosen_by if choice and choice.submission_id == pick.id else None},
+        })
+    return rows
 
 
 @admin.delete("/submissions/{submission_id}")

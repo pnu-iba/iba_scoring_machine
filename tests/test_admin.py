@@ -9,6 +9,7 @@ from scoring.clock import ContestSettings
 from tests.conftest import (
     ANSWER_ROWS,
     PASSWORD,
+    PUBLIC,
     SETTINGS,
     csv_bytes,
     login_admin,
@@ -166,6 +167,38 @@ def test_deleting_all_submissions_removes_team_from_leaderboard(client, store):
     for s in client.get("/api/admin/submissions").json():
         client.delete(f"/api/admin/submissions/{s['id']}")
     assert client.get("/api/leaderboard").json()["rows"] == []
+
+
+def test_submissions_carry_team_number(client, store):
+    submit(client, csv_bytes(perfect_rows()), team="1")
+    submit(client, csv_bytes(perfect_rows()), team="2")
+    submit(client, csv_bytes(perfect_rows()), team="1")
+    login_admin(client, store)
+    subs = client.get("/api/admin/submissions").json()
+    assert [(s["team"], s["no"]) for s in subs] == [("1", 2), ("2", 1), ("1", 1)]
+
+
+def test_team_summary_shows_best_and_final_with_numbers(client, store, clock):
+    # 1팀: 1번은 전체가 좋고 public이 나쁨, 2번은 public만 맞음. 1번을 최종으로 고른다.
+    public_only = [(i, p if pub else p + 9000) for (i, p), pub in zip(ANSWER_ROWS, PUBLIC)]
+    submit(client, csv_bytes(offset_rows(300)), team="1")
+    clock.advance(minutes=1)
+    submit(client, csv_bytes(public_only), team="1")
+    first = client.get("/api/team/submissions").json()["submissions"][-1]
+    client.post("/api/team/final-choice", json={"submission_id": first["id"]})
+    # 2팀: 한 번 제출, 고르지 않음
+    submit(client, csv_bytes(offset_rows(100)), team="2")
+
+    login_admin(client, store)
+    rows = client.get("/api/admin/teams").json()
+    assert [r["team"] for r in rows] == ["2", "1"]          # 최종 제출의 전체 RMSE 순
+    two, one = rows
+    assert (two["rank"], two["public_rank"], two["submissions"]) == (1, 2, 1)
+    assert two["final"]["no"] == 1 and two["final"]["chosen_by"] is None
+    assert one["public_rank"] == 1
+    assert one["public_best"]["no"] == 2 and one["public_best"]["public_rmse"] == 0
+    assert one["full_best"]["no"] == 1
+    assert one["final"]["no"] == 1 and one["final"]["chosen_by"] == "민석"
 
 
 def test_bad_team_filter_is_400(client, store):

@@ -63,7 +63,29 @@
     ].join("");
     $("#overviewWarn").innerHTML = o.answer_rows === 0
       ? '<p class="msg-warn">정답이 적재되지 않아 채점할 수 없습니다. README의 배포 절차대로 load_answers.py를 실행하세요.</p>' : "";
+    loadTeams();
   };
+
+  // 팀별 기록: 점수 앞에 팀 안 제출 순번(#)을 붙인다
+  async function loadTeams() {
+    const r = await api("/api/admin/teams");
+    if (!r.ok) { $("#teamEmpty").hidden = false; $("#teamEmpty").textContent = errMsg(r); $("#teamTable").hidden = true; return; }
+    const rows = r.body;
+    $("#teamEmpty").hidden = rows.length > 0;
+    $("#teamTable").hidden = rows.length === 0;
+    const no = (s) => `<span class="sub-no">#${s.no}</span>`;
+    $("#teamTable tbody").innerHTML = rows.map((t) => `
+      <tr>
+        <td class="num">${t.rank}</td>
+        <td>${esc(t.team)}</td>
+        <td class="num">${fmt.int(t.submissions)}</td>
+        <td class="num">${no(t.public_best)}${rmse(t.public_best.public_rmse)}</td>
+        <td class="num">${no(t.full_best)}${rmse(t.full_best.rmse)}</td>
+        <td>${no(t.final)}${t.final.chosen_by ? `${esc(t.final.chosen_by)}이(가) 고름` : "public 최고 (자동)"}</td>
+        <td class="num">${rmse(t.final.rmse)}</td>
+        <td class="num">${t.public_rank}</td>
+      </tr>`).join("");
+  }
 
   // --- 대회 설정 -----------------------------------------------------------
   loaders.contest = async () => {
@@ -127,6 +149,7 @@
       <tr data-id="${s.id}"${s.deleted_at ? ' class="deleted"' : ""}>
         <td class="num">${s.id}</td>
         <td>${esc(s.team)}</td>
+        <td class="num">#${s.no}</td>
         <td>${esc(s.nickname)}</td>
         <td class="num">${rmse(s.public_rmse)}</td>
         <td class="num">${rmse(s.rmse)}</td>
@@ -152,7 +175,7 @@
     let r;
     if (btn.dataset.act === "del") {
       const cells = tr.querySelectorAll("td");
-      if (!confirm(`${cells[1].textContent}팀 ${cells[2].textContent}의 제출 #${id}번을 삭제할까요?`)) return;
+      if (!confirm(`${cells[1].textContent}팀 ${cells[3].textContent}의 제출 ${cells[2].textContent}번을 삭제할까요?`)) return;
       r = await api(`/api/admin/submissions/${id}`, { method: "DELETE" });
     } else {
       r = await api(`/api/admin/submissions/${id}/restore`, { method: "POST" });

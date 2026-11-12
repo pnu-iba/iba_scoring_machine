@@ -45,6 +45,17 @@
         <div id="overviewWarn"></div>
         <ul class="kv" id="overviewList"></ul>
       </div>
+      <div class="card flush">
+        <div class="card-head"><h2>팀별 기록</h2></div>
+        <div class="table-wrap">
+          <table class="admin-table" id="teamTable">
+            <thead><tr><th class="num">순위</th><th>팀</th><th class="num">제출</th><th class="num">Public 최고</th><th class="num">전체 최고</th><th>최종 제출</th><th class="num">최종 RMSE</th><th class="num">Public 순위</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p class="empty" id="teamEmpty" hidden>제출한 팀이 없습니다.</p>
+        <div class="card-foot">순위는 지금 마감한다고 쳤을 때의 최종 순위입니다. #은 팀 안의 제출 순번으로, 제출 탭의 순번과 같습니다. 점수는 Public 최고는 public RMSE, 나머지는 전체 RMSE입니다.</div>
+      </div>
     </section>
 
     <!-- 대회 설정 -->
@@ -76,7 +87,7 @@
         </div>
         <div class="table-wrap">
           <table class="admin-table" id="subTable">
-            <thead><tr><th class="num">ID</th><th>팀</th><th>닉네임</th><th class="num">Public RMSE</th><th class="num">전체 RMSE</th><th class="num">전체 R²</th><th class="num">음수 처리</th><th>제출 시각</th><th></th></tr></thead>
+            <thead><tr><th class="num">ID</th><th>팀</th><th class="num">순번</th><th>닉네임</th><th class="num">Public RMSE</th><th class="num">전체 RMSE</th><th class="num">전체 R²</th><th class="num">음수 처리</th><th>제출 시각</th><th></th></tr></thead>
             <tbody></tbody>
           </table>
         </div>

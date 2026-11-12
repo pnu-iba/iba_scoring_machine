@@ -103,7 +103,8 @@
   - `GET /overview` — 대회 상태, 시작·마감 시각, 정답 행 수, 제출 수, 가입자 수.
   - `PUT /contest` — `{ start, end, daily_limit }`. 시작일이 마지막 날보다 늦거나 횟수가 1-100 밖이면 400.
   - `POST /score-check` — multipart `file`. 기록과 횟수에 남기지 않고 public·전체 점수를 돌려준다.
-  - `GET /submissions?team=&include_deleted=` — 제출 목록, 최신순. `DELETE /submissions/{id}`는 소프트 삭제, `POST /submissions/{id}/restore`는 복구(그날 한도는 다시 확인하지 않음). 대상이 없으면 404.
+  - `GET /teams` — 팀별 요약. 지금 마감한다고 쳤을 때의 최종 순위 순서로 `[{ rank, public_rank, team, submissions, public_best, full_best, final }]`를 준다. `public_best`는 public 최고 제출, `full_best`는 전체 데이터 점수가 가장 좋은 제출, `final`은 최종 순위에 쓸 제출이며 셋 다 `{ id, no, rmse, r2, public_rmse, public_r2 }`이고 `final`에는 `chosen_by`(팀이 직접 골랐을 때만)가 더 붙는다. `no`는 팀 안의 제출 순번이다.
+  - `GET /submissions?team=&include_deleted=` — 제출 목록, 최신순. 각 행에 팀 안의 제출 순번 `no`를 넣는다. `DELETE /submissions/{id}`는 소프트 삭제, `POST /submissions/{id}/restore`는 복구(그날 한도는 다시 확인하지 않음). 대상이 없으면 404.
   - `GET /users?team=` — 사용자 목록(비밀번호 해시 제외). `PATCH /users/{id}` — `{ team?, is_admin? }`. 팀을 옮겨도 이미 낸 제출은 원래 팀에 남는다. 자기 자신의 관리자 권한은 해제할 수 없다. `POST /users/{id}/reset-password` — 임시 비밀번호를 만들어 한 번 돌려준다.
   - `GET /export` — 최종 순위·전체 제출·사용자·미니게임 점수 CSV 네 개를 묶은 zip.
   - `POST /reset` — `{ confirm, delete_games, delete_users }`. `confirm`이 `기수 초기화`와 다르면 400. 제출 기록과 최종 제출 선택은 항상, 미니게임 점수와 관리자가 아닌 계정은 고른 경우에 한 트랜잭션으로 지운다. 관리자 계정, 구경용 계정 `iba_dev`, 정답, 대회 설정은 남긴다.
